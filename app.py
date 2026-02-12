@@ -4,8 +4,8 @@ import PyPDF2
 st.set_page_config(page_title="JurisClear AI", page_icon="⚖️", layout="centered")
 
 # --- Секция ссылок (ВСТАВЬ СВОИ ССЫЛКИ ИЗ LEMON SQUEEZY ТУТ) ---
-link_9usd = "ВСТАВЬ_ССЫЛКУ_НА_ТОВАР_9_ДОЛЛАРОВ" 
-link_29usd = "ВСТАВЬ_ССЫЛКУ_НА_ТОВАР_29_ДОЛЛАРОВ"
+link_9usd = "https://jurisclear.lemonsqueezy.com/checkout/buy/88fb3bfe-fca9-456b-9cc9-92112042fec0" 
+link_29usd = "https://jurisclear.lemonsqueezy.com/checkout/buy/eac0c119-22b5-4f1b-b82c-5ff4ebd92693"
 # -----------------------------------------------------------
 
 st.title("⚖️ JurisClear AI")
