@@ -1,10 +1,10 @@
 import streamlit as st
 
-# 1. КОНФИГУРАЦИЯ И КУРСЫ ВАЛЮТ
+# 1. КОНФИГУРАЦИЯ И ВАЛЮТЫ
 USD_TO_AMD = 400
 USD_TO_RUB = 90
 
-# 2. УЛУЧШЕННЫЙ СЛОВАРЬ (С учетом твоих правок)
+# 2. ПОЛНЫЙ СЛОВАРЬ (НИЧЕГО НЕ СОКРАЩАЕМ)
 translations = {
     "English": {
         "cur": "$", "rate": 1, "mo": "/ mo",
@@ -14,9 +14,22 @@ translations = {
         "price_9": "9", "price_29": "29",
         "buy": "Get Started", "upload": "Upload PDF contract",
         "demo_tab": "📝 Sample Report", "main_tab": "🚀 Analysis",
-        "demo_content": "🔴 **Critical Risk:** Clause 4.2 allows price increases without notice.",
-        "risk_wait": "Waiting for document...",
-        "status_ok": "✅ File ready for audit",
+        "risk_score_label": "Risk Assessment Score:",
+        "risk_desc": "7/10 - High Attention Required",
+        "demo_content": """
+        **Document Type:** Residential Lease Agreement
+        
+        🔴 **CRITICAL RISKS FOUND:**
+        1. **Clause 4.2 (Rent Increase):** The landlord can increase rent with only 7 days notice. 
+           *Advice: Demand at least 30 days notice.*
+        2. **Clause 8.1 (Security Deposit):** Deposit is non-refundable under vague 'cleaning' conditions.
+           *Advice: Add 'subject to normal wear and tear'.*
+           
+        ✅ **FINAL VERDICT:** Do not sign without these amendments.
+        """,
+        "wait_msg": "Please upload a document to begin...",
+        "status_ready": "✅ Document analyzed. Results locked.",
+        "pay_to_unlock": "🔒 Pay $9 to unlock full risk details."
     },
     "Русский": {
         "cur": "₽", "rate": USD_TO_RUB, "mo": "/ мес.",
@@ -26,9 +39,22 @@ translations = {
         "price_9": str(9 * USD_TO_RUB), "price_29": str(29 * USD_TO_RUB),
         "buy": "Купить доступ", "upload": "Загрузите PDF договор",
         "demo_tab": "📝 Пример отчета", "main_tab": "🚀 Анализ",
-        "demo_content": "🔴 **Критический риск:** Пункт 4.2 позволяет повышать цену без уведомления.",
-        "risk_wait": "Ожидание документа...",
-        "status_ok": "✅ Файл готов к проверке",
+        "risk_score_label": "Оценка юридического риска:",
+        "risk_desc": "7/10 - Требуется внимание",
+        "demo_content": """
+        **Тип документа:** Договор аренды жилья
+        
+        🔴 **КРИТИЧЕСКИЕ РИСКИ:**
+        1. **Пункт 4.2 (Повышение цены):** Арендодатель может поднять цену, предупредив всего за 7 дней.
+           *Совет: Требуйте срок уведомления не менее 30 дней.*
+        2. **Пункт 8.1 (Депозит):** Залог не возвращается при размытых условиях 'уборки'.
+           *Совет: Добавьте фразу 'с учетом естественного износа'.*
+           
+        ✅ **ИТОГ:** Не подписывайте в текущей редакции.
+        """,
+        "wait_msg": "Загрузите документ для начала...",
+        "status_ready": "✅ Документ проанализирован. Результаты скрыты.",
+        "pay_to_unlock": "🔒 Оплатите 9$, чтобы открыть полный отчет."
     },
     "Հայերեն": {
         "cur": "֏", "rate": USD_TO_AMD, "mo": "/ ամիս",
@@ -38,58 +64,71 @@ translations = {
         "price_9": str(9 * USD_TO_AMD), "price_29": str(29 * USD_TO_AMD),
         "buy": "Գնել", "upload": "Վերբեռնել PDF պայմանագիրը",
         "demo_tab": "📝 Օրինակ", "main_tab": "🚀 Վերլուծություն",
-        "demo_content": "🔴 **Կրիտիկական ռիսկ:** 4.2 կետը թույլ է տալիս բարձրացնել գինը առանց ծանուցման:",
-        "risk_wait": "Սպասում ենք փաստաթղթին...",
-        "status_ok": "✅ Ֆայլը պատրաստ է ստուգման",
+        "risk_score_label": "Իրավաբանական ռիսկի գնահատականը.",
+        "risk_desc": "7/10 - Պահանջվում է ուշադրություն",
+        "demo_content": """
+        **Փաստաթղթի տեսակը:** Բնակարանի վարձակալության պայմանագիր
+        
+        🔴 **ԿՐԻՏԻԿԱԿԱՆ ՌԻՍԿԵՐ:**
+        1. **Կետ 4.2 (Գնի բարձրացում).** Վարձատուն կարող է բարձրացնել գինը ընդամենը 7 օր առաջ ծանուցելով:
+           *Խորհուրդ. Պահանջեք առնվազն 30-օրյա ծանուցում:*
+        2. **Կետ 8.1 (Կանխավճար).** Կանխավճարը չի վերադարձվում անորոշ 'մաքրման' պայմանների պատճառով:
+           *Խորհուրդ. Ավելացրեք 'բնական մաշվածությունը հաշվի առնելով' արտահայտությունը:*
+           
+        ✅ **ԵԶՐԱԿԱՑՈՒԹՅՈՒՆ.** Մի ստորագրեք այս տարբերակով:
+        """,
+        "wait_msg": "Վերբեռնեք փաստաթուղթը սկսելու համար...",
+        "status_ready": "✅ Փաստաթուղթը վերլուծված է: Արդյունքները փակ են:",
+        "pay_to_unlock": "🔒 Վճարեք $9 ամբողջական հաշվետվությունը բացելու համար:"
     }
 }
 
 st.set_page_config(page_title="JurisClear AI", page_icon="⚖️", layout="wide")
 
-# 3. ВЕРХНЯЯ ПАНЕЛЬ (Язык теперь в углу)
-head_left, head_right = st.columns([4, 1])
+# 3. ШАПКА И ЧИСТЫЙ ВЫБОР ЯЗЫКА (БЕЗ КУРСОРA)
+st.markdown("<style>div.row-widget.stRadio > div{flex-direction:row; justify-content: flex-end;}</style>", unsafe_allow_html=True)
 
-with head_right:
-    # Убираем лишние отступы для выбора языка
-    lang_choice = st.selectbox("", ["Русский", "English", "Հայերեն"], label_visibility="collapsed")
+h_left, h_right = st.columns([3, 1])
+with h_left:
+    st.markdown(f"# ⚖️ JurisClear AI")
+with h_right:
+    # Используем radio вместо selectbox, чтобы не было курсора ввода
+    lang_choice = st.radio("", ["Русский", "English", "Հայերեն"], label_visibility="collapsed")
     t = translations[lang_choice]
 
-with head_left:
-    st.markdown(f"# ⚖️ {t['title']}")
-    st.markdown(f"*{t['subtitle']}*")
-
+st.markdown(f"#### *{t['subtitle']}*")
 st.divider()
 
-# 4. ТАРИФНЫЕ КАРТОЧКИ
-col1, col2 = st.columns(2)
-
-with col1:
+# 4. ТАРИФЫ
+c1, c2 = st.columns(2)
+with c1:
     st.info(f"### {t['one_time']}\n## {t['price_9']} {t['cur']}")
-    st.button(t['buy'], key="btn9", use_container_width=True)
-
-with col2:
-    # ЗДЕСЬ ИСПРАВЛЕНА НАДПИСЬ / MO
+    st.button(t['buy'], key="b9", use_container_width=True)
+with c2:
     st.success(f"### {t['pro']}\n## {t['price_29']} {t['cur']} {t['mo']}")
-    st.button(t['buy'], key="btn29", use_container_width=True)
+    st.button(t['buy'], key="b29", use_container_width=True)
 
 st.write("")
 
-# 5. РАБОЧАЯ ОБЛАСТЬ (Упрощена для мобильных)
-tab_main, tab_demo = st.tabs([t['main_tab'], t['demo_tab']])
+# 5. РАБОЧАЯ ОБЛАСТЬ
+tab1, tab2 = st.tabs([t['main_tab'], t['demo_tab']])
 
-with tab_main:
-    # Ключ для file_uploader добавлен для стабильности сессии
-    uploaded_file = st.file_uploader(t['upload'], type="pdf", key="legal_file_uploader")
-    
-    if uploaded_file is not None:
-        st.success(t['status_ok'])
-        st.warning("🔒 Payment required to unlock full AI analysis.")
+with tab1:
+    file = st.file_uploader(t['upload'], type="pdf", key="main_up")
+    if file:
+        st.subheader(t['risk_score_label'])
+        # Визуальная шкала риска (Макет)
+        st.error(f"### {t['risk_desc']}")
+        st.progress(0.7) # Оценка 7/10
+        st.write("---")
+        st.info(t['status_ready'])
+        st.warning(t['pay_to_unlock'])
     else:
-        st.write(f"ℹ️ {t['risk_wait']}")
+        st.write(t['wait_msg'])
 
-with tab_demo:
+with tab2:
     st.markdown(f"### {t['demo_tab']}")
-    st.write(t['demo_content'])
+    st.markdown(t['demo_content'])
 
 st.divider()
 st.caption("JurisClear AI © 2026 | Yerevan, Armenia")
