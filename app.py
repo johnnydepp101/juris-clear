@@ -1,129 +1,116 @@
 import streamlit as st
+import openai
+from PyPDF2 import PdfReader
 
-# 1. КОНФИГУРАЦИЯ И КУРСЫ ВАЛЮТ
-USD_TO_AMD = 400
-USD_TO_RUB = 90
+# --- 1. ТВОИ НАСТРОЙКИ ---
+# ВСТАВЬ СВОИ ССЫЛКИ ИЗ LEMONSQUEEZY МЕЖДУ КАВЫЧКАМИ
+LINK_9USD = "ВСТАВЬ_СЮДА_ССЫЛКУ_НА_9_ДОЛЛАРОВ"
+LINK_29USD = "ВСТАВЬ_СЮДА_ССЫЛКУ_НА_29_ДОЛЛАРОВ"
 
-# 2. ПОЛНЫЙ СЛОВАРЬ С ДИНАМИЧЕСКИМИ ЦЕНАМИ
+# Подключение OpenAI из Secrets
+try:
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
+except:
+    st.error("Ошибка: API ключ не найден в Secrets!")
+
+# --- 2. ЛОГИКА ИИ ---
+def get_ai_analysis(text, lang):
+    """Функция отправки текста договора в OpenAI"""
+    prompts = {
+        "Русский": "Ты профессиональный юрист. Проанализируй этот текст договора. Найди 3 главных юридических риска и дай общую оценку безопасности от 1 до 10.",
+        "English": "You are a professional lawyer. Analyze this contract text. Find the 3 main legal risks and give an overall safety score from 1 to 10.",
+        "Հայերեն": "Դուք պրոֆեսիոնալ իրավաբան եք: Վերլուծեք պայմանագրի այս տեքստը: Գտեք 3 հիմնական իրավաբանական ռիսկերը և տվեք անվտանգության ընդհանուր գնահատական 1-ից 10-ը:"
+    }
+    
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo", # Или gpt-4, если позволяет баланс
+            messages=[
+                {"role": "system", "content": "You are a helpful legal assistant."},
+                {"role": "user", "content": f"{prompts[lang]}\n\n{text[:4000]}"}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error: {e}"
+
+# --- 3. ИНТЕРФЕЙС И СЛОВАРЬ ---
 translations = {
     "English": {
-        "cur": "$", "rate": 1, "mo": "/ mo",
-        "title": "JurisClear AI",
-        "subtitle": "Next-Gen Legal Document Audit",
-        "one_time": "Single Audit", "pro": "Unlimited Pro",
-        "price_9": "9", "price_29": "29",
-        "buy": "Get Started", "upload": "Upload PDF contract",
-        "demo_tab": "📝 Sample Report", "main_tab": "🚀 Analysis",
-        "risk_score_label": "Risk Assessment Score:",
-        "risk_desc": "7/10 - High Attention Required",
-        "demo_content": """
-        **Document Type:** Residential Lease Agreement
-        
-        🔴 **CRITICAL RISKS FOUND:**
-        1. **Clause 4.2 (Rent Increase):** The landlord can increase rent with only 7 days notice. 
-        2. **Clause 8.1 (Security Deposit):** Deposit is non-refundable under vague conditions.
-           
-        ✅ **FINAL VERDICT:** Do not sign without these amendments.
-        """,
-        "wait_msg": "Please upload a document to begin...",
-        "status_ready": "✅ Document analyzed. Results locked.",
-        "pay_to_unlock": "🔒 Pay {price} {cur} to unlock full risk details."
+        "cur": "$", "rate": 1, "mo": "/ mo", "title": "JurisClear AI",
+        "subtitle": "Next-Gen Legal Document Audit", "one_time": "Single Audit",
+        "pro": "Unlimited Pro", "price_9": "9", "price_29": "29", "buy": "Unlock Full Analysis",
+        "upload": "Upload PDF contract", "demo_tab": "📝 Sample", "main_tab": "🚀 Analysis",
+        "risk_score": "Risk Assessment", "status_ready": "✅ Document analyzed.",
+        "btn_run": "Start AI Analysis"
     },
     "Русский": {
-        "cur": "₽", "rate": USD_TO_RUB, "mo": "/ мес.",
-        "title": "JurisClear AI",
-        "subtitle": "Юридический аудит нового поколения",
-        "one_time": "Разовый аудит", "pro": "Безлимит Pro",
-        "price_9": str(9 * USD_TO_RUB), "price_29": str(29 * USD_TO_RUB),
-        "buy": "Купить доступ", "upload": "Загрузите PDF договор",
-        "demo_tab": "📝 Пример отчета", "main_tab": "🚀 Анализ",
-        "risk_score_label": "Оценка юридического риска:",
-        "risk_desc": "7/10 - Требуется внимание",
-        "demo_content": """
-        **Тип документа:** Договор аренды жилья
-        
-        🔴 **КРИТИЧЕСКИЕ РИСКИ:**
-        1. **Пункт 4.2 (Повышение цены):** Повышение цены возможно через 7 дней после уведомления.
-        2. **Пункт 8.1 (Депозит):** Залог не возвращается при размытых условиях.
-           
-        ✅ **ИТОГ:** Не подписывайте в текущей редакции.
-        """,
-        "wait_msg": "Загрузите документ для начала...",
-        "status_ready": "✅ Документ проанализирован. Результаты скрыты.",
-        "pay_to_unlock": "🔒 Оплатите {price} {cur}, чтобы открыть полный отчет."
+        "cur": "₽", "rate": 90, "mo": "/ мес.", "title": "JurisClear AI",
+        "subtitle": "Юридический аудит нового поколения", "one_time": "Разовый аудит",
+        "pro": "Безлимит Pro", "price_9": "810", "price_29": "2610", "buy": "Открыть полный отчет",
+        "upload": "Загрузите PDF договор", "demo_tab": "📝 Пример", "main_tab": "🚀 Анализ",
+        "risk_score": "Оценка рисков", "status_ready": "✅ Документ проанализирован.",
+        "btn_run": "Запустить ИИ анализ"
     },
     "Հայերեն": {
-        "cur": "֏", "rate": USD_TO_AMD, "mo": "/ ամիս",
-        "title": "JurisClear AI",
-        "subtitle": "Իրավաբանական աուդիտի նոր սերունդ",
-        "one_time": "Մեկանգամյա ստուգում", "pro": "Անսահմանափակ Pro",
-        "price_9": str(9 * USD_TO_AMD), "price_29": str(29 * USD_TO_AMD),
-        "buy": "Գնել", "upload": "Վերբեռնել PDF պայմանագիրը",
-        "demo_tab": "📝 Օրինակ", "main_tab": "🚀 Վերլուծություն",
-        "risk_score_label": "Իրավաբանական ռիսկի գնահատականը.",
-        "risk_desc": "7/10 - Պահանջվում է ուշադրություն",
-        "demo_content": """
-        **Փաստաթղթի տեսակը:** Բնակարանի վարձակալության պայմանագիր
-        
-        🔴 **ԿՐԻՏԻԿԱԿԱՆ ՌԻՍԿԵՐ:**
-        1. **Կետ 4.2 (Գնի բարձրացում).** Վարձատուն կարող է բարձրացնել գինը 7 օր առաջ ծանուցելով:
-        2. **Կետ 8.1 (Կանխավճար).** Կանխավճարը չի վերադարձվում անորոշ պայմանների պատճառով:
-           
-        ✅ **ԵԶՐԱԿԱՑՈՒԹՅՈՒՆ.** Մի ստորագրեք այս տարբերակով:
-        """,
-        "wait_msg": "Վերբեռնեք փաստաթուղթը սկսելու համար...",
-        "status_ready": "✅ Փաստաթուղթը վերլուծված է: Արդյունքները փակ են:",
-        "pay_to_unlock": "🔒 Վճարեք {price} {cur} ամբողջական հաշվետվությունը բացելու համար:"
+        "cur": "֏", "rate": 400, "mo": "/ ամիս", "title": "JurisClear AI",
+        "subtitle": "Իրավաբանական աուդիտի նոր սերունդ", "one_time": "Մեկանգամյա ստուգում",
+        "pro": "Անսահմանափակ Pro", "price_9": "3600", "price_29": "11600", "buy": "Բացել ամբողջական հաշվետվությունը",
+        "upload": "Վերբեռնել PDF պայմանագիրը", "demo_tab": "📝 Օրինակ", "main_tab": "🚀 Վերլուծություն",
+        "risk_score": "Ռիսկերի գնահատում", "status_ready": "✅ Փաստաթուղթը վերլուծված է:",
+        "btn_run": "Սկսել վերլուծությունը"
     }
 }
 
 st.set_page_config(page_title="JurisClear AI", page_icon="⚖️", layout="wide")
 
-# 3. ШАПКА И ВЫБОР ЯЗЫКА
-st.markdown("<style>div.row-widget.stRadio > div{flex-direction:row; justify-content: flex-end;}</style>", unsafe_allow_html=True)
-
+# Выбор языка
 h_left, h_right = st.columns([3, 1])
-with h_left:
-    st.markdown(f"# ⚖️ JurisClear AI")
 with h_right:
-    lang_choice = st.radio("", ["Русский", "English", "Հայերեն"], label_visibility="collapsed")
+    lang_choice = st.radio("", ["Русский", "English", "Հայերեն"], label_visibility="collapsed", horizontal=True)
     t = translations[lang_choice]
 
-st.markdown(f"#### *{t['subtitle']}*")
+with h_left:
+    st.markdown(f"# ⚖️ {t['title']}")
+    st.caption(t['subtitle'])
+
 st.divider()
 
-# 4. ТАРИФЫ
-c1, c2 = st.columns(2)
-with c1:
+# Тарифы
+col1, col2 = st.columns(2)
+with col1:
     st.info(f"### {t['one_time']}\n## {t['price_9']} {t['cur']}")
-    st.button(t['buy'], key="b9", use_container_width=True)
-with c2:
+    st.link_button("Get Started", LINK_9USD, use_container_width=True)
+with col2:
     st.success(f"### {t['pro']}\n## {t['price_29']} {t['cur']} {t['mo']}")
-    st.button(t['buy'], key="b29", use_container_width=True)
+    st.link_button("Get Started", LINK_29USD, use_container_width=True)
 
-st.write("")
+# Основной блок
+tab_main, tab_demo = st.tabs([t['main_tab'], t['demo_tab']])
 
-# 5. РАБОЧАЯ ОБЛАСТЬ
-tab1, tab2 = st.tabs([t['main_tab'], t['demo_tab']])
-
-with tab1:
-    file = st.file_uploader(t['upload'], type="pdf", key="main_up")
-    if file:
-        st.subheader(t['risk_score_label'])
-        st.error(f"### {t['risk_desc']}")
-        st.progress(0.7)
-        st.write("---")
-        st.info(t['status_ready'])
+with tab_main:
+    uploaded_file = st.file_uploader(t['upload'], type="pdf")
+    
+    if uploaded_file:
+        # Извлечение текста
+        reader = PdfReader(uploaded_file)
+        full_text = ""
+        for page in reader.pages:
+            full_text += page.extract_text()
         
-        # ДИНАМИЧЕСКИЙ ТЕКСТ ОПЛАТЫ (ИСПРАВЛЕНО ЗДЕСЬ)
-        payment_text = t['pay_to_unlock'].format(price=t['price_9'], cur=t['cur'])
-        st.warning(payment_text)
-    else:
-        st.write(t['wait_msg'])
+        if st.button(t['btn_run'], type="primary"):
+            with st.spinner("AI is thinking..."):
+                analysis = get_ai_analysis(full_text, lang_choice)
+                
+                st.subheader(t['risk_score'])
+                st.write(analysis)
+                
+                st.write("---")
+                st.warning(f"💡 {t['buy']}")
+                st.link_button(f"👉 {t['buy']}", LINK_9USD)
 
-with tab2:
-    st.markdown(f"### {t['demo_tab']}")
-    st.markdown(t['demo_content'])
+with tab_demo:
+    st.write("Example report content...")
 
 st.divider()
-st.caption("JurisClear AI © 2026 | Yerevan, Armenia")
+st.caption("JurisClear AI © 2026")
