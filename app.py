@@ -112,4 +112,11 @@ with tab2:
     st.info(t['demo_content'])
 
 st.divider()
+f1, f2, f3 = st.columns(3)
+with f1:
+    st.write("© 2026 JurisClear AI")
+with f2:
+    st.write("Contact: support@jurisclear.ai") # Или твой личный email
+with f3:
+    st.write("Yerevan, Armenia")
 st.caption("JurisClear AI © 2026")
