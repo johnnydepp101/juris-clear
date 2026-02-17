@@ -44,18 +44,6 @@ st.markdown("""
     .stButton>button {
         border-radius: 12px; height: 3.8em; font-weight: bold; transition: 0.3s;
     }
-   
-    /* Убираем мигающий курсор и запрещаем прямой ввод в выпадающих списках */
-    div[data-baseweb="select"] input {
-        caret-color: transparent !important;
-        cursor: pointer !important;
-    }
-    
-    /* Дополнительно: делаем область выбора визуально более плотной */
-    div[data-baseweb="select"] {
-        cursor: pointer !important;
-    }
-    
     </style>
     """, unsafe_allow_html=True)
 
