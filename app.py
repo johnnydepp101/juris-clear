@@ -2,114 +2,130 @@ import streamlit as st
 from openai import OpenAI
 from PyPDF2 import PdfReader
 
-# --- 1. ТВОИ НАСТРОЙКИ ---
-LINK_9USD = "ВСТАВЬ_СЮДА_ССЫЛКУ_НА_9_ДОЛЛАРОВ"
-LINK_29USD = "ВСТАВЬ_СЮДА_ССЫЛКУ_НА_29_ДОЛЛАРОВ"
+# --- 1. CONFIG (Должен быть первым!) ---
+st.set_page_config(
+    page_title="JurisClear AI",
+    page_icon="⚖️",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-try:
+# --- 2. SECURITY & API ---
+# Используем секреты Streamlit для безопасности
+if "OPENAI_API_KEY" in st.secrets:
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-except Exception as e:
-    st.error("OpenAI API Key not found in Secrets")
+else:
+    st.error("API Key missing! Please add it to Streamlit Secrets.")
 
-# --- 2. ЛОГИКА ИИ (Исправленная версия 1.0+) ---
-def get_ai_analysis(text, lang):
-    prompts = {
-        "Русский": "Ты профессиональный юрист. Проанализируй этот текст договора. Найди 3 главных юридических риска и дай общую оценку безопасности от 1 до 10. Отвечай на русском.",
-        "English": "You are a professional lawyer. Analyze this contract text. Find 3 main risks and give an overall safety score from 1 to 10. Answer in English.",
-        "Հայերեն": "Դուք պրոֆեսիոնալ իրավաբան եք: Վերլուծեք պայմանագիրը: Գտեք 3 հիմնական ռիսկերը և տվեք անվտանգության գնահատական 1-ից 10-ը: Պատասխանեք հայերեն:"
-    }
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a professional legal auditor."},
-                {"role": "user", "content": f"{prompts[lang]}\n\n{text[:4000]}"}
-            ]
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Error: {e}"
+# --- 3. PROFESSIONAL STYLING (Hiding Streamlit branding) ---
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    [data-testid="stHeader"] {display: none;}
+    .block-container {padding-top: 1rem; padding-bottom: 1rem;}
+    .stButton>button {width: 100%; border-radius: 10px; height: 3.5em; font-weight: bold; background-color: #3b82f6; color: white; border: none;}
+    .stButton>button:hover {background-color: #2563eb; border: none;}
+    /* Прячем кнопку Fullscreen */
+    button[title="View fullscreen"] {display: none;}
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- 3. ПОЛНЫЙ СЛОВАРЬ (Вернули всё!) ---
+# --- 4. TRANSLATIONS & PRICING LOGIC ---
 translations = {
     "English": {
-        "cur": "$", "rate": 1, "mo": "/ mo", "title": "JurisClear AI",
-        "subtitle": "Next-Gen Legal Document Audit", "one_time": "Single Audit",
-        "pro": "Unlimited Pro", "price_9": "9", "price_29": "29", "buy": "Get Started",
-        "upload": "Upload PDF contract", "demo_tab": "📝 Sample Report", "main_tab": "🚀 Analysis",
-        "risk_score_label": "Risk Assessment Score:", "risk_desc": "7/10 - Attention Required",
-        "btn_run": "Start AI Analysis", "wait_msg": "Please upload a document...",
-        "pay_to_unlock": "🔒 Pay {price} {cur} to unlock full details.",
-        "demo_content": "🔴 **Critical Risk:** Clause 4.2 allows price changes without notice.\n\n🟠 **Medium Risk:** Deposit return terms are vague.\n\n✅ **Verdict:** Do not sign without amendments."
+        "cur": "$", "p9": "9", "p29": "29", "mo": "/mo",
+        "subtitle": "Professional Legal Document Audit",
+        "one_time": "Single Audit", "pro": "Unlimited Pro",
+        "buy": "Buy Access", "upload": "Upload PDF Contract",
+        "btn_run": "Start Analysis", "demo_tab": "📝 Sample Report",
+        "main_tab": "🚀 AI Analysis", "wait": "Please upload a PDF file...",
+        "pay_msg": "🔒 Pay {p}{c} to unlock the full legal report.",
+        "risk_label": "Legal Risk Assessment:",
+        "demo_txt": "🔴 **Critical Risk:** Clause 8.2 allows termination without notice.\n\n🟠 **Medium Risk:** Intellectual property rights are poorly defined.\n\n✅ **Verdict:** High risk. Review needed."
     },
     "Русский": {
-        "cur": "₽", "rate": 90, "mo": "/ мес.", "title": "JurisClear AI",
-        "subtitle": "Юридический аудит нового поколения", "one_time": "Разовый аудит",
-        "pro": "Безлимит Pro", "price_9": "810", "price_29": "2610", "buy": "Купить доступ",
-        "upload": "Загрузите PDF договор", "demo_tab": "📝 Пример отчета", "main_tab": "🚀 Анализ",
-        "risk_score_label": "Оценка юридического риска:", "risk_desc": "7/10 - Требуется внимание",
-        "btn_run": "Запустить ИИ анализ", "wait_msg": "Загрузите документ для начала...",
-        "pay_to_unlock": "🔒 Оплатите {price} {cur}, чтобы открыть отчет.",
-        "demo_content": "🔴 **Критический риск:** Пункт 4.2 позволяет менять цену без уведомления.\n\n🟠 **Средний риск:** Условия возврата депозита размыты.\n\n✅ **Итог:** Не подписывайте без правок."
+        "cur": "$", "p9": "9", "p29": "29", "mo": "/мес.",
+        "subtitle": "Профессиональный юридический аудит документов",
+        "one_time": "Разовый аудит", "pro": "Безлимит Pro",
+        "buy": "Купить доступ", "upload": "Загрузите PDF договор",
+        "btn_run": "Начать анализ", "demo_tab": "📝 Пример отчета",
+        "main_tab": "🚀 ИИ Анализ", "wait": "Загрузите PDF файл для начала...",
+        "pay_msg": "🔒 Оплатите {p}{c}, чтобы открыть полный отчет.",
+        "risk_label": "Результат анализа:",
+        "demo_txt": "🔴 **Критический риск:** Пункт 8.2 позволяет расторгнуть договор без уведомления.\n\n🟠 **Средний риск:** Права на интеллектуальную собственность размыты.\n\n✅ **Итог:** Высокий риск. Требуются правки."
     },
     "Հայերեն": {
-        "cur": "֏", "rate": 400, "mo": "/ ամիս", "title": "JurisClear AI",
-        "subtitle": "Իրավաբանական աուդիտի նոր սերունդ", "one_time": "Մեկանգամյա ստուգում",
-        "pro": "Անսահմանափակ Pro", "price_9": "3600", "price_29": "11600", "buy": "Գնել",
-        "upload": "Վերբեռնել PDF պայմանագիրը", "demo_tab": "📝 Օրինակ", "main_tab": "🚀 Վերլուծություն",
-        "risk_score_label": "Իրավաբանական ռիսկի գնահատականը.", "risk_desc": "7/10 - Պահանջվում է ուշադրություն",
-        "btn_run": "Սկսել վերլուծությունը", "wait_msg": "Վերբեռնեք փաստաթուղթը...",
-        "pay_to_unlock": "🔒 Վճարեք {price} {cur} ամբողջական հաշվետվության համար:",
-        "demo_content": "🔴 **Կրիտիկական ռիսկ.** 4.2 կետը թույլ է տալիս փոխել գինը առանց ծանուցման:\n\n🟠 **Միջին ռիսկ.** Ավանդի վերադարձի պայմանները անորոշ են:\n\n✅ **Եզրակացություն.** Մի ստորագրեք առանց փոփոխությունների:"
+        "cur": "$", "p9": "9", "p29": "29", "mo": "/ամիս",
+        "subtitle": "Փաստաթղթերի մասնագիտական իրավական աուդիտ",
+        "one_time": "Մեկանգամյա", "pro": "Անսահմանափակ Pro",
+        "buy": "Գնել", "upload": "Վերբեռնել PDF պայմանագիրը",
+        "btn_run": "Սկսել վերլուծությունը", "demo_tab": "📝 Օրինակ",
+        "main_tab": "🚀 AI Վերլուծություն", "wait": "Վերբեռնեք PDF ֆայլը...",
+        "pay_msg": "🔒 Վճարեք {p}{c} ամբողջական հաշվետվության համար:",
+        "risk_label": "Իրավաբանական գնահատական.",
+        "demo_txt": "🔴 **Կրիտիկական ռիսկ.** Կետ 8.2-ը թույլ է տալիս լուծարել պայմանագիրը առանց ծանուցման:\n\n🟠 **Միջին ռիսկ.** Մտավոր սեփականության իրավունքները հստակ չեն:\n\n✅ **Եզրակացություն.** Բարձր ռիսկ:"
     }
 }
 
-st.set_page_config(page_title="JurisClear AI", page_icon="⚖️", layout="wide")
+# Выбор языка
+c_lang, _ = st.columns([1, 3])
+with c_lang:
+    lang = st.selectbox("", ["English", "Русский", "Հայերեն"], label_visibility="collapsed")
 
-# ШАПКА И ВЫБОР ЯЗЫКА (БЕЗ МИГАНИЯ)
-st.markdown("<style>div.row-widget.stRadio > div{flex-direction:row; justify-content: flex-end;}</style>", unsafe_allow_html=True)
-h_left, h_right = st.columns([3, 1])
-with h_left:
-    st.markdown(f"# ⚖️ JurisClear AI")
-with h_right:
-    lang_choice = st.radio("", ["Русский", "English", "Հայերեն"], label_visibility="collapsed")
-    t = translations[lang_choice]
+t = translations[lang]
 
-st.markdown(f"#### *{t['subtitle']}*")
-st.divider()
+# Шапка
+st.markdown(f"<h1 style='text-align: center;'>⚖️ JurisClear AI</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: gray;'>{t['subtitle']}</p>", unsafe_allow_html=True)
 
-# ТАРИФЫ
-c1, c2 = st.columns(2)
-with c1:
-    st.info(f"### {t['one_time']}\n## {t['price_9']} {t['cur']}")
-    st.link_button(t['buy'], LINK_9USD, use_container_width=True)
-with c2:
-    st.success(f"### {t['pro']}\n## {t['price_29']} {t['cur']} {t['mo']}")
-    st.link_button(t['buy'], LINK_29USD, use_container_width=True)
+# --- 5. PRICING SECTION ---
+col1, col2 = st.columns(2)
+with col1:
+    st.info(f"### {t['one_time']}\n## {t['p9']}{t['cur']}")
+    st.link_button(t['buy'], "https://jurisclear.lemonsqueezy.com/checkout/buy/9usd-id") # ЗАМЕНИ НА СВОЮ
+with col2:
+    st.success(f"### {t['pro']}\n## {t['p29']}{t['cur']}{t['mo']}")
+    st.link_button(t['buy'], "https://jurisclear.lemonsqueezy.com/checkout/buy/29usd-id") # ЗАМЕНИ НА СВОЮ
 
-# РАБОЧАЯ ОБЛАСТЬ
+st.write("")
+
+# --- 6. MAIN LOGIC ---
 tab1, tab2 = st.tabs([t['main_tab'], t['demo_tab']])
 
 with tab1:
-    file = st.file_uploader(t['upload'], type="pdf")
+    file = st.file_uploader(t['upload'], type="pdf", label_visibility="collapsed")
     if file:
-        if st.button(t['btn_run'], type="primary"):
-            with st.spinner("AI analyzing..."):
-                reader = PdfReader(file)
-                text = "".join([p.extract_text() for p in reader.pages])
-                analysis = get_ai_analysis(text, lang_choice)
+        if st.button(t['btn_run']):
+            with st.spinner("AI Analysis..."):
+                # Чтение текста
+                pdf = PdfReader(file)
+                text = ""
+                for page in pdf.pages:
+                    text += page.extract_text()
                 
-                st.subheader(t['risk_score_label'])
-                st.markdown(analysis)
-                st.divider()
-                st.warning(t['pay_to_unlock'].format(price=t['price_9'], cur=t['cur']))
-                st.link_button(f"👉 {t['buy']}", LINK_9USD)
+                # Запрос к OpenAI
+                try:
+                    prompt = f"Analyze this contract in {lang}. Find 3 main risks: {text[:4000]}"
+                    response = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+                    st.subheader(t['risk_label'])
+                    st.markdown(response.choices[0].message.content)
+                    st.divider()
+                    st.warning(t['pay_msg'].format(p=t['p9'], c=t['cur']))
+                    st.link_button(f"👉 {t['buy']} ({t['p9']}{t['cur']})", "https://jurisclear.lemonsqueezy.com/checkout/buy/9usd-id")
+                except Exception as e:
+                    st.error(f"Error: {e}")
     else:
-        st.write(t['wait_msg'])
+        st.info(t['wait'])
 
 with tab2:
-    st.markdown(f"### {t['demo_tab']}")
-    st.info(t['demo_content'])
+    st.markdown(t['demo_txt'])
 
+# --- 7. FOOTER ---
+st.write("")
 st.divider()
-st.caption("JurisClear AI © 2026")
+st.caption(f"© 2026 JurisClear AI | support@jurisclear.com | Yerevan, Armenia")
