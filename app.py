@@ -269,11 +269,7 @@ with tab_audit:
                     st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
                     
                     st.divider() # Красивая линия-разделитель
-
-                    # 1. Сначала показываем бесплатную часть всегда
-                    st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
                     
-                    st.divider()
                     
                     # 2. Логика проверки оплаты (Lemon Squeezy)
                     # В реальности здесь будет запрос к API Lemon Squeezy или проверка параметров в URL
