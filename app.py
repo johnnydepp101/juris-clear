@@ -299,6 +299,52 @@ with tab_audit:
                 st.warning(f"🔒 Чтобы получить полный план устранения этих рисков, оплатите 850 ₽.")
 
                 st.rerun()
+                # --- 1. КНОПКА (Только делает анализ и сохраняет) ---
+                if st.button("Начать анализ", use_container_width=True, type="primary"):
+                    with st.spinner("ИИ проводит аудит..."):
+                        # ... твой код PdfReader и вызов API ...
+                        raw_res = response.choices[0].message.content
+                        clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
+                        
+                        # ЗАПИСЫВАЕМ В ПАМЯТЬ
+                        st.session_state.audit_result = clean_res 
+                        # Принудительно перезагружаем, чтобы код ниже увидел данные сразу
+                        st.rerun() 
+                
+                # --- 2. ОТОБРАЖЕНИЕ (ВНЕ КНОПКИ! Работает всегда, если есть данные) ---
+                if st.session_state.audit_result:
+                    # Берем данные из памяти
+                    result_to_show = st.session_state.audit_result
+                    
+                    # ПОВТОРЯЕМ ПАРСИНГ SCORE ДЛЯ ШКАЛЫ (т.к. мы вне кнопки)
+                    score_match = re.search(r"SCORE:\s*(\d+)", result_to_show) # Ищи в raw_res или сохрани score тоже в session_state
+                    score = int(score_match.group(1)) if score_match else 5
+                    
+                    # >>> ТВОЙ КОД ШКАЛЫ РИСКА (get_risk_params и HTML) <<<
+                    # Оставляешь его здесь БЕЗ ИЗМЕНЕНИЙ, просто сдвинь отступ влево
+                    
+                    if "[PAYWALL]" in result_to_show:
+                        free_part, paid_part = result_to_show.split("[PAYWALL]")
+                        
+                        # Показываем анализ (бесплатно)
+                        st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
+                        
+                        st.divider()
+                
+                        # ПРОВЕРЯЕМ ОПЛАТУ ЧЕРЕЗ URL
+                        if st.query_params.get("paid") == "true":
+                            st.success("✅ Оплата подтверждена! Вам открыт полный доступ.")
+                            # Показываем таблицу (платно)
+                            st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
+                            
+                            # Кнопка скачивания
+                            st.download_button(label="📥 Скачать Протокол (.txt)", data=paid_part.strip(), file_name="protocol.txt")
+                        else:
+                            # Если еще не оплачено
+                            st.warning("🔒 Полный отчет доступен после оплаты.")
+                            st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True)
+                    else:
+                        st.markdown(f"<div class='report-card'>{result_to_show}</div>", unsafe_allow_html=True)
                 
     else:
         st.info("Пожалуйста, загрузите файл договора в формате PDF для начала анализа.")
