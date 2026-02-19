@@ -243,6 +243,8 @@ with tab_audit:
                 score = int(score_match.group(1)) if score_match else 5
                 # Чистим текст от технической метки SCORE
                 clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
+
+                st.session_state.audit_result = clean_res  # Запоминаем результат анализа
                 
                 # Параметры динамической шкалы
                 bar_color, bar_shadow, risk_text = get_risk_params(score)
@@ -258,32 +260,39 @@ with tab_audit:
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # Проверяем, есть ли наша метка в тексте
-                if "[PAYWALL]" in clean_res:
-                    # Режем текст на две части
-                    parts = clean_res.split("[PAYWALL]")
+                # Используем результат из переменной или из памяти
+                result_to_show = st.session_state.audit_result if st.session_state.audit_result else clean_res
+
+                if "[PAYWALL]" in result_to_show:
+                    parts = result_to_show.split("[PAYWALL]")
                     free_part = parts[0]
                     paid_part = parts[1]
 
-                    # 1. Показываем бесплатную часть (Анализ)
+                    # 1. Всегда показываем бесплатную часть
                     st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
                     
-                    st.divider() # Красивая линия-разделитель
+                    st.divider()
                     
-                    
-                    # 2. Логика проверки оплаты (Lemon Squeezy)
-                    # В реальности здесь будет запрос к API Lemon Squeezy или проверка параметров в URL
-                    # Для теста мы можем создать кнопку, которая ведет на твой Checkout
-                    payment_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61" # Твоя ссылка
-                    
-                    # ПРОВЕРКА: Если оплата не подтверждена (в тестовом режиме можем временно оставить переключатель или проверять URL)
-                    if "paid" not in st.query_params: 
-                        st.warning("⚠️ Полный отчет и Протокол разногласий доступны после оплаты.")
-                        st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True)
-                    else:
-                        # Этот блок сработает, только если в адресе сайта появится ?paid=true
+                    # 2. АВТО-ПРОВЕРКА ОПЛАТЫ
+                    if st.query_params.get("paid") == "true":
                         st.success("✅ Оплата подтверждена! Вам открыт полный доступ.")
                         st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
+                        
+                        # Кнопка скачивания (появится только после оплаты)
+                        st.download_button(
+                            label="📥 Скачать Протокол разногласий (.txt)",
+                            data=paid_part.strip(),
+                            file_name="protocol_raznoglasiy.txt",
+                            mime="text/plain",
+                            use_container_width=True
+                        )
+                    else:
+                        # Если оплаты в URL нет — показываем предупреждение и кнопку
+                        st.warning("🔒 Полный отчет и Протокол разногласий доступны после оплаты.")
+                        st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True)
+                
+                else:
+                    st.markdown(f"<div class='report-card'>{result_to_show}</div>", unsafe_allow_html=True)
                     
                 else:
                     # Если вдруг метка пропала — просто выводим всё как раньше (безопасный режим)
