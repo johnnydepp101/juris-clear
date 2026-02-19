@@ -146,10 +146,6 @@ with c2:
 tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отчета"])
 
 with tab_audit:
-# Инициализируем память, чтобы не было ошибок при первой загрузке
-    if 'audit_result' not in st.session_state:
-        st.session_state.audit_result = None
-    
     file = st.file_uploader("Загрузите PDF договор", type="pdf", label_visibility="collapsed")
     if file:
         if st.button("Начать анализ", use_container_width=True, type="primary"):
@@ -237,14 +233,8 @@ with tab_audit:
                     temperature=0.0
                 )
                 # >>> END OF CHANGE <<<
-
-                st.session_state.audit_result = response.choices[0].message.content
-                st.rerun()
                 
-                #raw_res = response.choices[0].message.content
-                # Этот код сработает и сразу после анализа, и после возврата с оплаты
-        if st.session_state.audit_result:
-            full_res = st.session_state.audit_result
+                raw_res = response.choices[0].message.content
                 
                 # Парсинг оценки для шкалы
                 score_match = re.search(r"SCORE:\s*(\d+)", raw_res)
@@ -252,7 +242,7 @@ with tab_audit:
                 # Чистим текст от технической метки SCORE
                 clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
 
-                #st.session_state.audit_result = clean_res  # Запоминаем результат анализа
+                st.session_state.audit_result = clean_res  # Запоминаем результат анализа
                 
                 # Параметры динамической шкалы
                 bar_color, bar_shadow, risk_text = get_risk_params(score)
@@ -286,13 +276,13 @@ with tab_audit:
                     payment_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61" # Твоя ссылка
                     
                     # ПРОВЕРКА: Если оплата не подтверждена (в тестовом режиме можем временно оставить переключатель или проверять URL)
-                if st.query_params.get("paid") == "true":
-                    st.success("✅ Оплата подтверждена! Вам открыт полный доступ.")
-                    st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
-                    st.info("💡 Совет: Скопируйте таблицу и отправьте её контрагенту.")
-                else:
-                    st.warning("⚠️ Полный отчет и Протокол разногласий доступны после оплаты.")
-                    st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True)
+                    if "paid" not in st.query_params: 
+                        st.warning("⚠️ Полный отчет и Протокол разногласий доступны после оплаты.")
+                        st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True)
+                    else:
+                        # Этот блок сработает, только если в адресе сайта появится ?paid=true
+                        st.success("✅ Оплата подтверждена! Вам открыт полный доступ.")
+                        st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
                     
                 else:
                     # Если вдруг метка пропала — просто выводим всё как раньше (безопасный режим)
@@ -307,6 +297,7 @@ with tab_audit:
                 
     else:
         st.info("Пожалуйста, загрузите файл договора в формате PDF для начала анализа.")
+        
 with tab_demo:
     st.write("### Так выглядит результат анализа:")
     # Статичный пример для демонстрации
