@@ -146,12 +146,37 @@ with c2:
 tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отчета"])
 
 with tab_audit:
+    # 1. Инициализируем "память", если её еще нет
+    if 'audit_result' not in st.session_state:
+        st.session_state.audit_result = None
+
     file = st.file_uploader("Загрузите PDF договор", type="pdf", label_visibility="collapsed")
+    
     if file:
+        # Кнопка запускает процесс
         if st.button("Начать анализ", use_container_width=True, type="primary"):
             with st.spinner("ИИ проводит глубокий юридический аудит..."):
                 reader = PdfReader(file)
                 text = "".join([p.extract_text() for p in reader.pages])
+                
+                # ... тут твой prompt_instruction и вызов API (client.chat.completions.create) ...
+                
+                # 2. СОХРАНЯЕМ РЕЗУЛЬТАТ В ПАМЯТЬ вместо простого вывода
+                st.session_state.audit_result = response.choices[0].message.content
+
+        # 3. ОТОБРАЖЕНИЕ (теперь оно работает всегда, если в памяти есть результат)
+        if st.session_state.audit_result:
+            full_text = st.session_state.audit_result
+            
+            # Твоя логика со SCORE и чисткой текста (re.search, re.sub)
+            score_match = re.search(r"SCORE:\s*(\d+)", full_text)
+            score = int(score_match.group(1)) if score_match else 5
+            clean_res = re.sub(r"SCORE:\s*\d+", "", full_text).strip()
+            
+            # Вывод шкалы SCORE (твой HTML код)
+            bar_color, bar_shadow, risk_text = get_risk_params(score)
+            st.write("### ИИ Оценка Риска:")
+            st.markdown(f"""<div style="background:{bar_color}; ...">{risk_text} ({score}/10)</div>""", unsafe_allow_html=True)
                 
                 # Запрос к ИИ с жестким требованием оценки
                 # >>> START OF CHANGE (ОБЪЕДИНЕННАЯ ЛОГИКА: GPT-4o + СПЕЦИАЛИЗАЦИЯ) <<<
