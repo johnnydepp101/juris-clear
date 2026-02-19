@@ -146,10 +146,6 @@ with c2:
 tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отчета"])
 
 with tab_audit:
-    # 1. СОЗДАЕМ ПАМЯТЬ (в самом начале)
-    if 'audit_result' not in st.session_state:
-        st.session_state.audit_result = None
-        
     file = st.file_uploader("Загрузите PDF договор", type="pdf", label_visibility="collapsed")
     if file:
         if st.button("Начать анализ", use_container_width=True, type="primary"):
@@ -239,16 +235,6 @@ with tab_audit:
                 # >>> END OF CHANGE <<<
                 
                 raw_res = response.choices[0].message.content
-
-                # СОХРАНЯЕМ В ПАМЯТЬ (Заплатка №1)
-                st.session_state.audit_result = raw_res
-
-                # ЗАСТАВЛЯЕМ СТРАНИЦУ ОБНОВИТЬСЯ (Заплатка №2)
-                st.rerun()
-
-                if st.session_state.audit_result:
-                # Вынимаем данные из памяти
-                full_res = st.session_state.audit_result
                 
                 # Парсинг оценки для шкалы
                 score_match = re.search(r"SCORE:\s*(\d+)", raw_res)
@@ -256,7 +242,7 @@ with tab_audit:
                 # Чистим текст от технической метки SCORE
                 clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
 
-                
+                st.session_state.audit_result = clean_res  # Запоминаем результат анализа
                 
                 # Параметры динамической шкалы
                 bar_color, bar_shadow, risk_text = get_risk_params(score)
