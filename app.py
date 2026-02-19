@@ -96,11 +96,11 @@ col_a, col_b = st.columns(2)
 with col_a:
     st.markdown(f"<div class='pricing-card-single'><h3>Разовый аудит</h3><h2>850 ₽</h2></div>", unsafe_allow_html=True)
     st.write("")
-    st.link_button("Купить доступ", "https://jurisclear.lemonsqueezy.com/checkout/buy/...", use_container_width=True)
+    st.link_button("Купить доступ", "https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61", use_container_width=True)
 with col_b:
     st.markdown(f"<div class='pricing-card-pro'><h3>Безлимит Pro</h3><h2>2500 ₽ <small>/мес</small></h2></div>", unsafe_allow_html=True)
     st.write("")
-    st.link_button("Купить доступ", "https://jurisclear.lemonsqueezy.com/checkout/buy/...", use_container_width=True)
+    st.link_button("Купить доступ", "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8", use_container_width=True)
 
 st.divider()
 
@@ -269,17 +269,26 @@ with tab_audit:
                     st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
                     
                     st.divider() # Красивая линия-разделитель
-                    
-                    # 2. Создаем «замок» (Чекбокс-имитация)
-                    st.subheader("🔓 Платный раздел")
-                    is_paid = st.checkbox("Открыть Протокол разногласий (Имитация оплаты)")
 
-                    if is_paid:
-                        st.success("✅ Доступ открыт! Сформированы правки для защиты ваших интересов.")
-                        # Показываем платную часть (Таблицу)
-                        st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
+                    # 1. Сначала показываем бесплатную часть всегда
+                    st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
+                    
+                    st.divider()
+                    
+                    # 2. Логика проверки оплаты (Lemon Squeezy)
+                    # В реальности здесь будет запрос к API Lemon Squeezy или проверка параметров в URL
+                    # Для теста мы можем создать кнопку, которая ведет на твой Checkout
+                    payment_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61" # Твоя ссылка
+                    
+                    # ПРОВЕРКА: Если оплата не подтверждена (в тестовом режиме можем временно оставить переключатель или проверять URL)
+                    if "paid" not in st.query_params: 
+                        st.warning("⚠️ Полный отчет и Протокол разногласий доступны после оплаты.")
+                        st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True)
                     else:
-                        st.warning("⚠️ Готовые формулировки и Протокол разногласий скрыты. Требуется Premium-доступ.")
+                        # Этот блок сработает, только если в адресе сайта появится ?paid=true
+                        st.success("✅ Оплата подтверждена! Вам открыт полный доступ.")
+                        st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
+                    
                 else:
                     # Если вдруг метка пропала — просто выводим всё как раньше (безопасный режим)
                     st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
@@ -290,7 +299,7 @@ with tab_audit:
                 # >>> КОНЕЦ ВСТАВКИ <<<
                 
                 st.warning(f"🔒 Чтобы получить полный план устранения этих рисков, оплатите 850 ₽.")
-                st.link_button(f"👉 Оплатить и исправить риски", "https://jurisclear.lemonsqueezy.com/checkout/buy/...", use_container_width=True)
+                st.link_button(f"👉 Оплатить и исправить риски", "https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61", use_container_width=True)
     else:
         st.info("Пожалуйста, загрузите файл договора в формате PDF для начала анализа.")
 
