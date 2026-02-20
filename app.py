@@ -312,13 +312,8 @@ with tab_audit:
                             with col1:
                                 product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
                                 payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_audit_id}"
-                                st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", 
-                                               payment_url, 
-                                               use_container_width=True, 
-                                               type="primary")
-                                # Небольшой отступ
-                                st.write("")
-                            
+                                st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True, type="primary")
+                                
                             with col2:
                                 # Кнопка обновления с иконкой
                                 if st.button("🔄 Проверить оплату", use_container_width=True):
