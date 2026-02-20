@@ -248,6 +248,27 @@ with tab_audit:
                 score = int(score_match.group(1)) if score_match else 5
                 clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
 
+                # --- [НАЧАЛО ИНТЕГРАЦИИ] СОХРАНЕНИЕ В БАЗУ ---
+                try:
+                    # Собираем данные для таблицы
+                    data = {
+                        "contract_type": contract_type, 
+                        "raw_analysis": clean_res,
+                        "payment_status": "pending"
+                    }
+                    
+                    # Магия отправки:
+                    insert_result = supabase.table("contract_audits").insert(data).execute()
+                    
+                    # Вытаскиваем уникальный ID, который создала база
+                    current_audit_id = insert_result.data[0]['id']
+                    
+                except Exception as e:
+                    st.error(f"⚠️ Ошибка сохранения в базу: {e}")
+                    # Если база не ответила, создадим временный ID, чтобы код не встал
+                    current_audit_id = "error_fallback"
+                # --- [КОНЕЦ ИНТЕГРАЦИИ] ---
+
                 st.session_state.audit_result = clean_res
                 bar_color, bar_shadow, risk_text = get_risk_params(score)
                 
