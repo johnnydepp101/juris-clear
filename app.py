@@ -1,6 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 from PyPDF2 import PdfReader
+import pdfplumber
 import re
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
@@ -165,8 +166,18 @@ with tab_audit:
     if file:
         if st.button("Начать анализ", use_container_width=True, type="primary"):
             with st.spinner("ИИ проводит глубокий юридический аудит..."):
-                reader = PdfReader(file)
-                text = "".join([p.extract_text() for p in reader.pages])
+                #reader = PdfReader(file)
+                #text = "".join([p.extract_text() for p in reader.pages])
+                with pdfplumber.open(file) as pdf:
+                text = ""
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+                    else:
+                        # Если текст не извлекся (это скан), здесь можно подключить OCR
+                        st.warning("⚠️ Похоже, это скан. Пытаюсь распознать текст через OCR...")
+                        # В идеале тут вызывается Unstructured или EasyOCR
                 
                 
                 # Запрос к ИИ с жестким требованием оценки
