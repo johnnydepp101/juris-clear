@@ -283,35 +283,47 @@ with tab_audit:
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # --- [НОВЫЙ БЛОК ОПЛАТЫ] ---
+                # --- [ОБНОВЛЕННЫЙ БЛОК ОПЛАТЫ И PAYWALL] ---
                 if "[PAYWALL]" in clean_res:
                     parts = clean_res.split("[PAYWALL]")
                     free_part = parts[0]
                     paid_part = parts[1]
 
-                    # Показываем бесплатный анализ
+                    # Основной отчет (бесплатный)
                     st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
-                    st.divider()
+                    
+                    st.markdown("---") # Разделитель
 
-                    # Ссылка на оплату с ПЕРЕДАЧЕЙ ID АУДИТА
-                    product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
-                    payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_audit_id}"
+                    # Красивая карточка оплаты
+                    with st.container():
+                        # Проверяем статус в базе данных напрямую
+                        check_db = supabase.table("contract_audits").select("payment_status").eq("id", current_audit_id).single().execute()
+                        is_paid = check_db.data.get("payment_status") == "paid"
 
-                    # Проверка: оплачено или нет?
-                    if st.query_params.get("paid") == "true":
-                         st.success("✅ Оплата подтверждена!")
-                         st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
-                    else:
-                        st.warning("⚠️ Полный отчет и Протокол разногласий доступны после оплаты.")
-                        st.link_button("🚀 Оплатить Premium-доступ (850 ₽)", payment_url, use_container_width=True)
-                        
-                        # Кнопка для ручного обновления (пользователь нажмет её после оплаты)
-                        if st.button("Обновить статус оплаты"):
-                            st.rerun()
+                        if is_paid or st.query_params.get("paid") == "true":
+                            st.success("🎉 Доступ открыт! Оплата подтверждена.")
+                            st.markdown(f"<div class='report-card' style='border-left: 5px solid #28a745;'>{paid_part.strip()}</div>", unsafe_allow_html=True)
+                        else:
+                            # Создаем колонки для кнопки оплаты и кнопки обновления
+                            st.warning("🔒 **Полный отчет и Протокол разногласий (готовые правки) заблокированы.**")
+                            
+                            col1, col2 = st.columns([2, 1])
+                            
+                            with col1:
+                                product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
+                                payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_audit_id}"
+                                st.link_button("🚀 Оплатить Premium (850 ₽)", payment_url, use_container_width=True, type="primary")
+                            
+                            with col2:
+                                # Кнопка обновления с иконкой
+                                if st.button("🔄 Проверить оплату", use_container_width=True):
+                                    st.rerun()
+                            
+                            st.info("💡 После оплаты нажмите кнопку 'Проверить оплату', если доступ не открылся автоматически.")
                 else:
                     # Если вдруг PAYWALL не найден, просто выводим текст
                     st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
-                # --- [КОНЕЦ НОВОГО БЛОКА] ---
+                # --- [КОНЕЦ ОБНОВЛЕННОГО БЛОКА] ---
 
                 st.success("✅ Анализ и протокол разногласий успешно сформированы!")
                 st.info("💡 Совет: Скопируйте таблицу из раздела 'Протокол разногласий' и отправьте её контрагенту.")
