@@ -187,7 +187,6 @@ with tab_audit:
                         st.stop()
                     
                     special_instructions = ""
-                    # [Логика специальных инструкций сохранена без изменений]
                     if contract_type == "NDA":
                         special_instructions = "Фокус на сроках конфиденциальности, исключениях и штрафах за разглашение."
                     elif contract_type == "Аренда":
@@ -264,7 +263,7 @@ with tab_audit:
                         except Exception as e:
                             st.error(f"Ошибка при подготовке анализа: {e}")
         else:
-            # --- ШАГ 2: ОБНОВЛЕННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
+            # --- ШАГ 2: ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ ---
             score = st.session_state.get("audit_score", 5)
             bar_color, bar_shadow, risk_text = get_risk_params(score)
             st.write("### ИИ Оценка Риска:")
@@ -278,70 +277,60 @@ with tab_audit:
                 </div>
             """, unsafe_allow_html=True)
 
-            # Интеграция вашего нового блока
-            if "analysis_result" in st.session_state:
-                clean_res = st.session_state.analysis_result
-                current_audit_id = st.session_state.current_audit_id
+            clean_res = st.session_state.analysis_result
+            current_audit_id = st.session_state.current_audit_id
 
-                if "[PAYWALL]" in clean_res:
-                    parts = clean_res.split("[PAYWALL]")
-                    free_part = parts[0]
-                    paid_part = parts[1]
+            if "[PAYWALL]" in clean_res:
+                parts = clean_res.split("[PAYWALL]")
+                free_part = parts[0]
+                paid_part = parts[1]
 
-                    # Отображаем бесплатную часть
-                    st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
-                    st.divider()
+                st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
+                st.divider()
 
-                    # ПРОВЕРКА ОПЛАТЫ (Только база)
+                # --- НОВЫЙ ИНТЕГРИРОВАННЫЙ БЛОК ПРОВЕРКИ ---
+                with st.container():
                     try:
                         check_db = supabase.table("contract_audits").select("payment_status").eq("id", current_audit_id).single().execute()
-                        is_paid = check_db.data.get("payment_status") == "paid"
-                    except:
-                        is_paid = False
+                        db_status = check_db.data.get("payment_status")
+                    except Exception as e:
+                        st.error(f"Ошибка связи с базой: {e}")
+                        db_status = "error"
 
-                    if is_paid:
-                        st.success("🎉 Оплата подтверждена! Полный доступ открыт.")
+                    if db_status == "paid":
+                        st.success("🎉 Доступ открыт! Оплата подтверждена сервером.")
                         st.markdown(f"<div class='report-card' style='border-left: 5px solid #28a745;'>{paid_part.strip()}</div>", unsafe_allow_html=True)
-                        
-                        st.write("") # Отступ
-                        # Кнопка сброса (вариант для оплаченного состояния)
-                        if st.button("📁 Загрузить новый договор", key="btn_paid_reset", use_container_width=True):
-                            st.session_state.clear()
-                            st.rerun()
                     else:
-                        st.warning("🔒 **Полный отчет и Протокол разногласий заблокированы.**")
+                        st.warning(f"🔒 **Полный отчет заблокирован.** Статус в базе: `{db_status}`")
                         
-                        # Элегантные кнопки в два столбца
-                        col1, col2 = st.columns(2)
-                        
+                        col1, col2 = st.columns([2, 1])
                         with col1:
                             product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
                             payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_audit_id}"
                             st.link_button("🚀 Оплатить Premium (850 ₽)", payment_url, use_container_width=True, type="primary")
                         
                         with col2:
-                            # Кнопка проверки с тем же стилем
                             if st.button("🔄 Проверить оплату", use_container_width=True):
+                                st.cache_data.clear()
                                 st.rerun()
                         
-                        st.info("💡 После оплаты в окне Lemon Squeezy просто вернитесь на эту вкладку и нажмите кнопку 'Проверить оплату'.")
-                        
-                        st.write("")
-                        st.divider()
-                        # Кнопка полного сброса в самом низу
-                        if st.button("📁 Отменить и загрузить другой файл", use_container_width=True, help="Сбросить всё и вернуться в начало"):
-                            st.session_state.clear()
-                            st.rerun()
-                else:
-                    # Если PAYWALL нет в тексте
-                    st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
-                    if st.button("📁 Загрузить новый договор", key="btn_no_paywall_reset", use_container_width=True):
-                        st.session_state.clear()
-                        st.rerun()
+                        st.info("💡 Если вы уже оплатили, подождите 10-20 секунд, пока платежная система обновит статус, и нажмите 'Проверить оплату'.")
+            else:
+                st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
+
+            st.success("✅ Анализ и протокол разногласий успешно сформированы!")
+            
+            # НОВАЯ КНОПКА СБРОСА
+            if st.button("📁 Загрузить новый договор", use_container_width=True):
+                for key in ["analysis_result", "current_audit_id", "audit_score"]:
+                    if key in st.session_state: 
+                        del st.session_state[key]
+                st.rerun()
 
     else:
         if "analysis_result" in st.session_state:
-            st.session_state.clear()
+            for key in ["analysis_result", "current_audit_id", "audit_score"]:
+                if key in st.session_state: del st.session_state[key]
         st.info("Пожалуйста, загрузите файл договора в формате PDF для начала анализа.")
 
 with tab_demo:
