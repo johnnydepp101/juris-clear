@@ -46,6 +46,31 @@ st.markdown("""
     .stButton>button {
         border-radius: 12px; height: 3.8em; font-weight: bold; transition: 0.3s;
     }
+    /* Ультимативное выравнивание кнопок */
+    .stButton > button, .stLinkButton > a {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 50px !important; /* Фиксированная высота */
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 10px !important;
+        text-decoration: none !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    /* Цвет для кнопки-ссылки (Оплатить), чтобы она была как Primary */
+    .stLinkButton > a {
+        background-color: #3b82f6 !important;
+        color: white !important;
+        border: none !important;
+    }
+    .stLinkButton > a:hover {
+        background-color: #2563eb !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
