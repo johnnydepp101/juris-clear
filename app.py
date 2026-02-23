@@ -12,6 +12,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+if 'reset_counter' not in st.session_state:
+    st.session_state.reset_counter = 0
 
 # --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
 st.markdown("""
