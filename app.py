@@ -157,7 +157,6 @@ with c1:
         selection_mode="single", 
         default="Заказчик",
         label_visibility="collapsed"
-        key=f"pills_{st.session_state.reset_counter}
     )
 
 with c2:
