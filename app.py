@@ -414,17 +414,26 @@ with tab_audit:
 
                     if is_paid:
                         st.balloons()
+                        st.success("🎉 Оплата подтверждена!")
                         st.markdown(f"<div class='report-card' style='border-left: 5px solid #28a745;'>{paid_part.strip()}</div>", unsafe_allow_html=True)
                         
-                        # Кнопка скачивания PDF
-                        pdf_bytes = create_pdf(clean_res)
-                        st.download_button(
-                            label="📥 Скачать полный отчет (PDF)",
-                            data=pdf_bytes,
-                            file_name="audit_report.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
+                        # Ряд кнопок
+                        col_pdf, col_sup = st.columns(2)
+                        with col_pdf:
+                            try:
+                                pdf_bytes = create_pdf(clean_res)
+                                st.download_button(
+                                    label="📥 Скачать отчет (PDF)",
+                                    data=bytes(pdf_bytes),
+                                    file_name=f"audit_{current_audit_id[:8]}.pdf",
+                                    mime="application/pdf",
+                                    use_container_width=True
+                                )
+                            except Exception as e:
+                                st.error(f"Ошибка PDF: {e}")
+                        
+                        with col_sup:
+                            st.link_button("🆘 Поддержка", "https://t.me/твой_логин", use_container_width=True)
 
                         st.write("")
                         if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
@@ -466,14 +475,17 @@ with tab_audit:
                     st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
                     
                     # Кнопка скачивания PDF
-                    pdf_bytes = create_pdf(clean_res)
-                    st.download_button(
-                        label="📥 Скачать отчет (PDF)",
-                        data=pdf_bytes,
-                        file_name="audit_report.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+                    try:
+                        pdf_bytes = create_pdf(clean_res)
+                        st.download_button(
+                            label="📥 Скачать отчет (PDF)",
+                            data=bytes(pdf_bytes),
+                            file_name=f"audit_{current_audit_id[:8]}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error(f"Ошибка PDF: {e}")
 
                     if st.button("📁 Загрузить новый договор", key="btn_no_paywall_reset", use_container_width=True):
                         st.session_state.reset_counter += 1
@@ -536,14 +548,17 @@ with tab_history:
                             st.markdown(res_text.replace("[PAYWALL]", ""))
                             
                             # Кнопка скачивания PDF в истории (только если оплачено)
-                            pdf_bytes = create_pdf(res_text)
-                            st.download_button(
-                                label="📥 Скачать PDF",
-                                data=pdf_bytes,
-                                file_name=f"audit_{date_str}.pdf",
-                                mime="application/pdf",
-                                key=f"dl_{audit['id']}"
-                            )
+                            try:
+                                pdf_bytes = create_pdf(res_text)
+                                st.download_button(
+                                    label="📥 Скачать PDF",
+                                    data=bytes(pdf_bytes),
+                                    file_name=f"audit_{date_str}.pdf",
+                                    mime="application/pdf",
+                                    key=f"dl_{audit['id']}"
+                                )
+                            except Exception as e:
+                                st.error(f"Ошибка PDF: {e}")
                             
         except Exception as e:
             st.error(f"Не удалось загрузить историю: {e}")
