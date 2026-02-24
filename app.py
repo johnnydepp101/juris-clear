@@ -7,9 +7,6 @@ import os
 from fpdf import FPDF
 from docx import Document
 from io import BytesIO
-import pytesseract
-from pdf2image import convert_from_bytes
-from PIL import Image
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -142,42 +139,6 @@ def sign_out():
     supabase.auth.sign_out()
     st.session_state.user = None
     st.rerun()
-
-# --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С OCR) ---
-def extract_text_from_pdf(file_bytes):
-    # 1. Сначала пробуем обычный текст (pdfplumber)
-    text = ""
-    try:
-        with pdfplumber.open(BytesIO(file_bytes)) as pdf:
-            for page in pdf.pages:
-                content = page.extract_text()
-                if content:
-                    text += content + "\n"
-    except Exception as e:
-        st.error(f"Ошибка при чтении PDF: {e}")
-
-    # 2. Если текста почти нет — включаем OCR
-    if len(text.strip()) < 100:
-        st.info("Обнаружен скан или фото. Начинаю распознавание (OCR)... Это может занять 1-2 минуты.")
-        try:
-            # Превращаем PDF в картинки
-            images = convert_from_bytes(file_bytes)
-            
-            ocr_text = ""
-            progress_ocr = st.progress(0)
-            for i, image in enumerate(images):
-                # Распознаем текст (русский + английский)
-                page_text = pytesseract.image_to_string(image, lang='rus+eng')
-                ocr_text += f"--- Страница {i+1} ---\n{page_text}\n"
-                progress_ocr.progress((i + 1) / len(images))
-            
-            progress_ocr.empty()
-            return ocr_text
-        except Exception as e:
-            st.error(f"Ошибка OCR: {e}. Проверьте наличие tesseract в packages.txt")
-            return ""
-    
-    return text
 
 # --- ФУНКЦИЯ СОЗДАНИЯ PDF (ИНТЕГРИРОВАНА НОВАЯ ПРОВЕРКА ШРИФТА) ---
 def create_pdf(text):
@@ -436,11 +397,15 @@ with tab_audit:
             if st.button("Начать анализ", use_container_width=True, type="primary"):
                 with st.spinner("ИИ проводит глубокий юридический аудит..."):
                     try:
-                        # Используем новую функцию извлечения текста с поддержкой OCR
-                        text = extract_text_from_pdf(file.getvalue())
+                        with pdfplumber.open(file) as pdf:
+                            text = ""
+                            for page in pdf.pages:
+                                extracted = page.extract_text()
+                                if extracted:
+                                    text += extracted + "\n"
                         
                         if not text.strip():
-                            st.error("❌ Не удалось извлечь текст даже после OCR. Возможно, файл поврежден.")
+                            st.error("❌ Не удалось извлечь текст. Возможно, это изображение или защищенный PDF.")
                             st.stop()
                     except Exception as e:
                         st.error(f"Ошибка при чтении PDF: {e}")
@@ -690,9 +655,16 @@ with tab_redline:
     if file_v1 and file_v2:
         if st.button("🚀 Найти отличия", use_container_width=True):
             with st.spinner("ИИ сравнивает документы..."):
-                # Используем новую функцию извлечения для сравнения (с поддержкой OCR)
-                text_v1 = extract_text_from_pdf(file_v1.getvalue())
-                text_v2 = extract_text_from_pdf(file_v2.getvalue())
+                # Получаем текст из обоих файлов
+                text_v1 = ""
+                with pdfplumber.open(file_v1) as pdf:
+                    for page in pdf.pages:
+                        text_v1 += page.extract_text() + "\n"
+                
+                text_v2 = ""
+                with pdfplumber.open(file_v2) as pdf:
+                    for page in pdf.pages:
+                        text_v2 += page.extract_text() + "\n"
                 
                 # Промпт для сравнения
                 compare_prompt = f"""
