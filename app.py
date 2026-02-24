@@ -779,8 +779,32 @@ with col_f1:
     st.caption("© 2026 JurisClear AI")
 with col_f2:
     if st.button("Политика конфиденциальности", type="tertiary"):
-        st.info("Здесь будет текст политики... (я дам его ниже)")
+        st.info("### Privacy Policy / Политика конфиденциальности
+**Effective Date: February 24, 2026**
+
+1. **Data Collection:** We collect your email address for account access and the documents you upload for analysis.
+2. **Data Processing:** Your documents are processed via OpenAI API. We do not use your data to train AI models.
+3. **Data Storage:** Your analysis history is stored securely in Supabase. You can delete your data at any time.
+4. **Third Parties:** We use Lemon Squeezy for payments. We do not store your credit card details.
+
+---
+1. **Сбор данных:** Мы собираем ваш email для доступа и документы, которые вы загружаете для анализа.
+2. **Обработка:** Документы анализируются через API OpenAI. Ваши данные НЕ используются для обучения моделей.
+3. **Хранение:** История анализов хранится в зашифрованном виде в Supabase.
+4. **Оплата:** Платежи обрабатываются через Lemon Squeezy. Мы не имеем доступа к данным ваших карт.")
 with col_f3:
     if st.button("Условия использования", type="tertiary"):
-        st.info("Здесь будет текст оферты...")
+        st.info("### Terms of Service / Условия использования
+**Last Updated: February 24, 2026**
+
+1. **Not Legal Advice:** JurisClear AI provides automated document analysis. This is NOT a substitute for professional legal advice. Always consult a qualified lawyer.
+2. **Accuracy:** AI may occasionally produce inaccurate results. JurisClear AI is not liable for any business decisions based on AI reports.
+3. **Refunds:** Due to the nature of digital goods and the costs of AI processing, refunds are not provided once an analysis is generated.
+4. **Subscription/Payments:** Access to full reports is granted upon successful payment via Lemon Squeezy.
+
+---
+1. **Не является юридической консультацией:** JurisClear AI предоставляет автоматизированный анализ. Это НЕ замена профессиональному юристу.
+2. **Точность:** ИИ может допускать ошибки. Мы не несем ответственности за ваши бизнес-решения, принятые на основе отчетов.
+3. **Возвраты:** В связи с затратами на ИИ-процессинг, возврат средств после генерации полного отчета невозможен.
+4. **Оплата:** Доступ к полным отчетам предоставляется после подтверждения оплаты через Lemon Squeezy.")
 st.caption("© 2026 JurisClear AI | Ереван, Армения | support@jurisclear.com")
