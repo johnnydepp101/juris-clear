@@ -500,29 +500,38 @@ with tab_audit:
                     clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
 
                     if clean_res:
-                        try:
-                            # --- НОВЫЙ БЛОК ДЛЯ USER_ID ---
-                            if st.session_state.user:
-                                user_id = st.session_state.user.id
-                            else:
-                                user_id = None 
-
-                            data = {
-                                "contract_type": contract_type, 
+                        # --- ИНТЕГРИРОВАННЫЙ БЛОК СОХРАНЕНИЯ (ИЗ ВАШЕГО ЗАПРОСА) ---
+                        if st.session_state.user:
+                            user_id = st.session_state.user.id # ID из Supabase Auth
+                            
+                            data_to_insert = {
+                                "user_id": user_id,  # ЭТО КРИТИЧЕСКИ ВАЖНО ДЛЯ RLS
+                                "contract_type": contract_type,
+                                "user_role": user_role,
                                 "raw_analysis": clean_res,
-                                "payment_status": "pending",
-                                "user_id": user_id # ДОБАВИЛИ ЭТУ СТРОКУ
+                                "payment_status": "pending"
                             }
-                            # ------------------------------
-                            insert_result = supabase.table("contract_audits").insert(data).execute()
                             
+                            try:
+                                # Сохраняем в таблицу и получаем результат для session_state
+                                insert_result = supabase.table("contract_audits").insert(data_to_insert).execute()
+                                
+                                # Записываем данные в сессию для отображения
+                                st.session_state.analysis_result = clean_res
+                                st.session_state.current_audit_id = insert_result.data[0]['id']
+                                st.session_state.audit_score = score
+                                
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Ошибка при сохранении: {e}")
+                        else:
+                            # Если пользователь не вошел, просто показываем результат без сохранения в БД
+                            st.warning("Пожалуйста, войдите в аккаунт, чтобы сохранить анализ.")
                             st.session_state.analysis_result = clean_res
-                            st.session_state.current_audit_id = insert_result.data[0]['id']
+                            st.session_state.current_audit_id = "temp_audit"
                             st.session_state.audit_score = score
-                            
                             st.rerun()
-                        except Exception as e:
-                            st.error(f"Ошибка при подготовке анализа: {e}")
+                        # -------------------------------------------------------
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
             score = st.session_state.get("audit_score", 5)
@@ -574,7 +583,7 @@ with tab_audit:
                             st.download_button(
                                 label="📥 PDF",
                                 data=bytes(pdf_bytes),
-                                file_name=f"audit_{current_audit_id[:8]}.pdf",
+                                file_name=f"audit_{str(current_audit_id)[:8]}.pdf",
                                 mime="application/pdf",
                                 use_container_width=True
                             )
@@ -585,7 +594,7 @@ with tab_audit:
                                 st.download_button(
                                     label="📝 Word",
                                     data=word_bytes,
-                                    file_name=f"audit_{current_audit_id[:8]}.docx",
+                                    file_name=f"audit_{str(current_audit_id)[:8]}.docx",
                                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                     use_container_width=True
                                 )
@@ -642,7 +651,7 @@ with tab_audit:
                             st.download_button(
                                 label="📥 Скачать PDF",
                                 data=bytes(pdf_bytes),
-                                file_name=f"audit_{current_audit_id[:8]}.pdf",
+                                file_name=f"audit_{str(current_audit_id)[:8]}.pdf",
                                 mime="application/pdf",
                                 use_container_width=True
                             )
@@ -655,7 +664,7 @@ with tab_audit:
                             st.download_button(
                                 label="📥 Скачать Word",
                                 data=docx_bytes,
-                                file_name=f"audit_{current_audit_id[:8]}.docx",
+                                file_name=f"audit_{str(current_audit_id)[:8]}.docx",
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 use_container_width=True
                             )
@@ -744,7 +753,6 @@ with tab_history:
         st.warning("Пожалуйста, войдите в аккаунт, чтобы просмотреть историю своих анализов.")
     else:
         try:
-            # Правильный синтаксис для сортировки: desc=True (для новых сверху)
             history = supabase.table("contract_audits") \
                 .select("*") \
                 .eq("user_id", st.session_state.user.id) \
@@ -755,12 +763,10 @@ with tab_history:
                 st.info("У вас пока нет сохраненных анализов.")
             else:
                 for audit in history.data:
-                    # Создаем аккуратную карточку для каждого старого анализа
-                    date_str = audit['created_at'][:10] # Берем только дату
+                    date_str = audit['created_at'][:10] 
                     status = "✅ Оплачено" if audit['payment_status'] == 'paid' else "⏳ Ожидает оплаты"
                     
                     with st.expander(f"📄 {audit['contract_type']} от {date_str} — {status}"):
-                        # Показываем результат (если оплачено — весь, если нет — только начало)
                         res_text = audit['raw_analysis']
                         if "[PAYWALL]" in res_text and audit['payment_status'] != 'paid':
                             st.markdown(res_text.split("[PAYWALL]")[0])
@@ -768,7 +774,6 @@ with tab_history:
                         else:
                             st.markdown(res_text.replace("[PAYWALL]", ""))
                             
-                            # Кнопки скачивания в истории (только если оплачено)
                             if audit['payment_status'] == 'paid':
                                 h_col1, h_col2 = st.columns(2)
                                 with h_col1:
