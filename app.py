@@ -107,9 +107,10 @@ def sign_out():
     st.session_state.user = None
     st.rerun()
 
-# --- ФУНКЦИЯ СОЗДАНИЯ PDF ---
+# --- ФУНКЦИЯ СОЗДАНИЯ PDF (ОБНОВЛЕННАЯ ВЕРСИЯ) ---
 def create_pdf(text):
     pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15) # Авто-перенос страниц
     pdf.add_page()
     
     # Путь к шрифту
@@ -119,16 +120,16 @@ def create_pdf(text):
         pdf.add_font('DejaVu', '', font_path)
         pdf.set_font('DejaVu', '', 12)
     else:
-        # Если вдруг файла нет, будет Arial (но русский не отобразится)
-        pdf.set_font("Arial", size=12)
+        pdf.set_font("Arial", size=10)
     
+    # Очищаем текст от технической метки
     clean_text = text.replace("[PAYWALL]", "").strip()
     
-    # Умная разбивка текста на строки
-    for line in clean_text.split('\n'):
-        pdf.multi_cell(0, 10, txt=line)
+    # Используем write вместо multi_cell. 
+    # 10 — это высота строки. write() сам переносит текст и слова.
+    pdf.write(10, clean_text)
     
-    return pdf.output() # Для fpdf2 это вернет байты
+    return pdf.output()
 
 # === НОВЫЙ ПРОФЕССИОНАЛЬНЫЙ ПРИМЕР ОТЧЕТА ===
 sample_text = """
