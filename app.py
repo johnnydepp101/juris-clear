@@ -774,4 +774,13 @@ with tab_history:
             st.error(f"Не удалось загрузить историю: {e}")
 
 st.divider()
+col_f1, col_f2, col_f3 = st.columns(3)
+with col_f1:
+    st.caption("© 2026 JurisClear AI")
+with col_f2:
+    if st.button("Политика конфиденциальности", type="tertiary"):
+        st.info("Здесь будет текст политики... (я дам его ниже)")
+with col_f3:
+    if st.button("Условия использования", type="tertiary"):
+        st.info("Здесь будет текст оферты...")
 st.caption("© 2026 JurisClear AI | Ереван, Армения | support@jurisclear.com")
