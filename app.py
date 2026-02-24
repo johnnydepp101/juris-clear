@@ -165,6 +165,22 @@ def create_pdf(text):
     
     return pdf.output()
 
+# --- ФУНКЦИЯ СОЗДАНИЯ WORD ---
+def create_docx(text):
+    doc = Document()
+    doc.add_heading('Результат анализа договора - JurisClear AI', 0)
+    
+    clean_text = text.replace("[PAYWALL]", "").strip()
+    
+    # Разбиваем текст на параграфы для красоты
+    for paragraph in clean_text.split('\n'):
+        if paragraph.strip():
+            doc.add_paragraph(paragraph)
+    
+    bio = BytesIO()
+    doc.save(bio)
+    return bio.getvalue()
+
 # === НОВЫЙ ПРОФЕССИОНАЛЬНЫЙ ПРИМЕР ОТЧЕТА ===
 sample_text = """
 ### 📋 КРАТКОЕ РЕЗЮМЕ АУДИТА: ДОГОВОР ОКАЗАНИЯ УСЛУГ
@@ -455,12 +471,12 @@ with tab_audit:
                         st.markdown(f"<div class='report-card' style='border-left: 5px solid #28a745;'>{paid_part.strip()}</div>", unsafe_allow_html=True)
                         
                         # Ряд кнопок
-                        col_pdf, col_sup = st.columns(2)
+                        col_pdf, col_docx, col_sup = st.columns(3)
                         with col_pdf:
                             try:
                                 pdf_bytes = create_pdf(clean_res)
                                 st.download_button(
-                                    label="📥 Скачать отчет (PDF)",
+                                    label="📥 Скачать PDF",
                                     data=bytes(pdf_bytes),
                                     file_name=f"audit_{current_audit_id[:8]}.pdf",
                                     mime="application/pdf",
@@ -468,6 +484,19 @@ with tab_audit:
                                 )
                             except Exception as e:
                                 st.error(f"Ошибка PDF: {e}")
+                        
+                        with col_docx:
+                            try:
+                                docx_bytes = create_docx(clean_res)
+                                st.download_button(
+                                    label="📥 Скачать Word",
+                                    data=docx_bytes,
+                                    file_name=f"audit_{current_audit_id[:8]}.docx",
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    use_container_width=True
+                                )
+                            except Exception as e:
+                                st.error(f"Ошибка Word: {e}")
                         
                         with col_sup:
                             st.link_button("🆘 Поддержка", "https://t.me/твой_логин", use_container_width=True)
@@ -511,18 +540,33 @@ with tab_audit:
                     # Если PAYWALL нет в тексте
                     st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
                     
-                    # Кнопка скачивания PDF
-                    try:
-                        pdf_bytes = create_pdf(clean_res)
-                        st.download_button(
-                            label="📥 Скачать отчет (PDF)",
-                            data=bytes(pdf_bytes),
-                            file_name=f"audit_{current_audit_id[:8]}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                    except Exception as e:
-                        st.error(f"Ошибка PDF: {e}")
+                    # Кнопки скачивания
+                    col_pdf_f, col_docx_f = st.columns(2)
+                    with col_pdf_f:
+                        try:
+                            pdf_bytes = create_pdf(clean_res)
+                            st.download_button(
+                                label="📥 Скачать PDF",
+                                data=bytes(pdf_bytes),
+                                file_name=f"audit_{current_audit_id[:8]}.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+                        except Exception as e:
+                            st.error(f"Ошибка PDF: {e}")
+                    
+                    with col_docx_f:
+                        try:
+                            docx_bytes = create_docx(clean_res)
+                            st.download_button(
+                                label="📥 Скачать Word",
+                                data=docx_bytes,
+                                file_name=f"audit_{current_audit_id[:8]}.docx",
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True
+                            )
+                        except Exception as e:
+                            st.error(f"Ошибка Word: {e}")
 
                     if st.button("📁 Загрузить новый договор", key="btn_no_paywall_reset", use_container_width=True):
                         st.session_state.reset_counter += 1
@@ -584,18 +628,35 @@ with tab_history:
                         else:
                             st.markdown(res_text.replace("[PAYWALL]", ""))
                             
-                            # Кнопка скачивания PDF в истории (только если оплачено)
-                            try:
-                                pdf_bytes = create_pdf(res_text)
-                                st.download_button(
-                                    label="📥 Скачать PDF",
-                                    data=bytes(pdf_bytes),
-                                    file_name=f"audit_{date_str}.pdf",
-                                    mime="application/pdf",
-                                    key=f"dl_{audit['id']}"
-                                )
-                            except Exception as e:
-                                st.error(f"Ошибка PDF: {e}")
+                            # Кнопки скачивания в истории (только если оплачено)
+                            if audit['payment_status'] == 'paid':
+                                h_col1, h_col2 = st.columns(2)
+                                with h_col1:
+                                    try:
+                                        pdf_bytes = create_pdf(res_text)
+                                        st.download_button(
+                                            label="📥 Скачать PDF",
+                                            data=bytes(pdf_bytes),
+                                            file_name=f"audit_{date_str}.pdf",
+                                            mime="application/pdf",
+                                            key=f"dl_pdf_{audit['id']}",
+                                            use_container_width=True
+                                        )
+                                    except Exception as e:
+                                        st.error(f"Ошибка PDF: {e}")
+                                with h_col2:
+                                    try:
+                                        docx_bytes = create_docx(res_text)
+                                        st.download_button(
+                                            label="📥 Скачать Word",
+                                            data=docx_bytes,
+                                            file_name=f"audit_{date_str}.docx",
+                                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                            key=f"dl_docx_{audit['id']}",
+                                            use_container_width=True
+                                        )
+                                    except Exception as e:
+                                        st.error(f"Ошибка Word: {e}")
                             
         except Exception as e:
             st.error(f"Не удалось загрузить историю: {e}")
