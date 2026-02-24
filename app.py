@@ -492,45 +492,48 @@ with tab_audit:
                         "Язык: Русский."
                     )
 
-                    # Используем новую функцию для анализа длинного текста
+                    # Используем функцию для анализа длинного текста
                     raw_res = analyze_long_text(text, contract_type, user_role, special_instructions, prompt_instruction)
                     
+                    # Извлекаем оценку и очищаем текст для интерфейса
                     score_match = re.search(r"SCORE:\s*(\d+)", raw_res)
                     score = int(score_match.group(1)) if score_match else 5
                     clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
 
                     if clean_res:
-                        # --- ИНТЕГРИРОВАННЫЙ БЛОК СОХРАНЕНИЯ (ИЗ ВАШЕГО ЗАПРОСА) ---
+                        # --- ИНТЕГРИРОВАННЫЙ БЛОК СОХРАНЕНИЯ (ОБНОВЛЕННЫЙ) ---
                         if st.session_state.user:
-                            user_id = st.session_state.user.id # ID из Supabase Auth
+                            # Берем ID именно из объекта пользователя Supabase
+                            current_user_id = st.session_state.user.id 
                             
-                            data_to_insert = {
-                                "user_id": user_id,  # ЭТО КРИТИЧЕСКИ ВАЖНО ДЛЯ RLS
+                            # ПЕЧАТАЕМ ДЛЯ ПРОВЕРКИ (увидишь в терминале/логах)
+                            print(f"DEBUG: Попытка сохранения для пользователя: {current_user_id}")
+
+                            data_to_save = {
+                                "user_id": current_user_id, # Убедись, что колонка в БД называется именно user_id
                                 "contract_type": contract_type,
                                 "user_role": user_role,
-                                "raw_analysis": clean_res,
+                                "raw_analysis": raw_res,
                                 "payment_status": "pending"
                             }
                             
                             try:
-                                # Сохраняем в таблицу и получаем результат для session_state
-                                insert_result = supabase.table("contract_audits").insert(data_to_insert).execute()
+                                # Добавляем .execute() в конце
+                                response = supabase.table("contract_audits").insert(data_to_save).execute()
+                                st.success("Анализ успешно сохранен в базу!")
                                 
-                                # Записываем данные в сессию для отображения
+                                # Записываем данные в сессию для отображения и делаем реран
                                 st.session_state.analysis_result = clean_res
-                                st.session_state.current_audit_id = insert_result.data[0]['id']
+                                st.session_state.current_audit_id = response.data[0]['id']
                                 st.session_state.audit_score = score
-                                
                                 st.rerun()
+                                
                             except Exception as e:
                                 st.error(f"Ошибка при сохранении: {e}")
+                                # Выведем подробности ошибки для нас
+                                print(f"DEBUG ERROR: {e}") 
                         else:
-                            # Если пользователь не вошел, просто показываем результат без сохранения в БД
-                            st.warning("Пожалуйста, войдите в аккаунт, чтобы сохранить анализ.")
-                            st.session_state.analysis_result = clean_res
-                            st.session_state.current_audit_id = "temp_audit"
-                            st.session_state.audit_score = score
-                            st.rerun()
+                            st.error("Ошибка: Пользователь не авторизован. Войдите в систему.")
                         # -------------------------------------------------------
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
@@ -548,7 +551,6 @@ with tab_audit:
             """, unsafe_allow_html=True)
 
             if "analysis_result" in st.session_state:
-                # 1. Возвращаем зеленую плашку успеха
                 st.success("✅ Анализ и протокол разногласий успешно сформированы!")
 
                 clean_res = st.session_state.analysis_result
@@ -606,7 +608,6 @@ with tab_audit:
 
                         st.write("")
                         if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
-                            # Полная очистка
                             st.session_state.reset_counter += 1
                             keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
                             for k in keys_to_clear:
@@ -615,7 +616,6 @@ with tab_audit:
                     else:
                         st.warning("🔒 **Полный отчет и Протокол разногласий заблокированы.**")
                         
-                        # ДВЕ КНОПКИ В ОДИН РЯД
                         col1, col2 = st.columns(2)
                         with col1:
                             product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
@@ -629,21 +629,15 @@ with tab_audit:
                         st.write("")
                         st.divider()
 
-                        # КНОПКА ОТМЕНЫ (СБРОСА)
                         if st.button("❌ Отменить и загрузить другой файл", use_container_width=True):
-                            # Увеличиваем счетчик, чтобы сбросить file_uploader
                             st.session_state.reset_counter += 1
-                            # Очищаем данные анализа
                             keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
                             for k in keys_to_clear:
                                 if k in st.session_state: del st.session_state[k]
-                            # Принудительная перезагрузка
                             st.rerun()
                 else:
-                    # Если PAYWALL нет в тексте
                     st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
                     
-                    # Кнопки скачивания
                     col_pdf_f, col_docx_f = st.columns(2)
                     with col_pdf_f:
                         try:
@@ -680,7 +674,6 @@ with tab_audit:
 
     else:
         if "analysis_result" in st.session_state:
-            # Очистка если файл убран из uploader вручную
             keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
             for k in keys_to_clear:
                 if k in st.session_state: del st.session_state[k]
@@ -699,11 +692,9 @@ with tab_redline:
     if file_v1 and file_v2:
         if st.button("🚀 Найти отличия", use_container_width=True):
             with st.spinner("ИИ сравнивает документы..."):
-                # Используем новую функцию извлечения для сравнения (с поддержкой OCR)
                 text_v1 = extract_text_from_pdf(file_v1.getvalue())
                 text_v2 = extract_text_from_pdf(file_v2.getvalue())
                 
-                # Промпт для сравнения
                 compare_prompt = f"""
                 Ты — эксперт-юрист. Твоя задача сравнить две версии одного договора и найти отличия.
                 
