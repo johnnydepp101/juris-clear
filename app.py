@@ -25,103 +25,93 @@ if 'user' not in st.session_state:
 # --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
 st.markdown("""
     <style>
-    /* Прячем стандартные элементы Streamlit */
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
+    .block-container {padding-top: 1.5rem; max-width: 1000px;}
     
-    /* Контейнер страницы */
-    .block-container {
-        padding-top: 1.5rem; 
-        max-width: 1000px;
-        font-family: 'Inter', -apple-system, sans-serif;
+    /* Тарифные планы */
+    .pricing-card-single {
+        background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+        padding: 20px; border-radius: 15px; border: 1px solid #60a5fa; text-align: center; color: white;
     }
-
-    /* ВЫРАВНИВАНИЕ ХЕДЕРА (Лого и Вход) */
-    [data-testid="stHorizontalBlock"]:has(h1) {
-        align-items: center !important;
+    .pricing-card-pro {
+        background: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
+        padding: 20px; border-radius: 15px; border: 1px solid #34d399; text-align: center; color: white;
     }
     
-    /* Убираем лишние отступы у заголовка для точного центрирования */
-    h1 {
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
-        padding-bottom: 0 !important;
-    }
-
-    /* Карточки тарифов */
-    .pricing-card-single, .pricing-card-pro {
-        padding: 24px;
-        border-radius: 16px;
-        text-align: center;
-        color: white;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
-    .pricing-card-single:hover, .pricing-card-pro:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-    }
-    .pricing-card-single { background: linear-gradient(135deg, #1e293b 0%, #2563eb 100%); }
-    .pricing-card-pro { background: linear-gradient(135deg, #064e3b 0%, #059669 100%); border-color: #34d399; }
-
-    /* Карточка отчета (эффект стекла) */
+    /* Карточка отчета */
     .report-card {
-        background: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(10px);
-        border-left: 6px solid #3b82f6;
-        padding: 30px;
-        border-radius: 16px;
-        margin-top: 25px;
-        margin-bottom: 35px; /* Отступ от кнопок снизу */
-        color: #f8fafc;
-        line-height: 1.6;
-        border-top: 1px solid rgba(255,255,255,0.05);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background-color: #1e293b; border-left: 5px solid #3b82f6;
+        padding: 25px; border-radius: 12px; margin-top: 20px; color: #f1f5f9;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
     }
     
-    /* Отступ для таблиц внутри отчета */
-    .report-card table { margin-bottom: 20px !important; }
+    /* Объемный контейнер для шкалы риска */
+    .risk-meter-container {
+        background: #0f172a; border-radius: 15px; padding: 8px;
+        box-shadow: inset 0 3px 8px rgba(0,0,0,0.6); border: 1px solid #334155; margin: 15px 0;
+    }
+    
+    .stButton>button {
+        border-radius: 12px; height: 3.8em; font-weight: bold; transition: 0.3s;
+    }
+    /* Ультимативное выравнивание кнопок */
+    .stButton > button, .stLinkButton > a {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 50px !important; /* Фиксированная высота */
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 10px !important;
+        text-decoration: none !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+    }
 
-    /* КНОПКИ (Унификация) */
+    /* Цвет для кнопки-ссылки (Оплатить), чтобы она была как Primary */
+    .stLinkButton > a {
+        background-color: #3b82f6 !important;
+        color: white !important;
+        border: none !important;
+    }
+    .stLinkButton > a:hover {
+        background-color: #2563eb !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    }
+    /* Ультимативное выравнивание ВСЕХ кнопок: Обычных, Ссылок и Скачивания */
     .stButton > button, .stLinkButton > a, .stDownloadButton > button {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        height: 52px !important;
+        height: 50px !important;
         width: 100% !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease !important;
-        border: none !important;
+        margin: 0 !important;
+        padding: 10px 20px !important;
+        border-radius: 10px !important;
         text-decoration: none !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
     }
 
-    /* Основная синяя кнопка */
-    .stButton > button[kind="primary"], .stLinkButton > a {
-        background: #3b82f6 !important;
+    /* Цвет для кнопки скачивания (сделаем её чуть отличной, например, серой или оставить синей) */
+    .stDownloadButton > button {
+        background-color: #1e293b !important; /* Темно-синий/серый */
         color: white !important;
     }
-    .stButton > button[kind="primary"]:hover, .stLinkButton > a:hover {
-        background: #2563eb !important;
-        transform: scale(1.01);
+    .stDownloadButton > button:hover {
+        background-color: #334155 !important;
+        border-color: #3b82f6 !important;
     }
-
-    /* Вторичная кнопка */
-    .stDownloadButton > button, .stButton > button[kind="secondary"] {
-        background: #334155 !important;
-        color: #f1f5f9 !important;
+    
+    /* Цвет для кнопки Оплатить (Primary) */
+    .stLinkButton > a {
+        background-color: #3b82f6 !important;
+        color: white !important;
+        border: none !important;
     }
-
-    /* Стилизация табов */
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] {
-        height: 45px;
-        background-color: #1e293b;
-        border-radius: 10px 10px 0 0;
-        color: #94a3b8;
-    }
-    .stTabs [aria-selected="true"] { background-color: #3b82f6 !important; color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
