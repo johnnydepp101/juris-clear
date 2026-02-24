@@ -505,7 +505,7 @@ with tab_audit:
                             user_id = st.session_state.user.id # ID из Supabase Auth
                             
                             data_to_insert = {
-                                "user_id": user_id,  # ЭТО КРИТИЧЕСКИ ВАЖНО ДЛЯ RLS
+                                "user_id": st.session_state.user.id
                                 "contract_type": contract_type,
                                 "user_role": user_role,
                                 "raw_analysis": clean_res,
