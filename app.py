@@ -107,6 +107,29 @@ def sign_out():
     st.session_state.user = None
     st.rerun()
 
+# --- ФУНКЦИЯ СОЗДАНИЯ PDF ---
+def create_pdf(text):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Путь к шрифту
+    font_path = "DejaVuSans.ttf" 
+    
+    if os.path.exists(font_path):
+        pdf.add_font('DejaVu', '', font_path)
+        pdf.set_font('DejaVu', '', 12)
+    else:
+        # Если вдруг файла нет, будет Arial (но русский не отобразится)
+        pdf.set_font("Arial", size=12)
+    
+    clean_text = text.replace("[PAYWALL]", "").strip()
+    
+    # Умная разбивка текста на строки
+    for line in clean_text.split('\n'):
+        pdf.multi_cell(0, 10, txt=line)
+    
+    return pdf.output() # Для fpdf2 это вернет байты
+
 # === НОВЫЙ ПРОФЕССИОНАЛЬНЫЙ ПРИМЕР ОТЧЕТА ===
 sample_text = """
 ### 📋 КРАТКОЕ РЕЗЮМЕ АУДИТА: ДОГОВОР ОКАЗАНИЯ УСЛУГ
@@ -393,6 +416,16 @@ with tab_audit:
                         st.balloons()
                         st.markdown(f"<div class='report-card' style='border-left: 5px solid #28a745;'>{paid_part.strip()}</div>", unsafe_allow_html=True)
                         
+                        # Кнопка скачивания PDF
+                        pdf_bytes = create_pdf(clean_res)
+                        st.download_button(
+                            label="📥 Скачать полный отчет (PDF)",
+                            data=pdf_bytes,
+                            file_name="audit_report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+
                         st.write("")
                         if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
                             # Полная очистка
@@ -431,6 +464,17 @@ with tab_audit:
                 else:
                     # Если PAYWALL нет в тексте
                     st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
+                    
+                    # Кнопка скачивания PDF
+                    pdf_bytes = create_pdf(clean_res)
+                    st.download_button(
+                        label="📥 Скачать отчет (PDF)",
+                        data=pdf_bytes,
+                        file_name="audit_report.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+
                     if st.button("📁 Загрузить новый договор", key="btn_no_paywall_reset", use_container_width=True):
                         st.session_state.reset_counter += 1
                         keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
@@ -467,11 +511,11 @@ with tab_history:
         st.warning("Пожалуйста, войдите в аккаунт, чтобы просмотреть историю своих анализов.")
     else:
         try:
-            # Правильный синтаксис для сортировки: desc=True (для новых сверху)
+            # Запрашиваем из базы все анализы текущего пользователя
             history = supabase.table("contract_audits") \
                 .select("*") \
                 .eq("user_id", st.session_state.user.id) \
-                .order("created_at", desc=True) \
+                .order("created_at", ascending=False) \
                 .execute()
             
             if not history.data:
@@ -490,6 +534,16 @@ with tab_history:
                             st.warning("Этот отчет не оплачен. Оплатите его в основной вкладке, чтобы открыть полный доступ.")
                         else:
                             st.markdown(res_text.replace("[PAYWALL]", ""))
+                            
+                            # Кнопка скачивания PDF в истории (только если оплачено)
+                            pdf_bytes = create_pdf(res_text)
+                            st.download_button(
+                                label="📥 Скачать PDF",
+                                data=pdf_bytes,
+                                file_name=f"audit_{date_str}.pdf",
+                                mime="application/pdf",
+                                key=f"dl_{audit['id']}"
+                            )
                             
         except Exception as e:
             st.error(f"Не удалось загрузить историю: {e}")
