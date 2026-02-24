@@ -465,11 +465,11 @@ with tab_history:
         st.warning("Пожалуйста, войдите в аккаунт, чтобы просмотреть историю своих анализов.")
     else:
         try:
-            # Запрашиваем из базы все анализы текущего пользователя
+            # Правильный синтаксис для сортировки: desc=True (для новых сверху)
             history = supabase.table("contract_audits") \
                 .select("*") \
                 .eq("user_id", st.session_state.user.id) \
-                .order("created_at", ascending=False) \
+                .order("created_at", desc=True) \
                 .execute()
             
             if not history.data:
