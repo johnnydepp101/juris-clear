@@ -295,6 +295,82 @@ def analyze_long_text(full_text, contract_type, user_role, special_instructions,
     
     return final_response.choices[0].message.content
 
+# --- НОВАЯ ФУНКЦИЯ АНАЛИЗА (INTEGRATED) ---
+def generate_analysis(full_text, contract_type, user_role, special_reqs):
+
+    # --- НАСТРОЙКИ ЧАНКИНГА ---
+    MAX_CHUNK_SIZE = 15000  # Примерно 3000-4000 токенов
+
+    # 1. Если текст короткий, анализируем в один проход
+    if len(full_text) < MAX_CHUNK_SIZE:
+        prompt = f"""
+        Ты — профессиональный корпоративный юрист. Проведи полный аудит договора: {contract_type}.
+        Моя роль: {user_role}. Особые требования: {special_reqs if special_reqs else 'Нет'}.
+        Текст договора:
+        {full_text}
+        
+        Выдай отчет в Markdown: Резюме, Риски (Критический/Средний/Низкий), Топ-3 опасных пункта, Рекомендации.
+        """
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2
+        )
+        return response.choices[0].message.content
+
+    # 2. Если текст длинный — включаем логику ЧАНКИНГА
+    st.info(f"⏳ Договор очень длинный ({len(full_text)} симв.). Анализирую по частям...")
+    
+    paragraphs = full_text.split('\n\n')
+    chunks = []
+    current_chunk = ""
+    for p in paragraphs:
+        if len(current_chunk) + len(p) < MAX_CHUNK_SIZE:
+            current_chunk += p + "\n\n"
+        else:
+            chunks.append(current_chunk)
+            current_chunk = p + "\n\n"
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    # Собираем риски из каждой части
+    partial_risks = []
+    progress_bar = st.progress(0)
+    
+    for i, chunk in enumerate(chunks):
+        st.write(f"Сканирую часть {i+1} из {len(chunks)}...")
+        chunk_prompt = f"Найди все юридические риски в этой части договора {contract_type} для роли {user_role}. Текст:\n{chunk}"
+        
+        chunk_res = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": chunk_prompt}],
+            temperature=0
+        )
+        partial_risks.append(chunk_res.choices[0].message.content)
+        progress_bar.progress((i + 1) / len(chunks))
+
+    # --- ФИНАЛЬНЫЙ СИНТЕЗ ---
+    st.write("Сборка финального отчета...")
+    all_risks_text = "\n\n".join(partial_risks)
+    
+    final_prompt = f"""
+    Ты — старший юрист. Перед тобой список рисков, найденных в разных частях одного договора ({contract_type}).
+    Твоя задача: объединить их в один логичный, структурированный отчет для клиента ({user_role}).
+    Исключи повторы и выдели самые критические моменты.
+    
+    Список всех найденных рисков:
+    {all_risks_text}
+    
+    Выдай финальный отчет в Markdown: Резюме, Общая оценка рисков, Детальный список ловушек, Рекомендации.
+    """
+    
+    final_res = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": final_prompt}],
+        temperature=0.2
+    )
+    return final_res.choices[0].message.content
+
 # === НОВЫЙ ПРОФЕССИОНАЛЬНЫЙ ПРИМЕР ОТЧЕТА ===
 sample_text = """
 ### 📋 КРАТКОЕ РЕЗЮМЕ АУДИТА: ДОГОВОР ОКАЗАНИЯ УСЛУГ
