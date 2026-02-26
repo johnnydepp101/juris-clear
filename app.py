@@ -32,6 +32,21 @@ st.markdown("""
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
     .block-container {padding-top: 1.5rem; max-width: 1000px;}
+
+    /* Полностью скрываем иконки-цепочки (якоря) у заголовков */
+.stMarkdown h1 a, 
+.stMarkdown h2 a, 
+.stMarkdown h3 a, 
+.stMarkdown h4 a, 
+.stMarkdown h5 a, 
+.stMarkdown h6 a {
+    display: none !important;
+}
+
+/* Дополнительно убираем отступ, который они оставляли */
+[data-testid="stMarkdownHeader"] a {
+    display: none !important;
+}
     
     /* Тарифные планы */
     .pricing-card-single {
