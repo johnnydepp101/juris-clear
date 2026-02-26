@@ -47,6 +47,21 @@ st.markdown("""
 [data-testid="stMarkdownHeader"] a {
     display: none !important;
 }
+
+/* 1. ПОЛНОЕ УДАЛЕНИЕ ЯКОРЕЙ И ЦЕПОЧЕК */
+    [data-testid="stMarkdownHeader"] a, 
+    .header-anchor, 
+    svg.header-anchor-icon, 
+    button[kind="header_action"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* 2. УБИРАЕМ ЛИШНИЕ ОТСТУПЫ У ЗАГОЛОВКОВ */
+    [data-testid="stMarkdownHeader"] {
+        padding: 0 !important;
+        margin-top: 0.5rem !important;
+    }
     
     /* Тарифные планы */
     .pricing-card-single {
