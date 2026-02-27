@@ -977,53 +977,36 @@ with tab_history:
                     with st.expander(f"📄 {audit['contract_type']} от {date_str} — {status}"):
                         res_text = audit['raw_analysis']
                         current_id = audit['id']
-                        
-                        # Сначала проверяем: имеет ли пользователь Pro-статус или оплачен ли этот конкретный аудит
-                        is_pro_active = st.session_state.get('user_is_pro', False) # Эту переменную мы получим при входе
+
+                        is_pro_active = st.session_state.get('user_is_pro', False)
                         is_paid = audit['payment_status'] == 'paid'
-                        
+
                         if is_paid or is_pro_active:
-                            # --- ВАРИАНТ 1: ДОСТУП ОТКРЫТ ---
                             st.markdown(res_text.replace("[PAYWALL]", ""))
-                            
+                            # Кнопки скачивания (здесь key нужен и он работает)
                             h_col1, h_col2 = st.columns(2)
                             with h_col1:
                                 pdf_bytes = create_pdf(res_text)
-                                st.download_button(
-                                    label="📥 Скачать PDF",
-                                    data=bytes(pdf_bytes),
-                                    file_name=f"audit_{date_str}.pdf",
-                                    mime="application/pdf",
-                                    key=f"dl_pdf_{current_id}",
-                                    use_container_width=True
-                                )
+                                st.download_button("📥 Скачать PDF", bytes(pdf_bytes), f"audit_{date_str}.pdf", "application/pdf", key=f"dl_pdf_{current_id}", use_container_width=True)
                             with h_col2:
                                 docx_bytes = create_docx(res_text)
-                                st.download_button(
-                                    label="📝 Скачать Word",
-                                    data=docx_bytes,
-                                    file_name=f"audit_{date_str}.docx",
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    key=f"dl_docx_{current_id}",
-                                    use_container_width=True
-                                )
+                                st.download_button("📝 Скачать Word", docx_bytes, f"audit_{date_str}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_docx_{current_id}", use_container_width=True)
                         else:
-                            # --- ВАРИАНТ 2: ДОСТУП ЗАКРЫТ (ОПЛАТА НА МЕСТЕ) ---
                             if "[PAYWALL]" in res_text:
-                                st.markdown(res_text.split("[PAYWALL]")[0]) # Показываем только превью
-                                
-                                st.warning("🔒 Этот отчет не оплачен. Вы можете разблокировать его прямо сейчас:")
-                                
+                                st.markdown(res_text.split("[PAYWALL]")[0])
+
+                                st.warning("🔒 Этот отчет не оплачен.")
+
                                 h_pay_col1, h_pay_col2 = st.columns(2)
                                 with h_pay_col1:
-                                    # Формируем ссылку на оплату именно этого ID
                                     product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
+                                    # УБРАН key=... из link_button
                                     payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_id}"
-                                    st.link_button("🚀 Оплатить доступ (850 ₽)", payment_url, use_container_width=True, key=f"pay_btn_{current_id}")
-                                
+                                    st.link_button("🚀 Оплатить доступ (850 ₽)", payment_url, use_container_width=True)
+
                                 with h_pay_col2:
+                                    # В обычной кнопке key ОБЯЗАТЕЛЕН внутри цикла
                                     if st.button("🔄 Проверить оплату", use_container_width=True, key=f"check_btn_{current_id}"):
-                                        # Повторно запрашиваем статус из базы для конкретной записи
                                         check_res = supabase.table("contract_audits").select("payment_status").eq("id", current_id).single().execute()
                                         if check_res.data and check_res.data.get("payment_status") == "paid":
                                             st.success("Оплата подтверждена!")
