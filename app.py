@@ -26,32 +26,6 @@ if 'reset_counter' not in st.session_state:
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-# 1. ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ
-if "payment" in st.query_params and st.query_params["payment"] == "success":
-    st.toast("🎉 Оплата получена! Доступ обновляется...", icon="✅")
-    
-    # Очищаем параметры URL, чтобы сообщение не мелькало постоянно
-    st.query_params.clear()
-    
-    # Принудительно обновляем статус Pro в сессии, если пользователь вошел
-    if st.session_state.get('user'):
-        res = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).limit(1).execute()
-        if res.data:
-            st.session_state.user_is_pro = res.data[0].get("is_pro", False)
-            
-    # Короткая пауза, чтобы база успела обновиться от вебхука
-    import time
-    time.sleep(1.5)
-    st.rerun()
-
-# 2. АВТОМАТИЧЕСКАЯ ПРОВЕРКА СТАТУСА (если пользователь уже на странице)
-if st.session_state.get('user') and not st.session_state.get('user_is_pro'):
-    # Проверяем, не купил ли он Pro, пока сидел на странице
-    check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).eq("is_pro", True).execute()
-    if check_pro.data:
-        st.session_state.user_is_pro = True
-        st.success("Ваш статус обновлен до Безлимит Pro!")
-
 # --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
 st.markdown("""
     <style>
@@ -582,14 +556,9 @@ with col_tar2:
                     • Приоритетная поддержка 24/7
                 </div>
             </div>
+            <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
         </div>
     """, unsafe_allow_html=True)
-    if st.session_state.get('user'):
-        u_id = st.session_state.user.id
-        pro_link = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8?checkout[custom][user_id]={u_id}&checkout[custom][is_pro]=true"
-        st.link_button("🚀 Оформить подписку", pro_link, use_container_width=True)
-    else:
-        st.warning("Пожалуйста, войдите в аккаунт, чтобы купить подписку.")
 
 st.divider()
 
