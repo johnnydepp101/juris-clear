@@ -22,35 +22,46 @@ st.set_page_config(
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
 
-# --- ИНИЦИАЛИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ ---
+# --- 2. ИНИЦИАЛИЗАЦИЯ КЛИЕНТОВ И СЕССИИ ---
+# Создаем клиент Supabase сразу, чтобы он был доступен во всем коде
+supabase_url = st.secrets["SUPABASE_URL"]
+supabase_key = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
+supabase: Client = create_client(supabase_url, supabase_key)
+
 if 'user' not in st.session_state:
     st.session_state.user = None
+if 'user_is_pro' not in st.session_state:
+    st.session_state.user_is_pro = False
 
-# 1. ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ
+# --- 3. ОБРАБОТКА ПОСЛЕ ОПЛАТЫ (WEBHOOK & REDIRECT) ---
+# Проверка параметра из URL (возврат из Lemon Squeezy)
 if "payment" in st.query_params and st.query_params["payment"] == "success":
     st.toast("🎉 Оплата получена! Доступ обновляется...", icon="✅")
-    
-    # Очищаем параметры URL, чтобы сообщение не мелькало постоянно
     st.query_params.clear()
     
-    # Принудительно обновляем статус Pro в сессии, если пользователь вошел
-    if st.session_state.get('user'):
+    if st.session_state.user:
+        # Сразу проверяем в базе, обновил ли вебхук статус
         res = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).limit(1).execute()
         if res.data:
             st.session_state.user_is_pro = res.data[0].get("is_pro", False)
-            
-    # Короткая пауза, чтобы база успела обновиться от вебхука
+
     import time
     time.sleep(1.5)
     st.rerun()
 
-# 2. АВТОМАТИЧЕСКАЯ ПРОВЕРКА СТАТУСА (если пользователь уже на странице)
-if st.session_state.get('user') and not st.session_state.get('user_is_pro'):
-    # Проверяем, не купил ли он Pro, пока сидел на странице
-    check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).eq("is_pro", True).execute()
-    if check_pro.data:
-        st.session_state.user_is_pro = True
-        st.success("Ваш статус обновлен до Безлимит Pro!")
+# Автоматическая проверка статуса Pro при каждом обновлении, если пользователь вошел
+if st.session_state.user and not st.session_state.user_is_pro:
+    try:
+        check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).eq("is_pro", True).execute()
+        if check_pro.data:
+            st.session_state.user_is_pro = True
+            st.success("Ваш статус обновлен до Безлимит Pro!")
+    except Exception:
+        pass
+
+# --- 4. ЗАГОЛОВОК И ИНТЕРФЕЙС ---
+st.title("⚖️ JurisClear AI")
+st.subheader("Профессиональный юридический аудит договоров")
 
 # --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
 st.markdown("""
@@ -199,13 +210,6 @@ def get_risk_params(score):
 # --- 4. ПОДКЛЮЧЕНИЕ API И БАЗЫ ДАННЫХ ---
 # OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-# Supabase
-url: str = st.secrets["SUPABASE_URL"]
-key: str = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(url, key)
-# Используем Service Role Key, чтобы обойти проблемы с JWT в Streamlit
-supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
 # Функция для выхода
 def sign_out():
