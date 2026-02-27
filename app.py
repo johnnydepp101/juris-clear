@@ -485,47 +485,73 @@ with header_col2:
 
 st.markdown("<p style='text-align: center; color: gray;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
-# --- ТАРИФЫ (ОБНОВЛЕННАЯ ЛОГИКА) ---
-col_tar1, col_tar2 = st.columns(2)
+# --- ОБНОВЛЕННЫЕ ТАРИФЫ С ФИКСИРОВАННОЙ ВЫСОТОЙ ---
+st.markdown("""
+    <style>
+    .pricing-container {
+        display: flex;
+        gap: 20px;
+        align-items: stretch;
+    }
+    .pricing-card-fixed {
+        background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+        padding: 25px;
+        border-radius: 15px;
+        border: 1px solid #60a5fa;
+        color: white;
+        height: 420px; /* Фиксированная высота для обеих карточек */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Распределяет контент: текст сверху, инфо/кнопка снизу */
+    }
+    .pricing-card-pro-fixed {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        border: 1px solid #60a5fa;
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-with col_tar1:
+col_a, col_b = st.columns(2)
+
+with col_a:
     st.markdown("""
-        <div style="background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); 
-                    padding: 25px; border-radius: 15px; border: 1px solid #3b82f6; height: 320px;">
-            <div style="font-size: 20px; font-weight: 600; color: #fff;">Разовый аудит</div>
-            <div style="font-size: 32px; font-weight: 800; margin: 10px 0; color: #fff;">850 ₽</div>
-            <div style="font-size: 14px; color: #cbd5e1; margin-bottom: 20px;">
-                • Глубокий анализ одного документа<br>
-                • Оценка рисков и рекомендации<br>
-                • Экспорт в PDF и Word<br>
-                • <i>Оплата происходит после загрузки файла</i>
+        <div class="pricing-card-fixed">
+            <div>
+                <h3 style='margin-bottom:0;'>Разовый аудит</h3>
+                <h2 style='margin-top:0; color: #fff;'>850 ₽</h2>
+                <p style='font-size: 0.9em; color: #cbd5e1;'>
+                    • Глубокий анализ одного документа<br>
+                    • Оценка рисков и рекомендации<br>
+                    • Экспорт в PDF и Word
+                </p>
+            </div>
+            <div style='background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 0.85em;'>
+                ℹ️ Оплата происходит в конце анализа
             </div>
         </div>
     """, unsafe_allow_html=True)
-    # Кнопки здесь нет — она появится в блоке результатов анализа
 
-with col_tar2:
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); 
-                    padding: 25px; border-radius: 15px; border: 1px solid #60a5fa; height: 320px;
-                    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);">
-            <div style="font-size: 20px; font-weight: 600; color: #fff;">Безлимит Pro</div>
-            <div style="font-size: 32px; font-weight: 800; margin: 10px 0; color: #fff;">2500 ₽ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
-            <div style="font-size: 14px; color: #e0f2fe; margin-bottom: 20px;">
-                • Неограниченное количество проверок<br>
-                • Доступ ко всем функциям сразу<br>
-                • Приоритетная поддержка 24/7<br>
-                • История всех документов навсегда
+with col_b:
+    # Здесь мы используем контейнер, чтобы кнопка Streamlit "вписалась" в дизайн
+    with st.container():
+        st.markdown("""
+            <div class="pricing-card-fixed pricing-card-pro-fixed">
+                <div>
+                    <h3 style='margin-bottom:0;'>Безлимит Pro</h3>
+                    <h2 style='margin-top:0; color: #fff;'>2500 ₽ <small style='font-size: 0.5em;'>/мес</small></h2>
+                    <p style='font-size: 0.9em; color: #e0f2fe;'>
+                        • Неограниченное количество проверок<br>
+                        • Доступ ко всем функциям сразу<br>
+                        • Приоритетная поддержка 24/7<br>
+                        • История всех документов навсегда
+                    </p>
+                </div>
+                <div id="btn-placeholder"></div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Кнопка подписки (Безлимит Pro)
-    if st.button("🚀 Оформить подписку", use_container_width=True, type="primary", key="pro_btn"):
-        # Здесь будет вызов функции оплаты (Lemon Squeezy или Stripe)
-        # После успешного ответа — обновление Supabase
-        st.session_state.upgrade_trigger = True
-        st.info("Перенаправление на страницу оплаты...")
+        """, unsafe_allow_html=True)
+        # Кнопка ставится сразу под div, но за счет CSS контейнера она будет выглядеть частью карточки
+        st.link_button("🚀 Оформить подписку", "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8", use_container_width=True)
 
 st.divider()
 
