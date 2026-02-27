@@ -26,6 +26,32 @@ if 'reset_counter' not in st.session_state:
 if 'user' not in st.session_state:
     st.session_state.user = None
 
+# 1. ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ
+if "payment" in st.query_params and st.query_params["payment"] == "success":
+    st.toast("🎉 Оплата получена! Доступ обновляется...", icon="✅")
+    
+    # Очищаем параметры URL, чтобы сообщение не мелькало постоянно
+    st.query_params.clear()
+    
+    # Принудительно обновляем статус Pro в сессии, если пользователь вошел
+    if st.session_state.get('user'):
+        res = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).limit(1).execute()
+        if res.data:
+            st.session_state.user_is_pro = res.data[0].get("is_pro", False)
+            
+    # Короткая пауза, чтобы база успела обновиться от вебхука
+    import time
+    time.sleep(1.5)
+    st.rerun()
+
+# 2. АВТОМАТИЧЕСКАЯ ПРОВЕРКА СТАТУСА (если пользователь уже на странице)
+if st.session_state.get('user') and not st.session_state.get('user_is_pro'):
+    # Проверяем, не купил ли он Pro, пока сидел на странице
+    check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).eq("is_pro", True).execute()
+    if check_pro.data:
+        st.session_state.user_is_pro = True
+        st.success("Ваш статус обновлен до Безлимит Pro!")
+
 # --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
 st.markdown("""
     <style>
