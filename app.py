@@ -187,6 +187,21 @@ def sign_out():
     st.session_state.user = None
     st.rerun()
 
+def check_access_level(user_id, document_id):
+    # 1. Запрашиваем данные по пользователю и документу
+    res = supabase.table("contract_audits").select("*").eq("id", document_id).execute()
+    
+    if res.data:
+        doc_data = res.data[0]
+        # 2. Проверяем, есть ли глобальный Pro-статус
+        if doc_data.get("is_pro") == True:
+            # Тут можно добавить проверку даты pro_until
+            return "full"
+        # 3. Проверяем, оплачен ли конкретно этот документ (Разовый аудит)
+        if doc_data.get("payment_status") == "paid":
+            return "full"
+    return "preview"
+
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
     """
@@ -694,6 +709,25 @@ with tab_audit:
                                 # Записываем данные в сессию для отображения и делаем реран
                                 st.session_state.analysis_result = clean_res
                                 st.session_state.current_audit_id = response.data[0]['id']
+                                
+                                # Интеграция логики превью и проверки доступа
+                                current_doc_id = st.session_state.current_audit_id
+                                
+                                # Показываем краткое резюме (превью)
+                                if "[PAYWALL]" in clean_res:
+                                    preview_text = clean_res.split("[PAYWALL]")[0]
+                                    st.write(preview_text)
+                                
+                                # Проверяем доступ
+                                access = check_access_level(st.session_state.user.id, current_doc_id)
+                                
+                                if access == "full":
+                                    # Показываем полный анализ
+                                    st.markdown("### Полный юридический анализ")
+                                    st.write(clean_res.replace("[PAYWALL]", ""))
+                                else:
+                                    st.warning("🔒 Полный отчет и Протокол разногласий заблокированы.")
+                                
                                 st.session_state.audit_score = score
                                 st.rerun()
                                 
@@ -751,10 +785,13 @@ with tab_audit:
                         except:
                             is_pro = False
 
+                    # Использование новой функции check_access_level
+                    access_level = check_access_level(st.session_state.user.id, current_audit_id) if st.session_state.user else "preview"
+
                     # ЛОГИКА ДОСТУПА: Если куплен разово ИЛИ есть подписка Pro
-                    if is_paid or is_pro:
+                    if is_paid or is_pro or access_level == "full":
                         st.balloons()
-                        if is_pro:
+                        if is_pro or (access_level == "full" and not is_paid):
                             st.success("✨ Доступ предоставлен по подписке Pro")
                         else:
                             st.success("🎉 Оплата подтверждена!")
