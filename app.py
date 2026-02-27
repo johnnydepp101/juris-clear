@@ -485,17 +485,16 @@ with header_col2:
 
 st.markdown("<p style='text-align: center; color: gray;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
-# --- ТАРИФЫ С ИНТЕГРИРОВАННОЙ КНОПКОЙ ---
+# --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
 col_tar1, col_tar2 = st.columns(2)
 
-# Общий стиль для карточек
 card_style = """
     display: flex; 
     flex-direction: column; 
     justify-content: space-between; 
     padding: 25px; 
     border-radius: 15px; 
-    height: 380px; 
+    height: 420px; 
     color: white;
 """
 
@@ -505,46 +504,36 @@ with col_tar1:
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">850 ₽</div>
-                <div style="font-size: 14px; opacity: 0.8; line-height: 1.6;">
-                    • Глубокий анализ одного документа<br>
-                    • Оценка рисков и рекомендации<br>
-                    • Экспорт в PDF и Word
+                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                    • <b>Бесплатное резюме</b> основных рисков<br>
+                    • Детальный юридический разбор (Full Report)<br>
+                    • Конкретные правки для защиты ваших интересов<br>
+                    • Экспорт отчета в PDF и Word<br>
+                    • Доступ к результату в истории навсегда
                 </div>
             </div>
-            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; text-align: center; font-size: 13px;">
-                ℹ️ Оплата происходит после анализа
+            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; text-align: center; font-size: 12px;">
+                ℹ️ Оплачивайте только если результат вас устроит
             </div>
         </div>
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    # Замени URL на свою ссылку Lemon Squeezy
     checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
-    
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">2500 ₽ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
-                <div style="font-size: 14px; opacity: 0.8; line-height: 1.6;">
-                    • Неограниченное количество проверок<br>
-                    • Доступ ко всем функциям сразу<br>
-                    • Приоритетная поддержка 24/7<br>
-                    • История всех документов навсегда
+                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                    • <b>Неограниченное</b> количество документов<br>
+                    • Полные отчеты <b>мгновенно</b> без доплат<br>
+                    • Персональный архив всех проверок<br>
+                    • Самая мощная модель ИИ (GPT-4o)<br>
+                    • Приоритетная поддержка 24/7
                 </div>
             </div>
-            <a href="{checkout_url}" target="_blank" style="
-                display: block; 
-                background: white; 
-                color: #1d4ed8; 
-                text-align: center; 
-                padding: 12px; 
-                border-radius: 10px; 
-                text-decoration: none; 
-                font-weight: 700; 
-                font-size: 15px;
-                transition: 0.3s;
-            ">🚀 Оформить подписку</a>
+            <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
         </div>
     """, unsafe_allow_html=True)
 
