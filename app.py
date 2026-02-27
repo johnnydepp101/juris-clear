@@ -731,9 +731,24 @@ with tab_audit:
                     except:
                         is_paid = False
 
-                    if is_paid:
+                    # Проверка подписки Pro (Безлимит)
+                    is_pro = False
+                    if st.session_state.user:
+                        try:
+                            # Предполагаем наличие таблицы profiles или поля в auth с типом подписки
+                            user_data = supabase.table("profiles").select("is_pro").eq("id", st.session_state.user.id).single().execute()
+                            is_pro = user_data.data.get("is_pro", False)
+                        except:
+                            is_pro = False
+
+                    # ЛОГИКА ДОСТУПА: Если куплен разово ИЛИ есть подписка Pro
+                    if is_paid or is_pro:
                         st.balloons()
-                        st.success("🎉 Оплата подтверждена!")
+                        if is_pro:
+                            st.success("✨ Доступ предоставлен по подписке Pro")
+                        else:
+                            st.success("🎉 Оплата подтверждена!")
+                            
                         st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
                         
                         # Три колонки для кнопок
