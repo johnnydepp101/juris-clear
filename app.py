@@ -520,13 +520,6 @@ st.markdown("<p style='text-align: center; color: gray;'>Профессиона�
                 </div>
             </div>
         """, unsafe_allow_html=True)
-        
-        # Кнопка подписки (Безлимит Pro)
-        if st.button("🚀 Оформить подписку", use_container_width=True, type="primary", key="pro_btn"):
-            # Здесь будет вызов функции оплаты (Lemon Squeezy или Stripe)
-            # После успешного ответа — обновление Supabase
-            st.session_state.upgrade_trigger = True 
-            st.info("Перенаправление на страницу оплаты...")
 
 st.divider()
 
