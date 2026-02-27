@@ -62,6 +62,18 @@ st.markdown("""
         padding: 0 !important;
         margin-top: 0.5rem !important;
     }
+
+    /* ЦЕНТРИРОВАНИЕ ХЕДЕРА ПО ВЕРТИКАЛИ */
+    [data-testid="stHorizontalBlock"] {
+        align-items: center !important;
+    }
+
+    /* УБИРАЕМ ЛИШНИЙ ОТСТУП У ЛОГОТИПА */
+    [data-testid="column"] h1 {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2 !important;
+    }
     
     /* Тарифные планы */
     .pricing-card-single {
@@ -434,7 +446,7 @@ sample_text = """
 header_col1, header_col2 = st.columns([3, 1])
 
 with header_col1:
-    st.markdown(f"<h1 style='color: white;'>⚖️ JurisClear <span style='color:#3b82f6'>AI</span></h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='color: white; margin: 0; padding: 0;'>⚖️ JurisClear <span style='color:#3b82f6'>AI</span></h1>", unsafe_allow_html=True)
 
 with header_col2:
     # Если пользователь не вошел
