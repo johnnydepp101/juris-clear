@@ -476,6 +476,14 @@ with header_col2:
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email, "password": password})
                         st.session_state.user = res.user
+                        
+                        # Загружаем профиль пользователя для проверки Pro-статуса
+                        user_data = supabase.table("contract_audits").select("is_pro").eq("user_id", res.user.id).limit(1).execute()
+                        if user_data.data:
+                            st.session_state.user_is_pro = user_data.data[0].get("is_pro", False)
+                        else:
+                            st.session_state.user_is_pro = False
+                            
                         st.success("Успешный вход!")
                         st.rerun()
                     except Exception as e:
@@ -968,40 +976,60 @@ with tab_history:
                     
                     with st.expander(f"📄 {audit['contract_type']} от {date_str} — {status}"):
                         res_text = audit['raw_analysis']
-                        if "[PAYWALL]" in res_text and audit['payment_status'] != 'paid':
-                            st.markdown(res_text.split("[PAYWALL]")[0])
-                            st.warning("Этот отчет не оплачен. Оплатите его в основной вкладке, чтобы открыть полный доступ.")
-                        else:
+                        current_id = audit['id']
+                        
+                        # Сначала проверяем: имеет ли пользователь Pro-статус или оплачен ли этот конкретный аудит
+                        is_pro_active = st.session_state.get('user_is_pro', False) # Эту переменную мы получим при входе
+                        is_paid = audit['payment_status'] == 'paid'
+                        
+                        if is_paid or is_pro_active:
+                            # --- ВАРИАНТ 1: ДОСТУП ОТКРЫТ ---
                             st.markdown(res_text.replace("[PAYWALL]", ""))
                             
-                            if audit['payment_status'] == 'paid':
-                                h_col1, h_col2 = st.columns(2)
-                                with h_col1:
-                                    try:
-                                        pdf_bytes = create_pdf(res_text)
-                                        st.download_button(
-                                            label="📥 Скачать PDF",
-                                            data=bytes(pdf_bytes),
-                                            file_name=f"audit_{date_str}.pdf",
-                                            mime="application/pdf",
-                                            key=f"dl_pdf_{audit['id']}",
-                                            use_container_width=True
-                                        )
-                                    except Exception as e:
-                                        st.error(f"Ошибка PDF: {e}")
-                                with h_col2:
-                                    try:
-                                        docx_bytes = create_docx(res_text)
-                                        st.download_button(
-                                            label="📥 Скачать Word",
-                                            data=docx_bytes,
-                                            file_name=f"audit_{date_str}.docx",
-                                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                            key=f"dl_docx_{audit['id']}",
-                                            use_container_width=True
-                                        )
-                                    except Exception as e:
-                                        st.error(f"Ошибка Word: {e}")
+                            h_col1, h_col2 = st.columns(2)
+                            with h_col1:
+                                pdf_bytes = create_pdf(res_text)
+                                st.download_button(
+                                    label="📥 Скачать PDF",
+                                    data=bytes(pdf_bytes),
+                                    file_name=f"audit_{date_str}.pdf",
+                                    mime="application/pdf",
+                                    key=f"dl_pdf_{current_id}",
+                                    use_container_width=True
+                                )
+                            with h_col2:
+                                docx_bytes = create_docx(res_text)
+                                st.download_button(
+                                    label="📝 Скачать Word",
+                                    data=docx_bytes,
+                                    file_name=f"audit_{date_str}.docx",
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key=f"dl_docx_{current_id}",
+                                    use_container_width=True
+                                )
+                        else:
+                            # --- ВАРИАНТ 2: ДОСТУП ЗАКРЫТ (ОПЛАТА НА МЕСТЕ) ---
+                            if "[PAYWALL]" in res_text:
+                                st.markdown(res_text.split("[PAYWALL]")[0]) # Показываем только превью
+                                
+                                st.warning("🔒 Этот отчет не оплачен. Вы можете разблокировать его прямо сейчас:")
+                                
+                                h_pay_col1, h_pay_col2 = st.columns(2)
+                                with h_pay_col1:
+                                    # Формируем ссылку на оплату именно этого ID
+                                    product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
+                                    payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_id}"
+                                    st.link_button("🚀 Оплатить доступ (850 ₽)", payment_url, use_container_width=True, key=f"pay_btn_{current_id}")
+                                
+                                with h_pay_col2:
+                                    if st.button("🔄 Проверить оплату", use_container_width=True, key=f"check_btn_{current_id}"):
+                                        # Повторно запрашиваем статус из базы для конкретной записи
+                                        check_res = supabase.table("contract_audits").select("payment_status").eq("id", current_id).single().execute()
+                                        if check_res.data and check_res.data.get("payment_status") == "paid":
+                                            st.success("Оплата подтверждена!")
+                                            st.rerun()
+                                        else:
+                                            st.error("Оплата еще не поступила. Если вы уже оплатили, подождите 1-2 минуты.")
                             
         except Exception as e:
             st.error(f"Не удалось загрузить историю: {e}")
