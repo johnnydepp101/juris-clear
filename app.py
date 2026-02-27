@@ -685,59 +685,47 @@ with tab_audit:
                     clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
 
                     if clean_res:
-                        # --- ИНТЕГРИРОВАННЫЙ БЛОК СОХРАНЕНИЯ (ОБНОВЛЕННЫЙ) ---
+                        # --- УЛУЧШЕННЫЙ БЛОК СОХРАНЕНИЯ С ОБРАБОТКОЙ ОШИБОК ---
                         if st.session_state.user:
-                            # Берем ID именно из объекта пользователя Supabase
-                            current_user_id = st.session_state.user.id 
-                            
-                            # ПЕЧАТАЕМ ДЛЯ ПРОВЕРКИ (увидишь в терминале/логах)
-                            print(f"DEBUG: Попытка сохранения для пользователя: {current_user_id}")
-
+                            current_user_id = st.session_state.user.id
+                            # 1. Формируем данные (ТЕПЕРЬ С SCORE)
                             data_to_save = {
-                                "user_id": current_user_id, # Убедись, что колонка в БД называется именно user_id
+                                "user_id": current_user_id,
                                 "contract_type": contract_type,
                                 "user_role": user_role,
                                 "raw_analysis": raw_res,
-                                "payment_status": "pending"
+                                "payment_status": "pending",
+                                "score": score, # ТЕПЕРЬ SCORE БУДЕТ СОХРАНЯТЬСЯ
+                                "user_role": user_role # Убедись, что это поле есть в БД
                             }
                             
                             try:
-                                # Добавляем .execute() в конце
+                                # Проверяем наличие соединения перед отправкой
                                 response = supabase.table("contract_audits").insert(data_to_save).execute()
-                                st.success("Анализ успешно сохранен в базу!")
                                 
-                                # Записываем данные в сессию для отображения и делаем реран
-                                st.session_state.analysis_result = clean_res
-                                st.session_state.current_audit_id = response.data[0]['id']
-                                
-                                # Интеграция логики превью и проверки доступа
-                                current_doc_id = st.session_state.current_audit_id
-                                
-                                # Показываем краткое резюме (превью)
-                                if "[PAYWALL]" in clean_res:
-                                    preview_text = clean_res.split("[PAYWALL]")[0]
-                                    st.write(preview_text)
-                                
-                                # Проверяем доступ
-                                access = check_access_level(st.session_state.user.id, current_doc_id)
-                                
-                                if access == "full":
-                                    # Показываем полный анализ
-                                    st.markdown("### Полный юридический анализ")
-                                    st.write(clean_res.replace("[PAYWALL]", ""))
+                                if response.data:
+                                    st.success("✅ Анализ успешно сохранен в облако.")
+                                    st.session_state.analysis_result = clean_res
+                                    st.session_state.current_audit_id = response.data[0]['id']
+                                    st.session_state.audit_score = score
+                                    st.rerun()
                                 else:
-                                    st.warning("🔒 Полный отчет и Протокол разногласий заблокированы.")
-                                
-                                st.session_state.audit_score = score
-                                st.rerun()
-                                
+                                    st.error("Ошибка: База данных не вернула подтверждение сохранения.")
+
                             except Exception as e:
-                                st.error(f"Ошибка при сохранении: {e}")
-                                # Выведем подробности ошибки для нас
-                                print(f"DEBUG ERROR: {e}") 
+                                # Обработка отсутствия интернета или ошибки сервера
+                                error_msg = str(e)
+                                if "connection" in error_msg.lower():
+                                    st.error("📡 Ошибка соединения: Проверьте интернет или статус Supabase.")
+                                else:
+                                    st.error(f"❌ Критическая ошибка базы данных: {error_msg}")
+                                
+                                # Позволяем пользователю увидеть результат даже если база упала
+                                st.warning("⚠️ Результат показан без сохранения в историю.")
+                                st.session_state.analysis_result = clean_res
+                                st.session_state.audit_score = score
                         else:
-                            st.error("Ошибка: Пользователь не авторизован. Войдите в систему.")
-                        # -------------------------------------------------------
+                            st.error("Ошибка: Сессия пользователя истекла. Пожалуйста, войдите снова.")
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
             score = st.session_state.get("audit_score", 5)
