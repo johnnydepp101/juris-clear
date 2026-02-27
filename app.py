@@ -485,73 +485,68 @@ with header_col2:
 
 st.markdown("<p style='text-align: center; color: gray;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
-# --- ОБНОВЛЕННЫЕ ТАРИФЫ С ФИКСИРОВАННОЙ ВЫСОТОЙ ---
-st.markdown("""
-    <style>
-    .pricing-container {
-        display: flex;
-        gap: 20px;
-        align-items: stretch;
-    }
-    .pricing-card-fixed {
-        background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
-        padding: 25px;
-        border-radius: 15px;
-        border: 1px solid #60a5fa;
-        color: white;
-        height: 420px; /* Фиксированная высота для обеих карточек */
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between; /* Распределяет контент: текст сверху, инфо/кнопка снизу */
-    }
-    .pricing-card-pro-fixed {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        border: 1px solid #60a5fa;
-        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-    }
-    </style>
-""", unsafe_allow_html=True)
+# --- ТАРИФЫ С ИНТЕГРИРОВАННОЙ КНОПКОЙ ---
+col_tar1, col_tar2 = st.columns(2)
 
-col_a, col_b = st.columns(2)
+# Общий стиль для карточек
+card_style = """
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    padding: 25px; 
+    border-radius: 15px; 
+    height: 380px; 
+    color: white;
+"""
 
-with col_a:
-    st.markdown("""
-        <div class="pricing-card-fixed">
+with col_tar1:
+    st.markdown(f"""
+        <div style="{card_style} background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); border: 1px solid #3b82f6;">
             <div>
-                <h3 style='margin-bottom:0;'>Разовый аудит</h3>
-                <h2 style='margin-top:0; color: #fff;'>850 ₽</h2>
-                <p style='font-size: 0.9em; color: #cbd5e1;'>
+                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
+                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">850 ₽</div>
+                <div style="font-size: 14px; opacity: 0.8; line-height: 1.6;">
                     • Глубокий анализ одного документа<br>
                     • Оценка рисков и рекомендации<br>
                     • Экспорт в PDF и Word
-                </p>
+                </div>
             </div>
-            <div style='background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 0.85em;'>
-                ℹ️ Оплата происходит в конце анализа
+            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; text-align: center; font-size: 13px;">
+                ℹ️ Оплата происходит после анализа
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-with col_b:
-    # Здесь мы используем контейнер, чтобы кнопка Streamlit "вписалась" в дизайн
-    with st.container():
-        st.markdown("""
-            <div class="pricing-card-fixed pricing-card-pro-fixed">
-                <div>
-                    <h3 style='margin-bottom:0;'>Безлимит Pro</h3>
-                    <h2 style='margin-top:0; color: #fff;'>2500 ₽ <small style='font-size: 0.5em;'>/мес</small></h2>
-                    <p style='font-size: 0.9em; color: #e0f2fe;'>
-                        • Неограниченное количество проверок<br>
-                        • Доступ ко всем функциям сразу<br>
-                        • Приоритетная поддержка 24/7<br>
-                        • История всех документов навсегда
-                    </p>
+with col_tar2:
+    # Замени URL на свою ссылку Lemon Squeezy
+    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
+    
+    st.markdown(f"""
+        <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
+            <div>
+                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
+                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">2500 ₽ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
+                <div style="font-size: 14px; opacity: 0.8; line-height: 1.6;">
+                    • Неограниченное количество проверок<br>
+                    • Доступ ко всем функциям сразу<br>
+                    • Приоритетная поддержка 24/7<br>
+                    • История всех документов навсегда
                 </div>
-                <div id="btn-placeholder"></div>
             </div>
-        """, unsafe_allow_html=True)
-        # Кнопка ставится сразу под div, но за счет CSS контейнера она будет выглядеть частью карточки
-        st.link_button("🚀 Оформить подписку", "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8", use_container_width=True)
+            <a href="{checkout_url}" target="_blank" style="
+                display: block; 
+                background: white; 
+                color: #1d4ed8; 
+                text-align: center; 
+                padding: 12px; 
+                border-radius: 10px; 
+                text-decoration: none; 
+                font-weight: 700; 
+                font-size: 15px;
+                transition: 0.3s;
+            ">🚀 Оформить подписку</a>
+        </div>
+    """, unsafe_allow_html=True)
 
 st.divider()
 
