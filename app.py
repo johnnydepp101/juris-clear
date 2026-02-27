@@ -32,7 +32,7 @@ st.markdown("""
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
     .block-container {padding-top: 1.5rem; max-width: 1000px;}
-
+            
     /* Полностью скрываем иконки-цепочки (якоря) у заголовков */
 .stMarkdown h1 a, 
 .stMarkdown h2 a, 
@@ -486,15 +486,15 @@ with header_col2:
 st.markdown("<p style='text-align: center; color: gray;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
 # Секция цен
-    col_a, col_b = st.columns(2)
-        with col_a:
-            st.markdown(f"<div class='pricing-card-single'><h3>Разовый аудит</h3><h2>850 ₽</h2></div>", unsafe_allow_html=True)
-            st.write("")
-            st.link_button("Купить доступ", "https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61", use_container_width=True)
-        with col_b:
-            st.markdown(f"<div class='pricing-card-pro'><h3>Безлимит Pro</h3><h2>2500 ₽ <small>/мес</small></h2></div>", unsafe_allow_html=True)
-            st.write("")
-            st.link_button("Купить доступ", "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8", use_container_width=True)
+col_a, col_b = st.columns(2)
+with col_a:
+    st.markdown(f"<div class='pricing-card-single'><h3>Разовый аудит</h3><h2>850 ₽</h2></div>", unsafe_allow_html=True)
+    st.write("")
+    st.link_button("Купить доступ", "https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61", use_container_width=True)
+with col_b:
+    st.markdown(f"<div class='pricing-card-pro'><h3>Безлимит Pro</h3><h2>2500 ₽ <small>/мес</small></h2></div>", unsafe_allow_html=True)
+    st.write("")
+    st.link_button("Купить доступ", "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8", use_container_width=True)
 
 st.divider()
 
