@@ -582,9 +582,14 @@ with col_tar2:
                     • Приоритетная поддержка 24/7
                 </div>
             </div>
-            <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
         </div>
     """, unsafe_allow_html=True)
+    if st.session_state.get('user'):
+        u_id = st.session_state.user.id
+        pro_link = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8?checkout[custom][user_id]={u_id}&checkout[custom][is_pro]=true"
+        st.link_button("🚀 Оформить подписку", pro_link, use_container_width=True)
+    else:
+        st.warning("Пожалуйста, войдите в аккаунт, чтобы купить подписку.")
 
 st.divider()
 
