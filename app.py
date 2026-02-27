@@ -19,6 +19,53 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+
+# --- 2. ИНИЦИАЛИЗАЦИЯ SUPABASE (Теперь ПЕРЕД использованием) ---
+# Эти данные берем из секретов Streamlit
+try:
+    supabase_url = st.secrets["SUPABASE_URL"]
+    supabase_key = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
+    supabase: Client = create_client(supabase_url, supabase_key)
+except Exception as e:
+    st.error(f"Ошибка подключения к базе данных: {e}")
+
+# --- 3. ИНИЦИАЛИЗАЦИЯ СЕССИИ ---
+if 'user' not in st.session_state:
+    st.session_state.user = None
+if 'user_is_pro' not in st.session_state:
+    st.session_state.user_is_pro = False
+if 'reset_counter' not in st.session_state:
+    st.session_state.reset_counter = 0
+
+# --- 4. ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ (REDIRECT LOGIC) ---
+if "payment" in st.query_params and st.query_params["payment"] == "success":
+    st.toast("🎉 Оплата получена! Доступ обновляется...", icon="✅")
+    st.query_params.clear()
+    
+    # Если пользователь залогинен, проверяем его статус в базе
+    if st.session_state.user:
+        try:
+            res = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).limit(1).execute()
+            if res.data:
+                st.session_state.user_is_pro = res.data[0].get("is_pro", False)
+        except:
+            pass
+    
+    time.sleep(1.5)
+    st.rerun()
+
+# Автоматическая проверка Pro-статуса
+if st.session_state.user and not st.session_state.user_is_pro:
+    try:
+        check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", st.session_state.user.id).eq("is_pro", True).execute()
+        if check_pro.data:
+            st.session_state.user_is_pro = True
+            st.success("Ваш статус обновлен до Безлимит Pro!")
+    except:
+        pass
+
+
+
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
 
