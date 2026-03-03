@@ -10,15 +10,6 @@ from io import BytesIO
 import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
-import extra_streamlit_components as stx  # Функция для работы с куки
-from datetime import datetime, timedelta
-import time
-
-# --- ИНИЦИАЛИЗАЦИЯ КУКИ-МЕНЕДЖЕРА ---
-def get_manager():
-    return stx.CookieManager()
-
-cookie_manager = get_manager()
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -27,59 +18,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
-# --- ИНИЦИАЛИЗАЦИЯ SUPABASE ---
-supabase_url = st.secrets["SUPABASE_URL"]
-supabase_key = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
-supabase: Client = create_client(supabase_url, supabase_key)
-
-# --- ЛОГИКА АВТО-ЛОГИНА (Восстановление сессии) ---
-if 'user' not in st.session_state:
-    st.session_state.user = None
-
-if st.session_state.user is None:
-    # Пытаемся достать токен из браузера
-    saved_token = cookie_manager.get(cookie="sb_token")
-    if saved_token:
-        try:
-            # Проверяем токен через Supabase
-            user_res = supabase.auth.get_user(saved_token)
-            if user_res.user:
-                st.session_state.user = user_res.user
-        except:
-            pass
-# --- ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ (ФИНАЛЬНАЯ ВЕРСИЯ) ---
-if "payment" in st.query_params and st.query_params.get("payment") == "success":
-    returned_audit_id = st.query_params.get("audit_id")
-    
-    # Очищаем параметры, чтобы не войти в бесконечный цикл реранов
-    st.query_params.clear()
-
-    with st.status("🚀 Синхронизация данных...", expanded=True) as status:
-        time.sleep(2) # Ждем вебхук
-        
-        if returned_audit_id:
-            try:
-                # Теперь 'supabase' точно существует и запрос сработает
-                res = supabase.table("contract_audits").select("*").eq("id", returned_audit_id).execute()
-                
-                if res.data and len(res.data) > 0:
-                    audit_data = res.data[0]
-                    
-                    # Заполняем твои переменные
-                    st.session_state.analysis_result = audit_data.get('raw_analysis')
-                    st.session_state.audit_score = audit_data.get('score')
-                    st.session_state.current_audit_id = returned_audit_id
-                    st.session_state.payment_done = True
-                    
-                    status.update(label="✅ Готово! Открываем отчёт...", state="complete")
-                    st.balloons()
-                    time.sleep(1)
-                    st.rerun() # Обновляем экран, чтобы показать данные
-                else:
-                    status.update(label="⌛ Платеж принят, но база еще обновляется. Зайдите в Историю через минуту.", state="error")
-            except Exception as e:
-                st.error(f"Ошибка базы: {e}")
 
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
@@ -235,6 +173,14 @@ def get_risk_params(score):
 # --- 4. ПОДКЛЮЧЕНИЕ API И БАЗЫ ДАННЫХ ---
 # OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+# Supabase
+url: str = st.secrets["SUPABASE_URL"]
+key: str = st.secrets["SUPABASE_KEY"]
+supabase: Client = create_client(url, key)
+# Используем Service Role Key, чтобы обойти проблемы с JWT в Streamlit
+supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
+
 # Функция для выхода
 def sign_out():
     supabase.auth.sign_out()
@@ -529,20 +475,15 @@ with header_col2:
                 if st.button("Войти", use_container_width=True, type="primary"):
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-                        # Сохраняем токен в куки на 7 дней
-                        if res.user:
-                            st.session_state.user = res.user
-                            cookie_manager.set("sb_token", res.session.access_token, expires_at=datetime.now() + timedelta(days=7), key="set_token")
-                        user_data = res.user
-                        st.session_state.user = user_data
-
-                        # Проверяем, есть ли у пользователя статус Pro в таблице
-                        # Мы ищем ЛЮБУЮ запись этого пользователя, где стоит флаг is_pro = True
-                        check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", user_data.id).eq("is_pro", True).limit(1).execute()
-                        if check_pro.data and len(check_pro.data) > 0:
-                            st.session_state.user_is_pro = True
+                        st.session_state.user = res.user
+                        
+                        # Загружаем профиль пользователя для проверки Pro-статуса
+                        user_data = supabase.table("contract_audits").select("is_pro").eq("user_id", res.user.id).limit(1).execute()
+                        if user_data.data:
+                            st.session_state.user_is_pro = user_data.data[0].get("is_pro", False)
                         else:
                             st.session_state.user_is_pro = False
+                            
                         st.success("Успешный вход!")
                         st.rerun()
                     except Exception as e:
@@ -601,15 +542,7 @@ with col_tar1:
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    # 1. Сначала задаем значение по умолчанию
-    checkout_url = "#"
-    # 2. Если пользователь вошел, формируем реальную ссылку на оплату
-    if st.session_state.get('user'):
-        u_id = st.session_state.user.id
-        # Для Pro подписки:
-        pro_uuid = "69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
-        checkout_url = f"https://jurisclearai.lemonsqueezy.com/buy/{pro_uuid}?checkout[custom][user_id]={u_id}&checkout[custom][is_pro]=true"
-    # 3. Вывод карточки
+    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
@@ -902,10 +835,8 @@ with tab_audit:
                         
                         col1, col2 = st.columns(2)
                         with col1:
-                            # Замени старый product_id на новый Variant ID
-                            # Для разового аудита:
-                            audit_uuid = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61"
-                            payment_url = f"https://jurisclearai.lemonsqueezy.com/buy/{audit_uuid}?checkout[custom][audit_id]={current_audit_id}"
+                            product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
+                            payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_audit_id}"
                             st.link_button("🚀 Оплатить Premium (850 ₽)", payment_url, use_container_width=True)
                         
                         with col2:
@@ -1068,10 +999,9 @@ with tab_history:
 
                                 h_pay_col1, h_pay_col2 = st.columns(2)
                                 with h_pay_col1:
-                                    # Замени старый product_id на новый Variant ID
-                                    # Для разового аудита:
-                                    audit_uuid = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61"
-                                    payment_url = f"https://jurisclearai.lemonsqueezy.com/buy/{audit_uuid}?checkout[custom][audit_id]={current_id}"
+                                    product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
+                                    # УБРАН key=... из link_button
+                                    payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_id}"
                                     st.link_button("🚀 Оплатить доступ (850 ₽)", payment_url, use_container_width=True)
 
                                 with h_pay_col2:
