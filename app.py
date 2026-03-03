@@ -11,6 +11,7 @@ import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
 import extra_streamlit_components as stx  # Функция для работы с куки
+from datetime import datetime, timedelta
 import time
 
 # --- ИНИЦИАЛИЗАЦИЯ КУКИ-МЕНЕДЖЕРА ---
