@@ -475,15 +475,16 @@ with header_col2:
                 if st.button("Войти", use_container_width=True, type="primary"):
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-                        st.session_state.user = res.user
-                        
-                        # Загружаем профиль пользователя для проверки Pro-статуса
-                        user_data = supabase.table("contract_audits").select("is_pro").eq("user_id", res.user.id).limit(1).execute()
-                        if user_data.data:
-                            st.session_state.user_is_pro = user_data.data[0].get("is_pro", False)
+                        user_data = res.user
+                        st.session_state.user = user_data
+
+                        # Проверяем, есть ли у пользователя статус Pro в таблице
+                        # Мы ищем ЛЮБУЮ запись этого пользователя, где стоит флаг is_pro = True
+                        check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", user_data.id).eq("is_pro", True).limit(1).execute()
+                        if check_pro.data and len(check_pro.data) > 0:
+                            st.session_state.user_is_pro = True
                         else:
                             st.session_state.user_is_pro = False
-                            
                         st.success("Успешный вход!")
                         st.rerun()
                     except Exception as e:
