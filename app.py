@@ -40,31 +40,45 @@ if st.session_state.user is None:
                 st.session_state.user = user_res.user
         except:
             pass
-# --- ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ (УЛУЧШЕННАЯ) ---
-if "payment" in st.query_params and st.query_params["payment"] == "success":
+# --- ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ (ФИНАЛЬНАЯ ВЕРСИЯ) ---
+if "payment" in st.query_params and st.query_params.get("payment") == "success":
+    # 1. Получаем ID анализа из ссылки
     returned_audit_id = st.query_params.get("audit_id")
-    st.query_params.clear() # Очищаем URL сразу
     
-    with st.spinner("🚀 Почти готово! Загружаем ваш отчет..."):
-        # Даем вебхуку 2 секунды, чтобы он точно обновил базу
+    # 2. Сразу очищаем URL, чтобы при обновлении страницы код не срабатывал повторно
+    st.query_params.clear()
+
+    with st.status("🚀 Синхронизация данных... Почти готово!", expanded=True) as status:
+        # Даем вебхуку время (2 секунды) на обновление статуса в базе
         time.sleep(2)
         
         if returned_audit_id:
-            # Запрашиваем данные именно этого анализа
-            res = supabase.table("contract_audits").select("*").eq("id", returned_audit_id).execute()
-            
-            if res.data:
-                audit_data = res.data[0]
+            try:
+                # 3. Идем в базу данных Supabase за данными этого анализа
+                res = supabase.table("contract_audits").select("*").eq("id", returned_audit_id).execute()
                 
-                # ВАЖНО: Заполняем session_state данными из базы
-                st.session_state.analysis_result = audit_data.get('raw_analysis').replace("SCORE:", "").strip() if audit_data.get('raw_analysis') else None
-                st.session_state.audit_score = audit_data.get('score')
-                st.session_state.current_audit_id = returned_audit_id
-                st.session_state.payment_complete = True # Флаг, что оплата прошла
-                
-                st.balloons()
-                st.success("Доступ открыт! Ваш отчет готов.")
-                st.rerun()
+                if res.data:
+                    audit_data = res.data[0]
+                    
+                    # 4. "ГИДРАТАЦИЯ" — Наполняем сессию данными из базы
+                    # Теперь приложение думает, что анализ только что произошел
+                    st.session_state.analysis_result = audit_data.get('raw_analysis')
+                    st.session_state.audit_score = audit_data.get('score')
+                    st.session_state.current_audit_id = returned_audit_id
+                    
+                    # Если у тебя есть флаг, отвечающий за "открытость" отчета, ставим его
+                    st.session_state.payment_done = True
+                    
+                    status.update(label="✅ Данные восстановлены! Открываем отчет...", state="complete")
+                    st.balloons()
+                else:
+                    status.update(label="⚠️ Анализ найден в базе, но данные еще не обновились.", state="error")
+            except Exception as e:
+                st.error(f"Ошибка при загрузке данных: {e}")
+
+    # 5. Принудительно обновляем интерфейс, чтобы показать результат
+    time.sleep(1)
+    st.rerun()
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
