@@ -846,7 +846,7 @@ with tab_audit:
                         with col1:
                             # Замени старый product_id на новый Variant ID
                             # Для разового аудита:
-                            audit_uuid = "ТВОЙ_UUID_ИЗ_КНОПКИ_SHARE_ДЛЯ_SINGLE_AUDIT"
+                            audit_uuid = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61"
                             payment_url = f"https://jurisclearai.lemonsqueezy.com/buy/{audit_uuid}?checkout[custom][audit_id]={current_audit_id}"
                             st.link_button("🚀 Оплатить Premium (850 ₽)", payment_url, use_container_width=True)
                         
@@ -1012,7 +1012,7 @@ with tab_history:
                                 with h_pay_col1:
                                     # Замени старый product_id на новый Variant ID
                                     # Для разового аудита:
-                                    audit_uuid = "ТВОЙ_UUID_ИЗ_КНОПКИ_SHARE_ДЛЯ_SINGLE_AUDIT"
+                                    audit_uuid = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61"
                                     payment_url = f"https://jurisclearai.lemonsqueezy.com/buy/{audit_uuid}?checkout[custom][audit_id]={current_id}"
                                     st.link_button("🚀 Оплатить доступ (850 ₽)", payment_url, use_container_width=True)
 
