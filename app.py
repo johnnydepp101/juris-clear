@@ -20,6 +20,14 @@ def get_manager():
 
 cookie_manager = get_manager()
 
+# --- 1. НАСТРОЙКА СТРАНИЦЫ ---
+st.set_page_config(
+    page_title="JurisClear AI",
+    page_icon="⚖️",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
 # --- ИНИЦИАЛИЗАЦИЯ SUPABASE ---
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
@@ -42,51 +50,36 @@ if st.session_state.user is None:
             pass
 # --- ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ (ФИНАЛЬНАЯ ВЕРСИЯ) ---
 if "payment" in st.query_params and st.query_params.get("payment") == "success":
-    # 1. Получаем ID анализа из ссылки
     returned_audit_id = st.query_params.get("audit_id")
     
-    # 2. Сразу очищаем URL, чтобы при обновлении страницы код не срабатывал повторно
+    # Очищаем параметры, чтобы не войти в бесконечный цикл реранов
     st.query_params.clear()
 
-    with st.status("🚀 Синхронизация данных... Почти готово!", expanded=True) as status:
-        # Даем вебхуку время (2 секунды) на обновление статуса в базе
-        time.sleep(2)
+    with st.status("🚀 Синхронизация данных...", expanded=True) as status:
+        time.sleep(2) # Ждем вебхук
         
         if returned_audit_id:
             try:
-                # 3. Идем в базу данных Supabase за данными этого анализа
+                # Теперь 'supabase' точно существует и запрос сработает
                 res = supabase.table("contract_audits").select("*").eq("id", returned_audit_id).execute()
                 
-                if res.data:
+                if res.data and len(res.data) > 0:
                     audit_data = res.data[0]
                     
-                    # 4. "ГИДРАТАЦИЯ" — Наполняем сессию данными из базы
-                    # Теперь приложение думает, что анализ только что произошел
+                    # Заполняем твои переменные
                     st.session_state.analysis_result = audit_data.get('raw_analysis')
                     st.session_state.audit_score = audit_data.get('score')
                     st.session_state.current_audit_id = returned_audit_id
-                    
-                    # Если у тебя есть флаг, отвечающий за "открытость" отчета, ставим его
                     st.session_state.payment_done = True
                     
-                    status.update(label="✅ Данные восстановлены! Открываем отчет...", state="complete")
+                    status.update(label="✅ Готово! Открываем отчёт...", state="complete")
                     st.balloons()
+                    time.sleep(1)
+                    st.rerun() # Обновляем экран, чтобы показать данные
                 else:
-                    status.update(label="⚠️ Анализ найден в базе, но данные еще не обновились.", state="error")
+                    status.update(label="⌛ Платеж принят, но база еще обновляется. Зайдите в Историю через минуту.", state="error")
             except Exception as e:
-                st.error(f"Ошибка при загрузке данных: {e}")
-
-    # 5. Принудительно обновляем интерфейс, чтобы показать результат
-    time.sleep(1)
-    st.rerun()
-
-# --- 1. НАСТРОЙКА СТРАНИЦЫ ---
-st.set_page_config(
-    page_title="JurisClear AI",
-    page_icon="⚖️",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+                st.error(f"Ошибка базы: {e}")
 
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
