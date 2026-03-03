@@ -8,3 +8,4 @@ python-docx
 pytesseract
 pdf2image
 Pillow
+extra-streamlit-components
