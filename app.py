@@ -10,6 +10,28 @@ from io import BytesIO
 import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
+import extra_streamlit_components as stx  # Функция для работы с куки
+from datetime import datetime, timedelta
+
+def get_cookie_manager():
+    return stx.CookieManager()
+
+cookie_manager = get_cookie_manager()
+
+# Попытка авто-логина при запуске
+if 'user' not in st.session_state or st.session_state.user is None:
+    saved_token = cookie_manager.get(cookie="supabase_token")
+    if saved_token:
+        # Пытаемся восстановить сессию через токен
+        try:
+            res = supabase.auth.get_user(saved_token)
+            if res.user:
+                st.session_state.user = res.user
+                # После входа сразу проверяем Pro-статус
+                check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", res.user.id).eq("is_pro", True).limit(1).execute()
+                st.session_state.user_is_pro = any(row.get("is_pro") for row in check_pro.data) if check_pro.data else False
+        except:
+            pass
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -475,6 +497,11 @@ with header_col2:
                 if st.button("Войти", use_container_width=True, type="primary"):
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                        
+                        # Сохранение токена в куки для авто-логина
+                        session = res.session
+                        cookie_manager.set("supabase_token", session.access_token, expires_at=datetime.now() + timedelta(days=7))
+                        
                         user_data = res.user
                         st.session_state.user = user_data
 
