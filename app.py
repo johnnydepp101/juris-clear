@@ -546,7 +546,7 @@ with col_tar2:
     # Убедись, что пользователь вошел в систему
     if st.session_state.user:
         u_id = st.session_state.user.id
-        checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/1312656?checkout[custom][user_id]={u_id}&checkout[custom][is_pro]=true"
+        checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/1312656?checkout[custom][user_id]={u_id}&checkout[custom][is_pro]=true"
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
