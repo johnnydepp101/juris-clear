@@ -12,26 +12,49 @@ from pdf2image import convert_from_bytes
 from PIL import Image
 import extra_streamlit_components as stx  # Функция для работы с куки
 from datetime import datetime, timedelta
+import time
 
-def get_cookie_manager():
+# --- ИНИЦИАЛИЗАЦИЯ КУКИ-МЕНЕДЖЕРА ---
+def get_manager():
     return stx.CookieManager()
 
-cookie_manager = get_cookie_manager()
+cookie_manager = get_manager()
 
-# Попытка авто-логина при запуске
-if 'user' not in st.session_state or st.session_state.user is None:
-    saved_token = cookie_manager.get(cookie="supabase_token")
+# --- ИНИЦИАЛИЗАЦИЯ SUPABASE ---
+supabase_url = st.secrets["SUPABASE_URL"]
+supabase_key = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
+supabase: Client = create_client(supabase_url, supabase_key)
+
+# --- ЛОГИКА АВТО-ЛОГИНА (Восстановление сессии) ---
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
+if st.session_state.user is None:
+    # Пытаемся достать токен из браузера
+    saved_token = cookie_manager.get(cookie="sb_token")
     if saved_token:
-        # Пытаемся восстановить сессию через токен
         try:
-            res = supabase.auth.get_user(saved_token)
-            if res.user:
-                st.session_state.user = res.user
-                # После входа сразу проверяем Pro-статус
-                check_pro = supabase.table("contract_audits").select("is_pro").eq("user_id", res.user.id).eq("is_pro", True).limit(1).execute()
-                st.session_state.user_is_pro = any(row.get("is_pro") for row in check_pro.data) if check_pro.data else False
+            # Проверяем токен через Supabase
+            user_res = supabase.auth.get_user(saved_token)
+            if user_res.user:
+                st.session_state.user = user_res.user
         except:
             pass
+
+# --- ОБРАБОТКА ПОСЛЕ ОПЛАТЫ ---
+if "payment" in st.query_params and st.query_params["payment"] == "success":
+    st.query_params.clear() # Очищаем URL
+    with st.status("💎 Проверяем оплату...", expanded=True) as status:
+        time.sleep(2)
+        if st.session_state.user:
+            res = supabase.table("contract_audits").select("payment_status").eq("user_id", st.session_state.user.id).order("created_at", desc=True).limit(1).execute()
+            if res.data and res.data[0]['payment_status'] == 'paid':
+                status.update(label="✅ Оплата подтверждена! Открываем отчет...", state="complete")
+                st.balloons()
+            else:
+                status.update(label="⏳ Платеж обрабатывается. Пожалуйста, обновите страницу через 5 секунд.", state="error")
+        time.sleep(1)
+    st.rerun()
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -195,14 +218,6 @@ def get_risk_params(score):
 # --- 4. ПОДКЛЮЧЕНИЕ API И БАЗЫ ДАННЫХ ---
 # OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-# Supabase
-url: str = st.secrets["SUPABASE_URL"]
-key: str = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(url, key)
-# Используем Service Role Key, чтобы обойти проблемы с JWT в Streamlit
-supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
-
 # Функция для выхода
 def sign_out():
     supabase.auth.sign_out()
@@ -497,11 +512,10 @@ with header_col2:
                 if st.button("Войти", use_container_width=True, type="primary"):
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-                        
-                        # Сохранение токена в куки для авто-логина
-                        session = res.session
-                        cookie_manager.set("supabase_token", session.access_token, expires_at=datetime.now() + timedelta(days=7))
-                        
+                        # Сохраняем токен в куки на 7 дней
+                        if res.user:
+                            st.session_state.user = res.user
+                            cookie_manager.set("sb_token", res.session.access_token, expires_at=datetime.now() + timedelta(days=7), key="set_token")
                         user_data = res.user
                         st.session_state.user = user_data
 
