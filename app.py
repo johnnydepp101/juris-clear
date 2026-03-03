@@ -40,21 +40,31 @@ if st.session_state.user is None:
                 st.session_state.user = user_res.user
         except:
             pass
-
-# --- ОБРАБОТКА ПОСЛЕ ОПЛАТЫ ---
+# --- ОБРАБОТКА ВОЗВРАТА ПОСЛЕ ОПЛАТЫ (УЛУЧШЕННАЯ) ---
 if "payment" in st.query_params and st.query_params["payment"] == "success":
-    st.query_params.clear() # Очищаем URL
-    with st.status("💎 Проверяем оплату...", expanded=True) as status:
+    returned_audit_id = st.query_params.get("audit_id")
+    st.query_params.clear() # Очищаем URL сразу
+    
+    with st.spinner("🚀 Почти готово! Загружаем ваш отчет..."):
+        # Даем вебхуку 2 секунды, чтобы он точно обновил базу
         time.sleep(2)
-        if st.session_state.user:
-            res = supabase.table("contract_audits").select("payment_status").eq("user_id", st.session_state.user.id).order("created_at", desc=True).limit(1).execute()
-            if res.data and res.data[0]['payment_status'] == 'paid':
-                status.update(label="✅ Оплата подтверждена! Открываем отчет...", state="complete")
+        
+        if returned_audit_id:
+            # Запрашиваем данные именно этого анализа
+            res = supabase.table("contract_audits").select("*").eq("id", returned_audit_id).execute()
+            
+            if res.data:
+                audit_data = res.data[0]
+                
+                # ВАЖНО: Заполняем session_state данными из базы
+                st.session_state.analysis_result = audit_data.get('raw_analysis').replace("SCORE:", "").strip() if audit_data.get('raw_analysis') else None
+                st.session_state.audit_score = audit_data.get('score')
+                st.session_state.current_audit_id = returned_audit_id
+                st.session_state.payment_complete = True # Флаг, что оплата прошла
+                
                 st.balloons()
-            else:
-                status.update(label="⏳ Платеж обрабатывается. Пожалуйста, обновите страницу через 5 секунд.", state="error")
-        time.sleep(1)
-    st.rerun()
+                st.success("Доступ открыт! Ваш отчет готов.")
+                st.rerun()
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
