@@ -1,4 +1,5 @@
 streamlit
+extra-streamlit-components
 openai
 PyPDF2
 pdfplumber
@@ -8,4 +9,3 @@ python-docx
 pytesseract
 pdf2image
 Pillow
-extra-streamlit-components
