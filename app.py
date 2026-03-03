@@ -548,7 +548,9 @@ with col_tar2:
     # 2. Если пользователь вошел, формируем реальную ссылку на оплату
     if st.session_state.get('user'):
         u_id = st.session_state.user.id
-        checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/1312656?checkout[custom][user_id]={u_id}&checkout[custom][is_pro]=true"
+        # Для Pro подписки:
+        pro_uuid = "69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
+        checkout_url = f"https://jurisclearai.lemonsqueezy.com/buy/{pro_uuid}?checkout[custom][user_id]={u_id}&checkout[custom][is_pro]=true"
     # 3. Вывод карточки
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
@@ -843,8 +845,9 @@ with tab_audit:
                         col1, col2 = st.columns(2)
                         with col1:
                             # Замени старый product_id на новый Variant ID
-                            product_variant_id = "1312648"
-                            payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_variant_id}?checkout[custom][audit_id]={current_audit_id}"
+                            # Для разового аудита:
+                            audit_uuid = "ТВОЙ_UUID_ИЗ_КНОПКИ_SHARE_ДЛЯ_SINGLE_AUDIT"
+                            payment_url = f"https://jurisclearai.lemonsqueezy.com/buy/{audit_uuid}?checkout[custom][audit_id]={current_audit_id}"
                             st.link_button("🚀 Оплатить Premium (850 ₽)", payment_url, use_container_width=True)
                         
                         with col2:
@@ -1008,8 +1011,9 @@ with tab_history:
                                 h_pay_col1, h_pay_col2 = st.columns(2)
                                 with h_pay_col1:
                                     # Замени старый product_id на новый Variant ID
-                                    product_variant_id = "1312648"
-                                    payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_variant_id}?checkout[custom][audit_id]={current_id}"
+                                    # Для разового аудита:
+                                    audit_uuid = "ТВОЙ_UUID_ИЗ_КНОПКИ_SHARE_ДЛЯ_SINGLE_AUDIT"
+                                    payment_url = f"https://jurisclearai.lemonsqueezy.com/buy/{audit_uuid}?checkout[custom][audit_id]={current_id}"
                                     st.link_button("🚀 Оплатить доступ (850 ₽)", payment_url, use_container_width=True)
 
                                 with h_pay_col2:
