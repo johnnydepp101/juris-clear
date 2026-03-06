@@ -631,7 +631,16 @@ with col_tar1:
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
+    # 1. Базовая ссылка из Lemon Squeezy
+    base_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
+    
+    # 2. Формируем динамическую ссылку с User ID
+    # Если пользователь не вошел, ссылка будет вести на заглушку или логин
+    user_id = st.session_state.user.id if st.session_state.user else "not_logged_in"
+    
+    # Важно: добавляем параметр checkout[custom][user_id]
+    # Это "секретный конверт", который Lemon Squeezy вернет нашему вебхуку
+    checkout_url = f"{base_url}?checkout[custom][user_id]={user_id}"
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
