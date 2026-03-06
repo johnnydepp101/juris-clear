@@ -1,6 +1,4 @@
 import streamlit as st
-import time
-from datetime import datetime
 from openai import OpenAI
 import pdfplumber
 import re
@@ -10,7 +8,6 @@ from fpdf import FPDF
 from docx import Document
 from io import BytesIO
 import pytesseract
-import extra_streamlit_components as stx
 from pdf2image import convert_from_bytes
 from PIL import Image
 
@@ -22,70 +19,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ИНИЦИАЛИЗАЦИЯ SUPABASE ---
-@st.cache_resource
-def init_connection():
-    url = st.secrets["SUPABASE_URL"]
-    # Используем Service Role Key, чтобы обойти проблемы с JWT в Streamlit
-    key = st.secrets.get("SUPABASE_SERVICE_ROLE_KEY", st.secrets.get("SUPABASE_KEY"))
-    return create_client(url, key)
-
-supabase = init_connection()
-
-# --- 3. КУКИ-МЕНЕДЖЕР (ДЛЯ "ВЕЧНОЙ" СЕССИИ) ---
-@st.cache_resource
-def get_cookie_manager():
-    return stx.CookieManager()
-
-cookie_manager = get_cookie_manager()
-
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
 
 # --- ИНИЦИАЛИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ ---
 if 'user' not in st.session_state:
     st.session_state.user = None
-    st.session_state.user_is_pro = False
-
-# Авто-логин через куки, если сессия пуста
-if st.session_state.user is None:
-    token = cookie_manager.get(cookie="sb_token")
-    if token:
-        try:
-            res = supabase.auth.get_user(token)
-            if res.user:
-                st.session_state.user = res.user
-                # Сразу проверяем Pro-статус из таблицы profiles
-                p_res = supabase.table("profiles").select("is_pro, pro_until").eq("id", res.user.id).single().execute()
-                if p_res.data:
-                    # Проверяем, не истекла ли дата подписки
-                    until = p_res.data.get("pro_until")
-
-                    def check_full_access(audit_id):
-                        """
-                        Главный судья: Решает, показывать ли платный контент.
-                        """
-                        # 1. Если пользователь Pro — доступ всегда открыт
-                        if st.session_state.get("user_is_pro", False):
-                            return True, "✨ Доступ по подписке Pro"
-                        
-                        # 2. Если есть разовый платеж за этот конкретный аудит
-                        if audit_id:
-                            try:
-                                res = supabase.table("contract_audits").select("payment_status").eq("id", audit_id).single().execute()
-                                if res.data and res.data.get("payment_status") == "paid":
-                                    return True, "🎉 Аудит оплачен"
-                            except:
-                                pass
-                        
-                        return False, "🔒 Доступ ограничен"
-
-                    is_active = True
-                    if until:
-                        is_active = datetime.fromisoformat(until.replace('Z', '')) > datetime.now()
-                    st.session_state.user_is_pro = p_res.data.get("is_pro", False) and is_active
-        except:
-            pass
 
 # --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
 st.markdown("""
@@ -93,6 +32,7 @@ st.markdown("""
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
     .block-container {padding-top: 1.5rem; max-width: 1000px;}
+            
     /* Полностью скрываем иконки-цепочки (якоря) у заголовков */
 .stMarkdown h1 a, 
 .stMarkdown h2 a, 
@@ -230,13 +170,19 @@ def get_risk_params(score):
     else:
         return "linear-gradient(90deg, #dc2626 0%, #ef4444 100%)", "rgba(239, 68, 68, 0.5)", "КРИТИЧЕСКИЙ"
 
-# --- 4. ПОДКЛЮЧЕНИЕ API ---
+# --- 4. ПОДКЛЮЧЕНИЕ API И БАЗЫ ДАННЫХ ---
 # OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Функция для выхода (ПРАВИЛЬНАЯ)
+# Supabase
+url: str = st.secrets["SUPABASE_URL"]
+key: str = st.secrets["SUPABASE_KEY"]
+supabase: Client = create_client(url, key)
+# Используем Service Role Key, чтобы обойти проблемы с JWT в Streamlit
+supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
+
+# Функция для выхода
 def sign_out():
-    cookie_manager.delete("sb_token") # Удаляем куку
     supabase.auth.sign_out()
     st.session_state.user = None
     st.rerun()
@@ -529,8 +475,6 @@ with header_col2:
                 if st.button("Войти", use_container_width=True, type="primary"):
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-                        if res.session:
-                            cookie_manager.set("sb_token", res.session.access_token, expires_at=datetime.now().replace(year=datetime.now().year + 1))
                         st.session_state.user = res.user
                         
                         # Загружаем профиль пользователя для проверки Pro-статуса
@@ -563,39 +507,6 @@ with header_col2:
                 sign_out()
 
 st.markdown("<p style='text-align: center; color: gray;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
-
-# --- ОБРАБОТКА ПЛАТЕЖЕЙ ИЗ URL ---
-if "payment" in st.query_params and st.query_params.get("payment") == "success":
-    p_type = st.query_params.get("type")
-    audit_id = st.query_params.get("audit_id")
-    
-    # Очищаем URL сразу
-    st.query_params.clear()
-    
-    with st.status("💎 Синхронизация лицензии...", expanded=True) as status:
-        time.sleep(3) # Даем вебхуку время сработать
-        
-        if p_type == "pro" and st.session_state.user:
-            # Проверяем подписку в profiles
-            res = supabase.table("profiles").select("is_pro").eq("id", st.session_state.user.id).single().execute()
-            if res.data and res.data.get("is_pro"):
-                st.session_state.user_is_pro = True
-                status.update(label="✅ Подписка Pro активирована!", state="complete")
-            else:
-                st.warning("Платеж обрабатывается... Обновите страницу через 10 секунд.")
-        
-        elif audit_id:
-            # Проверяем разовый аудит
-            res = supabase.table("contract_audits").select("payment_status").eq("id", audit_id).single().execute()
-            if res.data and res.data.get("payment_status") == "paid":
-                st.session_state.current_audit_id = audit_id
-                status.update(label="✅ Доступ к аудиту открыт!", state="complete")
-            else:
-                st.warning("Данные аудита обновляются...")
-        
-        st.balloons()
-        time.sleep(1)
-        st.rerun()
 
 # --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
 col_tar1, col_tar2 = st.columns(2)
@@ -631,16 +542,7 @@ with col_tar1:
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    # 1. Базовая ссылка из Lemon Squeezy
-    base_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
-    
-    # 2. Формируем динамическую ссылку с User ID
-    # Если пользователь не вошел, ссылка будет вести на заглушку или логин
-    user_id = st.session_state.user.id if st.session_state.user else "not_logged_in"
-    
-    # Важно: добавляем параметр checkout[custom][user_id]
-    # Это "секретный конверт", который Lemon Squeezy вернет нашему вебхуку
-    checkout_url = f"{base_url}?checkout[custom][user_id]={user_id}"
+    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
@@ -858,13 +760,38 @@ with tab_audit:
                     free_part = parts[0]
                     paid_part = parts[1]
 
+                    # Бесплатная часть
                     st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
                     st.divider()
 
-                    has_access, message = check_full_access(current_audit_id)
+                    # Проверка оплаты
+                    try:
+                        check_db = supabase.table("contract_audits").select("payment_status").eq("id", current_audit_id).single().execute()
+                        is_paid = check_db.data.get("payment_status") == "paid"
+                    except:
+                        is_paid = False
 
-                    if has_access:
-                        st.success(message)
+                    # Проверка подписки Pro (Безлимит)
+                    is_pro = False
+                    if st.session_state.user:
+                        try:
+                            # Предполагаем наличие таблицы profiles или поля в auth с типом подписки
+                            user_data = supabase.table("profiles").select("is_pro").eq("id", st.session_state.user.id).single().execute()
+                            is_pro = user_data.data.get("is_pro", False)
+                        except:
+                            is_pro = False
+
+                    # Использование новой функции check_access_level
+                    access_level = check_access_level(st.session_state.user.id, current_audit_id) if st.session_state.user else "preview"
+
+                    # ЛОГИКА ДОСТУПА: Если куплен разово ИЛИ есть подписка Pro
+                    if is_paid or is_pro or access_level == "full":
+                        st.balloons()
+                        if is_pro or (access_level == "full" and not is_paid):
+                            st.success("✨ Доступ предоставлен по подписке Pro")
+                        else:
+                            st.success("🎉 Оплата подтверждена!")
+                            
                         st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
                         
                         # Три колонки для кнопок
@@ -904,7 +831,7 @@ with tab_audit:
                                 if k in st.session_state: del st.session_state[k]
                             st.rerun()
                     else:
-                        st.warning("🔒 Для просмотра полного отчета и протокола разногласий требуется оплата.")
+                        st.warning("🔒 **Полный отчет и Протокол разногласий заблокированы.**")
                         
                         col1, col2 = st.columns(2)
                         with col1:
