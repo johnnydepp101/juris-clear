@@ -56,10 +56,10 @@ if st.session_state.user is None:
             if res.user:
                 st.session_state.user = res.user
                 # Сразу проверяем Pro-статус из таблицы profiles
-                p_res = supabase.table("profiles").select("is_pro, pro_untill").eq("id", res.user.id).single().execute()
+                p_res = supabase.table("profiles").select("is_pro, pro_until").eq("id", res.user.id).single().execute()
                 if p_res.data:
                     # Проверяем, не истекла ли дата подписки
-                    until = p_res.data.get("pro_untill")
+                    until = p_res.data.get("pro_until")
 
                     def check_full_access(audit_id):
                         """
