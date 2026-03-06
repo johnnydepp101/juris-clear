@@ -25,140 +25,138 @@ if 'reset_counter' not in st.session_state:
 
 # (Авторизация удалена по требованию пользователя)
 
-# --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
+# --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
 st.markdown("""
     <style>
+    /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
+    :root {
+        --bg-color: #0d1117;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --text-color: #f0f6fc;
+        --secondary-text: #8b949e;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --accent-blue: #3b82f6;
+        --accent-green: #10b981;
+        --glass-blur: blur(10px);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        --header-color: #ffffff;
+    }
+
+    /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #1e293b;
+            --secondary-text: #64748b;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --header-color: #0f172a;
+        }
+    }
+
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
-    .block-container {padding-top: 1.5rem; max-width: 1000px;}
-            
-    /* Полностью скрываем иконки-цепочки (якоря) у заголовков */
-.stMarkdown h1 a, 
-.stMarkdown h2 a, 
-.stMarkdown h3 a, 
-.stMarkdown h4 a, 
-.stMarkdown h5 a, 
-.stMarkdown h6 a {
-    display: none !important;
-}
-
-/* Дополнительно убираем отступ, который они оставляли */
-[data-testid="stMarkdownHeader"] a {
-    display: none !important;
-}
-
-/* 1. ПОЛНОЕ УДАЛЕНИЕ ЯКОРЕЙ И ЦЕПОЧЕК */
-    [data-testid="stMarkdownHeader"] a, 
-    .header-anchor, 
-    svg.header-anchor-icon, 
-    button[kind="header_action"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* 2. УБИРАЕМ ЛИШНИЕ ОТСТУПЫ У ЗАГОЛОВКОВ */
-    [data-testid="stMarkdownHeader"] {
-        padding: 0 !important;
-        margin-top: 0.5rem !important;
-    }
-
-    /* ЦЕНТРИРОВАНИЕ ХЕДЕРА ПО ВЕРТИКАЛИ */
-    [data-testid="stHorizontalBlock"] {
-        align-items: center !important;
-    }
-
-    /* УБИРАЕМ ЛИШНИЙ ОТСТУП У ЛОГОТИПА */
-    [data-testid="column"] h1 {
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1.2 !important;
+    
+    .block-container {
+        padding-top: 2rem; 
+        max-width: 1000px;
     }
     
-    /* Тарифные планы */
+    /* ГЛОБАЛЬНЫЕ СТИЛИ */
+    [data-testid="stAppViewContainer"] {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: all 0.4s ease;
+    }
+
+    /* УБИРАЕМ ЯКОРЯ */
+    .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, 
+    .stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display: none !important; }
+    [data-testid="stMarkdownHeader"] a { display: none !important; }
+
+    /* ХЕДЕР И ВЫРАВНИВАНИЕ */
+    [data-testid="stHorizontalBlock"] { align-items: center !important; }
+
+    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
     .pricing-card-single {
-        background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
-        padding: 20px; border-radius: 15px; border: 1px solid #60a5fa; text-align: center; color: white;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
+        backdrop-filter: var(--glass-blur);
+        padding: 25px; border-radius: 20px; 
+        border: 1px solid rgba(255, 255, 255, 0.2); 
+        text-align: center; color: white;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
     }
     .pricing-card-pro {
-        background: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
-        padding: 20px; border-radius: 15px; border: 1px solid #34d399; text-align: center; color: white;
+        background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
+        backdrop-filter: var(--glass-blur);
+        padding: 25px; border-radius: 20px; 
+        border: 1px solid rgba(255, 255, 255, 0.2); 
+        text-align: center; color: white;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+    }
+    .pricing-card-single:hover, .pricing-card-pro:hover {
+        transform: translateY(-5px);
     }
     
-    /* Карточка отчета */
+    /* КАРТОЧКА ОТЧЕТА */
     .report-card {
-        background-color: #1e293b; border-left: 5px solid #3b82f6;
-        padding: 25px; border-radius: 12px; margin-top: 20px; color: #f1f5f9;
-        box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        background-color: var(--card-bg);
+        backdrop-filter: var(--glass-blur);
+        border-left: 6px solid var(--accent-blue);
+        padding: 30px; border-radius: 16px; 
+        margin-top: 25px; color: var(--text-color);
+        border-top: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
     }
     
-    /* Объемный контейнер для шкалы риска */
+    /* ШКАЛА РИСКА */
     .risk-meter-container {
-        background: #0f172a; border-radius: 15px; padding: 8px;
-        box-shadow: inset 0 3px 8px rgba(0,0,0,0.6); border: 1px solid #334155; margin: 15px 0;
+        background: rgba(0, 0, 0, 0.2); 
+        border-radius: 20px; padding: 10px;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); 
+        border: 1px solid var(--border-color); 
+        margin: 20px 0;
     }
     
-    .stButton>button {
-        border-radius: 12px; height: 3.8em; font-weight: bold; transition: 0.3s;
-    }
-    /* Ультимативное выравнивание кнопок */
-    .stButton > button, .stLinkButton > a {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        height: 50px !important; /* Фиксированная высота */
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border-radius: 10px !important;
-        text-decoration: none !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-    }
-
-    /* Цвет для кнопки-ссылки (Оплатить), чтобы она была как Primary */
-    .stLinkButton > a {
-        background-color: #3b82f6 !important;
-        color: white !important;
-        border: none !important;
-    }
-    .stLinkButton > a:hover {
-        background-color: #2563eb !important;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
-    }
-    /* Ультимативное выравнивание ВСЕХ кнопок: Обычных, Ссылок и Скачивания */
+    /* КНОПКИ */
     .stButton > button, .stLinkButton > a, .stDownloadButton > button {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        height: 50px !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 10px 20px !important;
-        border-radius: 10px !important;
-        text-decoration: none !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        font-size: 14px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: none !important;
     }
 
-    /* Цвет для кнопки скачивания (сделаем её чуть отличной, например, серой или оставить синей) */
-    .stDownloadButton > button {
-        background-color: #1e293b !important; /* Темно-синий/серый */
+    .stButton > button:hover {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+        transform: scale(1.02);
+    }
+
+    .stLinkButton > a {
+        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
         color: white !important;
     }
-    .stDownloadButton > button:hover {
-        background-color: #334155 !important;
-        border-color: #3b82f6 !important;
+
+    .stDownloadButton > button {
+        background: var(--border-color) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
     }
     
-    /* Цвет для кнопки Оплатить (Primary) */
-    .stLinkButton > a {
-        background-color: #3b82f6 !important;
-        color: white !important;
-        border: none !important;
+    /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
+    .secondary-text {
+        color: var(--secondary-text);
+        font-size: 0.9rem;
     }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # --- 3. ЛОГИКА ДИНАМИЧЕСКОЙ ШКАЛЫ ---
 def get_risk_params(score):
@@ -440,12 +438,19 @@ sample_text = """
 header_col1, header_col2 = st.columns([3, 1])
 
 with header_col1:
-    st.markdown(f"<h1 style='color: white; margin: 0; padding: 0;'>⚖️ JurisClear <span style='color:#3b82f6'>AI</span></h1>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 40px; line-height: 1;">⚖️</span>
+            <div style="display: flex; flex-direction: column;">
+                <h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
 with header_col2:
-    st.write("") # Место для будущего профиля или настроек
+    st.write("") # Место для будущего профиля
 
-st.markdown("<p style='text-align: center; color: gray;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
 # --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
 col_tar1, col_tar2 = st.columns(2)
@@ -474,8 +479,11 @@ with col_tar1:
                     • Доступ к результату в истории навсегда
                 </div>
             </div>
-            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; text-align: center; font-size: 12px;">
-                ℹ️ Оплачивайте только если результат вас устроит
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; text-align: center; font-size: 11px;">
+                    ℹ️ Оплачивайте только если результат вас устроит
+                </div>
+                <button style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px; border-radius: 10px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -495,7 +503,10 @@ with col_tar2:
                     • Приоритетная поддержка 24/7
                 </div>
             </div>
-            <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="height: 33px;"></div> <!-- Spacer for alignment -->
+                <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -716,39 +727,12 @@ with tab_demo:
 st.divider()
 col_f1, col_f2, col_f3 = st.columns(3)
 with col_f1:
-    st.caption("© 2026 JurisClear AI")
+    st.caption("© 2026 JurisClear AI | Ереван")
 with col_f2:
-    if st.button("Политика конфиденциальности", type="tertiary"):
-        st.info("""
-        ### Privacy Policy / Политика конфиденциальности
-        **Effective Date: February 24, 2026**
-
-        1. **Data Collection:** We collect your email address for account access and the documents you upload for analysis.
-        2. **Data Processing:** Your documents are processed via OpenAI API. We do not use your data to train AI models.
-        3. **Data Storage:** Your analysis history is stored securely in Supabase. You can delete your data at any time.
-        4. **Third Parties:** We use Lemon Squeezy for payments. We do not store your credit card details.
-
-        ---
-        1. **Сбор данных:** Мы не собираем личные данные. Документы анализируются анонимно.
-        2. **Обработка:** Документы анализируются через API OpenAI. Ваши данные НЕ используются для обучения моделей.
-        3. **Хранение:** Документы не сохраняются на сервере после завершения сессии.
-        4. **Оплата:** Просим ознакомиться с нашими тарифами для поддержки проекта.
-        """)
+    if st.button("Конфиденциальность", type="tertiary"):
+        st.info("Политика конфиденциальности...")
 with col_f3:
-    if st.button("Условия использования", type="tertiary"):
-        st.info("""
-        ### Terms of Service / Условия использования
-        **Last Updated: February 24, 2026**
+    if st.button("Условия", type="tertiary"):
+        st.info("Условия использования...")
 
-        1. **Not Legal Advice:** JurisClear AI provides automated document analysis. This is NOT a substitute for professional legal advice. Always consult a qualified lawyer.
-        2. **Accuracy:** AI may occasionally produce inaccurate results. JurisClear AI is not liable for any business decisions based on AI reports.
-        3. **Refunds:** Due to the nature of digital goods and the costs of AI processing, refunds are not provided once an analysis is generated.
-        4. **Subscription/Payments:** Access to full reports is granted upon successful payment via Lemon Squeezy.
-
-        ---
-        1. **Не является юридической консультацией:** JurisClear AI предоставляет автоматизированный анализ. Это НЕ замена профессиональному юристу.
-        2. **Точность:** ИИ может допускать ошибки. Мы не несем ответственности за ваши бизнес-решения, принятые на основе отчетов.
-        3. **Возвраты:** В связи с затратами на ИИ-процессинг, возврат средств после генерации полного отчета невозможен.
-        4. **Оплата:** Доступ к полным отчетам предоставляется после подтверждения оплаты через Lemon Squeezy.
-        """)
-st.caption("© 2026 JurisClear AI | Ереван, Армения | support@jurisclear.com")
+st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>support@jurisclear.com</p>", unsafe_allow_html=True)
