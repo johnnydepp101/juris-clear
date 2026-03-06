@@ -174,11 +174,16 @@ def get_risk_params(score):
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Supabase
-url: str = st.secrets["SUPABASE_URL"]
-key: str = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(url, key)
-# Используем Service Role Key, чтобы обойти проблемы с JWT в Streamlit
-supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
+# Попытка инициализации из секретов Streamlit (рекомендуемый способ)
+try:
+    url: str = st.secrets["SUPABASE_URL"]
+    # Пробуем взять Service Key для полной свободы действий, если он есть, иначе Anon Key
+    key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
+    supabase: Client = create_client(url, key)
+except Exception as e:
+    st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
+    # Создаем фиктивный клиент, чтобы приложение не вылетало сразу при отрисовке UI
+    supabase = None
 
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
@@ -230,19 +235,17 @@ def create_pdf(text):
     # Путь к шрифту
     font_path = "DejaVuSans.ttf" 
     
-    # Новая логика проверки из запроса
+    # Новая логика проверки шрифта
     if not os.path.exists(font_path):
-        raise FileNotFoundError("Критическая ошибка: Шрифт для PDF не найден!")
+        st.error("Критическая ошибка: Файл шрифта DejaVuSans.ttf не найден. PDF не может быть создан.")
+        return None
         
     pdf.add_font('DejaVu', '', font_path)
     pdf.set_font('DejaVu', '', 12)
     
-    # Очищаем текст от технической метки
-    clean_text = text.replace("[PAYWALL]", "").strip()
-    
     # Используем write вместо multi_cell. 
     # 10 — это высота строки. write() сам переносит текст и слова.
-    pdf.write(10, clean_text)
+    pdf.write(10, text.strip())
     
     return pdf.output()
 
@@ -251,10 +254,8 @@ def create_docx(text):
     doc = Document()
     doc.add_heading('Результат анализа договора - JurisClear AI', 0)
     
-    clean_text = text.replace("[PAYWALL]", "").strip()
-    
     # Разбиваем текст на параграфы для красоты
-    for paragraph in clean_text.split('\n'):
+    for paragraph in text.strip().split('\n'):
         if paragraph.strip():
             doc.add_paragraph(paragraph)
     
@@ -578,7 +579,7 @@ with tab_audit:
                     
                     special_instructions = ""
                     if contract_type == "NDA":
-                        special_instructions = "Фокус на сроках конфиденциальности, исключениях и штрафах за разглашение."
+                        special_instructions = "Фокус на сроках конфиденциальности, исключениях и штрафaх за разглашение."
                     elif contract_type == "Аренда":
                         special_instructions = "Фокус на индексации цены, условиях расторжения, возврате депозита и текущем ремонте."
                     elif contract_type == "Трудовой":
@@ -595,6 +596,12 @@ with tab_audit:
                         special_instructions = "Фокус на порядке отчетности агента, расчете вознаграждеия и праве на прямой поиск клиентов."
 
                     prompt_instruction = (
+                        "СТРУКТУРА ОТВЕТА (ОБЯЗАТЕЛЬНО):\n"
+                        "## ⚖️ Юридический анализ рисков\n"
+                        "1. ОБЩИЙ ВЕРДИКТ.\n"
+                        "2. ФИНАНСОВЫЕ РИСКИ.\n"
+                        "3. РИСКИ РАСТОРЖЕНИЯ И СПОРОВ.\n"
+                        "Для каждого риска пиши: 'Суть условия' и 'Юридический анализ'. Используй 🔴, 🟠, 🟡.\n\n"
                         "Будь строгим критиком. Если в договоре есть штрафы без вины или односторонние кабальные условия, "
                         "оценка риска (SCORE) должна быть высокой (7-10). "
                         "Разделяй пункты отчета двойным переносом строки для четкой читаемости.\n\n"
@@ -655,24 +662,30 @@ with tab_audit:
                 
                 with col_pdf:
                     pdf_bytes = create_pdf(clean_res)
-                    st.download_button(
-                        label="📥 PDF",
-                        data=bytes(pdf_bytes),
-                        file_name=f"audit_report.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+                    if pdf_bytes:
+                        st.download_button(
+                            label="📥 PDF",
+                            data=bytes(pdf_bytes),
+                            file_name=f"audit_report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    else:
+                        st.warning("PDF не доступен")
                 
                 with col_word:
                     try:
                         word_bytes = create_docx(clean_res)
-                        st.download_button(
-                            label="📝 Word",
-                            data=word_bytes,
-                            file_name=f"audit_report.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True
-                        )
+                        if word_bytes:
+                            st.download_button(
+                                label="📝 Word",
+                                data=word_bytes,
+                                file_name=f"audit_report.docx",
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True
+                            )
+                        else:
+                            st.warning("Word не доступен")
                     except Exception as e:
                         st.error("Ошибка Word")
                 
@@ -716,10 +729,10 @@ with col_f2:
         4. **Third Parties:** We use Lemon Squeezy for payments. We do not store your credit card details.
 
         ---
-        1. **Сбор данных:** Мы собираем ваш email для доступа и документы, которые вы загружаете для анализа.
+        1. **Сбор данных:** Мы не собираем личные данные. Документы анализируются анонимно.
         2. **Обработка:** Документы анализируются через API OpenAI. Ваши данные НЕ используются для обучения моделей.
-        3. **Хранение:** История анализов хранится в зашифрованном виде в Supabase.
-        4. **Оплата:** Платежи обрабатываются через Lemon Squeezy. Мы не имеем доступа к данным ваших карт.
+        3. **Хранение:** Документы не сохраняются на сервере после завершения сессии.
+        4. **Оплата:** Просим ознакомиться с нашими тарифами для поддержки проекта.
         """)
 with col_f3:
     if st.button("Условия использования", type="tertiary"):
