@@ -19,12 +19,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- ИНИЦИАЛИЗАЦИЯ ---
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
 
-# --- ИНИЦИАЛИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ ---
-if 'user' not in st.session_state:
-    st.session_state.user = None
+# (Авторизация удалена по требованию пользователя)
 
 # --- 2. ВЕСЬ ДИЗАЙН (CSS) ---
 st.markdown("""
@@ -181,27 +180,6 @@ supabase: Client = create_client(url, key)
 # Используем Service Role Key, чтобы обойти проблемы с JWT в Streamlit
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
-# Функция для выхода
-def sign_out():
-    supabase.auth.sign_out()
-    st.session_state.user = None
-    st.rerun()
-
-def check_access_level(user_id, document_id):
-    # 1. Запрашиваем данные по пользователю и документу
-    res = supabase.table("contract_audits").select("*").eq("id", document_id).execute()
-    
-    if res.data:
-        doc_data = res.data[0]
-        # 2. Проверяем, есть ли глобальный Pro-статус
-        if doc_data.get("is_pro") == True:
-            # Тут можно добавить проверку даты pro_until
-            return "full"
-        # 3. Проверяем, оплачен ли конкретно этот документ (Разовый аудит)
-        if doc_data.get("payment_status") == "paid":
-            return "full"
-    return "preview"
-
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
     """
@@ -334,7 +312,7 @@ def analyze_long_text(full_text, contract_type, user_role, special_instructions,
         "Твоя задача — объединить их в один профессиональный, структурированный отчет.\n\n"
         "УДАЛИ повторы. СГРУППИРУЙ риски по категориям (Финансовые, Сроки, Ответственность).\n"
         "СОСТАВЬ итоговую таблицу 'Протокол разногласий'.\n\n"
-        "СТРУКТУРА И ЯЗЫК ОТВЕТА ДОЛЖНЫ СТРОГО СООТВЕТСТВОВАТЬ ЭТАЛОНУ (с [PAYWALL] и SCORE).\n\n"
+        "СТРУКТУРА И ЯЗЫК ОТВЕТА ДОЛЖНЫ СТРОГО СООТВЕТСТВОВАТЬ ЭТАЛОНУ (с SCORE).\n\n"
         f"Промежуточные данные:\n{combined_context}"
     )
     
@@ -464,47 +442,7 @@ with header_col1:
     st.markdown(f"<h1 style='color: white; margin: 0; padding: 0;'>⚖️ JurisClear <span style='color:#3b82f6'>AI</span></h1>", unsafe_allow_html=True)
 
 with header_col2:
-    # Если пользователь не вошел
-    if st.session_state.user is None:
-        with st.popover("👤 Войти", use_container_width=True):
-            tab_login, tab_signup = st.tabs(["Вход", "Регистрация"])
-            
-            with tab_login:
-                email = st.text_input("Email", key="login_email")
-                password = st.text_input("Пароль", type="password", key="login_pass")
-                if st.button("Войти", use_container_width=True, type="primary"):
-                    try:
-                        res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-                        st.session_state.user = res.user
-                        
-                        # Загружаем профиль пользователя для проверки Pro-статуса
-                        user_data = supabase.table("contract_audits").select("is_pro").eq("user_id", res.user.id).limit(1).execute()
-                        if user_data.data:
-                            st.session_state.user_is_pro = user_data.data[0].get("is_pro", False)
-                        else:
-                            st.session_state.user_is_pro = False
-                            
-                        st.success("Успешный вход!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error("Ошибка входа: проверьте данные")
-            
-            with tab_signup:
-                new_email = st.text_input("Email", key="reg_email")
-                new_pass = st.text_input("Пароль", type="password", key="reg_pass")
-                if st.button("Создать аккаунт", use_container_width=True):
-                    try:
-                        res = supabase.auth.sign_up({"email": new_email, "password": new_pass})
-                        st.info("Проверьте почту для подтверждения регистрации!")
-                    except Exception as e:
-                        st.error(f"Ошибка: {e}")
-    else:
-        # Если пользователь вошел
-        user_email = st.session_state.user.email
-        with st.popover(f"👤 {user_email[:10]}...", use_container_width=True):
-            st.write(f"Вы вошли как: **{user_email}**")
-            if st.button("Выйти", use_container_width=True):
-                sign_out()
+    st.write("") # Место для будущего профиля или настроек
 
 st.markdown("<p style='text-align: center; color: gray;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
@@ -602,7 +540,7 @@ with c2:
     )
 
 # Рабочее пространство (Вкладки)
-tab_audit, tab_redline, tab_demo, tab_history = st.tabs(["🚀 ИИ Аудит", "🔄 Сравнение версий", "📝 Пример отчета", "📜 История"])
+tab_audit, tab_redline, tab_demo = st.tabs(["🚀 ИИ Аудит", "🔄 Сравнение версий", "📝 Пример отчета"])
 
 with tab_audit:
     # --- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР ---
@@ -669,14 +607,7 @@ with tab_audit:
                         "Шаг 1: Проанализируй текст и выдели риски.\n"
                         "Шаг 2: Для каждого риска проверь, действительно ли в тексте договора есть указанный пункт и условие.\n"
                         "Шаг 3: Сформируй итоговый отчет. Если риск не подтвержден фактами — удали его.\n\n"
-                        "СТРУКТУРА ОТВЕТА (ОБЯЗАТЕЛЬНО):\n"
-                        "## ⚖️ Юридический анализ рисков\n"
-                        "1. ОБЩИЙ ВЕРДИКТ.\n"
-                        "2. ФИНАНСОВЫЕ РИСКИ.\n"
-                        "3. РИСКИ РАСТОРЖЕНИЯ И СПОРОВ.\n"
-                        "Для каждого риска пиши: 'Суть условия' и 'Юридический анализ'. Используй 🔴, 🟠, 🟡.\n\n"
-                        "ТЕХНИЧЕСКАЯ ИНСТРУКЦИЯ: Перед следующим разделом ОБЯЗАТЕЛЬНО напечатай строку [PAYWALL] отдельной строкой.\n\n"
-                        "## 🛠️ Протокол разногласий (Готовые правки)\n"
+                        " ## 🛠️ Протокол разногласий (Готовые правки)\n"
                         "Составь таблицу в формате Markdown для всех найденных рисков:\n"
                         "| № Пункта | Оригинальный текст | Предлагаемая редакция | Обоснование |\n"
                         "| :--- | :--- | :--- | :--- |\n\n"
@@ -693,47 +624,9 @@ with tab_audit:
                     clean_res = re.sub(r"SCORE:\s*\d+", "", raw_res).strip()
 
                     if clean_res:
-                        # --- УЛУЧШЕННЫЙ БЛОК СОХРАНЕНИЯ С ОБРАБОТКОЙ ОШИБОК ---
-                        if st.session_state.user:
-                            current_user_id = st.session_state.user.id
-                            # 1. Формируем данные (ТЕПЕРЬ С SCORE)
-                            data_to_save = {
-                                "user_id": current_user_id,
-                                "contract_type": contract_type,
-                                "user_role": user_role,
-                                "raw_analysis": raw_res,
-                                "payment_status": "pending",
-                                "score": score, # ТЕПЕРЬ SCORE БУДЕТ СОХРАНЯТЬСЯ
-                                "user_role": user_role # Убедись, что это поле есть в БД
-                            }
-                            
-                            try:
-                                # Проверяем наличие соединения перед отправкой
-                                response = supabase.table("contract_audits").insert(data_to_save).execute()
-                                
-                                if response.data:
-                                    st.success("✅ Анализ успешно сохранен в облако.")
-                                    st.session_state.analysis_result = clean_res
-                                    st.session_state.current_audit_id = response.data[0]['id']
-                                    st.session_state.audit_score = score
-                                    st.rerun()
-                                else:
-                                    st.error("Ошибка: База данных не вернула подтверждение сохранения.")
-
-                            except Exception as e:
-                                # Обработка отсутствия интернета или ошибки сервера
-                                error_msg = str(e)
-                                if "connection" in error_msg.lower():
-                                    st.error("📡 Ошибка соединения: Проверьте интернет или статус Supabase.")
-                                else:
-                                    st.error(f"❌ Критическая ошибка базы данных: {error_msg}")
-                                
-                                # Позволяем пользователю увидеть результат даже если база упала
-                                st.warning("⚠️ Результат показан без сохранения в историю.")
-                                st.session_state.analysis_result = clean_res
-                                st.session_state.audit_score = score
-                        else:
-                            st.error("Ошибка: Сессия пользователя истекла. Пожалуйста, войдите снова.")
+                        st.session_state.analysis_result = clean_res
+                        st.session_state.audit_score = score
+                        st.rerun()
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
             score = st.session_state.get("audit_score", 5)
@@ -753,193 +646,46 @@ with tab_audit:
                 st.success("✅ Анализ и протокол разногласий успешно сформированы!")
 
                 clean_res = st.session_state.analysis_result
-                current_audit_id = st.session_state.current_audit_id
-
-                if "[PAYWALL]" in clean_res:
-                    parts = clean_res.split("[PAYWALL]")
-                    free_part = parts[0]
-                    paid_part = parts[1]
-
-                    # Бесплатная часть
-                    st.markdown(f"<div class='report-card'>{free_part.strip()}</div>", unsafe_allow_html=True)
-                    st.divider()
-
-                    # Проверка оплаты
+                
+                # Показываем результат сразу
+                st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
+                
+                # Три колонки для кнопок (ID заменен на фейковый или удален)
+                col_pdf, col_word, col_sup = st.columns(3)
+                
+                with col_pdf:
+                    pdf_bytes = create_pdf(clean_res)
+                    st.download_button(
+                        label="📥 PDF",
+                        data=bytes(pdf_bytes),
+                        file_name=f"audit_report.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                
+                with col_word:
                     try:
-                        check_db = supabase.table("contract_audits").select("payment_status").eq("id", current_audit_id).single().execute()
-                        is_paid = check_db.data.get("payment_status") == "paid"
-                    except:
-                        is_paid = False
-
-                    # Проверка подписки Pro (Безлимит)
-                    is_pro = False
-                    if st.session_state.user:
-                        try:
-                            # Предполагаем наличие таблицы profiles или поля в auth с типом подписки
-                            user_data = supabase.table("profiles").select("is_pro").eq("id", st.session_state.user.id).single().execute()
-                            is_pro = user_data.data.get("is_pro", False)
-                        except:
-                            is_pro = False
-
-                    # Использование новой функции check_access_level
-                    access_level = check_access_level(st.session_state.user.id, current_audit_id) if st.session_state.user else "preview"
-
-                    # ЛОГИКА ДОСТУПА: Если куплен разово ИЛИ есть подписка Pro
-                    if is_paid or is_pro or access_level == "full":
-                        st.balloons()
-                        if is_pro or (access_level == "full" and not is_paid):
-                            st.success("✨ Доступ предоставлен по подписке Pro")
-                        else:
-                            st.success("🎉 Оплата подтверждена!")
-                            
-                        st.markdown(f"<div class='report-card'>{paid_part.strip()}</div>", unsafe_allow_html=True)
-                        
-                        # Три колонки для кнопок
-                        col_pdf, col_word, col_sup = st.columns(3)
-                        
-                        with col_pdf:
-                            pdf_bytes = create_pdf(clean_res)
-                            st.download_button(
-                                label="📥 PDF",
-                                data=bytes(pdf_bytes),
-                                file_name=f"audit_{str(current_audit_id)[:8]}.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
-                        
-                        with col_word:
-                            try:
-                                word_bytes = create_docx(clean_res)
-                                st.download_button(
-                                    label="📝 Word",
-                                    data=word_bytes,
-                                    file_name=f"audit_{str(current_audit_id)[:8]}.docx",
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    use_container_width=True
-                                )
-                            except Exception as e:
-                                st.error("Ошибка Word")
-                        
-                        with col_sup:
-                            st.link_button("🆘 Поддержка", "https://t.me/твой_логин", use_container_width=True)
-
-                        st.write("")
-                        if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
-                            st.session_state.reset_counter += 1
-                            keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
-                            for k in keys_to_clear:
-                                if k in st.session_state: del st.session_state[k]
-                            st.rerun()
-                    else:
-                        st.warning("🔒 **Полный отчет и Протокол разногласий заблокированы.**")
-                        
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
-                            payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_audit_id}"
-                            st.link_button("🚀 Оплатить Premium (850 ₽)", payment_url, use_container_width=True)
-                        
-                        with col2:
-                            if st.button("🔄 Проверить оплату", use_container_width=True):
-                                st.rerun()
-                        
-                        st.write("")
-                        st.divider()
-
-                        if st.button("❌ Отменить и загрузить другой файл", use_container_width=True):
-                            st.session_state.reset_counter += 1
-                            keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
-                            for k in keys_to_clear:
-                                if k in st.session_state: del st.session_state[k]
-                            st.rerun()
-                else:
-                    st.markdown(f"<div class='report-card'>{clean_res}</div>", unsafe_allow_html=True)
-                    
-                    col_pdf_f, col_docx_f = st.columns(2)
-                    with col_pdf_f:
-                        try:
-                            pdf_bytes = create_pdf(clean_res)
-                            st.download_button(
-                                label="📥 Скачать PDF",
-                                data=bytes(pdf_bytes),
-                                file_name=f"audit_{str(current_audit_id)[:8]}.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
-                        except Exception as e:
-                            st.error(f"Ошибка PDF: {e}")
-                    
-                    with col_docx_f:
-                        try:
-                            docx_bytes = create_docx(clean_res)
-                            st.download_button(
-                                label="📥 Скачать Word",
-                                data=docx_bytes,
-                                file_name=f"audit_{str(current_audit_id)[:8]}.docx",
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                use_container_width=True
-                            )
-                        except Exception as e:
-                            st.error(f"Ошибка Word: {e}")
-
-                    if st.button("📁 Загрузить новый договор", key="btn_no_paywall_reset", use_container_width=True):
-                        st.session_state.reset_counter += 1
-                        keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
-                        for k in keys_to_clear:
-                            if k in st.session_state: del st.session_state[k]
-                        st.rerun()
-
-    else:
-        if "analysis_result" in st.session_state:
-            keys_to_clear = ["analysis_result", "current_audit_id", "audit_score"]
-            for k in keys_to_clear:
-                if k in st.session_state: del st.session_state[k]
-        st.info("Пожалуйста, загрузите файл договора в формате PDF для начала анализа.")
-
-with tab_redline:
-    st.subheader("🔄 Сравнение двух редакций договора")
-    st.info("Загрузите исходную версию и версию с правками, чтобы ИИ нашел отличия и оценил риски.")
-    
-    col_v1, col_v2 = st.columns(2)
-    with col_v1:
-        file_v1 = st.file_uploader("Исходная версия (PDF)", type=['pdf'], key="v1")
-    with col_v2:
-        file_v2 = st.file_uploader("Новая версия (PDF)", type=['pdf'], key="v2")
-    
-    if file_v1 and file_v2:
-        if st.button("🚀 Найти отличия", use_container_width=True):
-            with st.spinner("ИИ сравнивает документы..."):
-                text_v1 = extract_text_from_pdf(file_v1.getvalue())
-                text_v2 = extract_text_from_pdf(file_v2.getvalue())
+                        word_bytes = create_docx(clean_res)
+                        st.download_button(
+                            label="📝 Word",
+                            data=word_bytes,
+                            file_name=f"audit_report.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error("Ошибка Word")
                 
-                compare_prompt = f"""
-                Ты — эксперт-юрист. Твоя задача сравнить две версии одного договора и найти отличия.
-                
-                ВЕРСИЯ 1 (Исходная):
-                {text_v1[:15000]} 
-                
-                ВЕРСИЯ 2 (С правками):
-                {text_v2[:15000]}
-                
-                АКЦЕНТИРУЙ ВНИМАНИЕ НА:
-                1. Изменении сумм, сроков и ответственности.
-                2. Удаленных пунктах, которые были важны.
-                3. Новых скрытых обязанностях.
-                
-                ОТВЕТЬ В ВИДЕ ТАБЛИЦЫ:
-                | Пункт | Что было (v1) | Что стало (v2) | Риск / Комментарий |
-                |-------|---------------|----------------|-------------------|
-                """
-                
-                compare_res = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[{"role": "user", "content": compare_prompt}],
-                    temperature=0.0
-                )
-                
-                st.markdown("### 📊 Результат сравнения")
-                st.markdown(compare_res.choices[0].message.content)
+                with col_sup:
+                    st.link_button("🆘 Поддержка", "https://t.me/твой_логин", use_container_width=True)
 
+                st.write("")
+                if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
+                    st.session_state.reset_counter += 1
+                    keys_to_clear = ["analysis_result", "audit_score"]
+                    for k in keys_to_clear:
+                        if k in st.session_state: del st.session_state[k]
+                    st.rerun()
 with tab_demo:
     st.write("### Так выглядит результат анализа:")
     bar_color, bar_shadow, risk_text = get_risk_params(9)
@@ -953,69 +699,6 @@ with tab_demo:
         </div>
     """, unsafe_allow_html=True)
     st.markdown(f"<div class='report-card'>{sample_text}</div>", unsafe_allow_html=True)
-
-with tab_history:
-    st.subheader("📜 История ваших аудитов")
-    
-    if st.session_state.user is None:
-        st.warning("Пожалуйста, войдите в аккаунт, чтобы просмотреть историю своих анализов.")
-    else:
-        try:
-            history = supabase.table("contract_audits") \
-                .select("*") \
-                .eq("user_id", st.session_state.user.id) \
-                .order("created_at", desc=True) \
-                .execute()
-            
-            if not history.data:
-                st.info("У вас пока нет сохраненных анализов.")
-            else:
-                for audit in history.data:
-                    date_str = audit['created_at'][:10] 
-                    status = "✅ Оплачено" if audit['payment_status'] == 'paid' else "⏳ Ожидает оплаты"
-                    
-                    with st.expander(f"📄 {audit['contract_type']} от {date_str} — {status}"):
-                        res_text = audit['raw_analysis']
-                        current_id = audit['id']
-
-                        is_pro_active = st.session_state.get('user_is_pro', False)
-                        is_paid = audit['payment_status'] == 'paid'
-
-                        if is_paid or is_pro_active:
-                            st.markdown(res_text.replace("[PAYWALL]", ""))
-                            # Кнопки скачивания (здесь key нужен и он работает)
-                            h_col1, h_col2 = st.columns(2)
-                            with h_col1:
-                                pdf_bytes = create_pdf(res_text)
-                                st.download_button("📥 Скачать PDF", bytes(pdf_bytes), f"audit_{date_str}.pdf", "application/pdf", key=f"dl_pdf_{current_id}", use_container_width=True)
-                            with h_col2:
-                                docx_bytes = create_docx(res_text)
-                                st.download_button("📝 Скачать Word", docx_bytes, f"audit_{date_str}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"dl_docx_{current_id}", use_container_width=True)
-                        else:
-                            if "[PAYWALL]" in res_text:
-                                st.markdown(res_text.split("[PAYWALL]")[0])
-
-                                st.warning("🔒 Этот отчет не оплачен.")
-
-                                h_pay_col1, h_pay_col2 = st.columns(2)
-                                with h_pay_col1:
-                                    product_id = "a06e3832-bc7a-4d2c-8f1e-113446b2bf61" 
-                                    # УБРАН key=... из link_button
-                                    payment_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/{product_id}?checkout[custom][audit_id]={current_id}"
-                                    st.link_button("🚀 Оплатить доступ (850 ₽)", payment_url, use_container_width=True)
-
-                                with h_pay_col2:
-                                    # В обычной кнопке key ОБЯЗАТЕЛЕН внутри цикла
-                                    if st.button("🔄 Проверить оплату", use_container_width=True, key=f"check_btn_{current_id}"):
-                                        check_res = supabase.table("contract_audits").select("payment_status").eq("id", current_id).single().execute()
-                                        if check_res.data and check_res.data.get("payment_status") == "paid":
-                                            st.success("Оплата подтверждена!")
-                                            st.rerun()
-                                        else:
-                                            st.error("Оплата еще не поступила. Если вы уже оплатили, подождите 1-2 минуты.")
-                            
-        except Exception as e:
-            st.error(f"Не удалось загрузить историю: {e}")
 
 st.divider()
 col_f1, col_f2, col_f3 = st.columns(3)
