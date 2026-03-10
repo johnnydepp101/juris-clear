@@ -305,6 +305,36 @@ def get_user_status():
         return "pro"
     return "free"
 
+# --- ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПОСЛЕ ОПЛАТЫ (РЕДИРЕКТ ИЗ LEMON SQUEEZY) ---
+if st.query_params.get("payment") == "success":
+    st.success("🎉 Оплата успешно завершена! Спасибо за покупку.")
+    
+    # Редирект после разового аудита
+    if "audit_id" in st.query_params and "analysis_result" not in st.session_state:
+        audit_id = st.query_params.get("audit_id")
+        if supabase:
+            try:
+                res = supabase.table("audits").select("*").eq("id", audit_id).single().execute()
+                # Если уже оплачено, грузим результат из БД
+                if res.data and res.data.get("is_paid_one_off"):
+                    st.session_state.analysis_result = res.data["analysis_text"]
+                    st.session_state.audit_score = res.data["score"]
+                    st.session_state.is_paid_one_off = True
+                    st.session_state.current_audit_db_id = audit_id
+            except Exception as e:
+                pass
+                
+    # Редирект после покупки подписки
+    if st.query_params.get("type") == "pro":
+        if st.session_state.user:
+            # Обновляем профиль принудительно
+            get_profile(st.session_state.user.id)
+            st.info("💡 Ваша подписка успешно активирована!")
+        else:
+            st.info("💡 Ваша подписка активирована! Пожалуйста, войдите в свой аккаунт.")
+        
+    st.query_params.clear()
+
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
     """
@@ -577,10 +607,15 @@ with col_tar1:
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    # URL для оплаты подписки с привязкой к user_id
-    user_id = st.session_state.user.id if st.session_state.user else "new_user"
+    is_logged_in = st.session_state.user is not None
+    user_id = st.session_state.user.id if is_logged_in else "guest"
     sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8?checkout[custom][user_id]={user_id}"
     
+    if is_logged_in:
+        button_html = f'<a href="{sub_checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>'
+    else:
+        button_html = f'<div style="background: rgba(255,255,255,0.3); color: white; text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: not-allowed; border: 1px solid rgba(255,255,255,0.4);">Для подписки нужно войти в аккаунт 👆</div>'
+
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
@@ -596,7 +631,7 @@ with col_tar2:
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div style="height: 33px;"></div> <!-- Spacer for alignment -->
-                <a href="{sub_checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
+                {button_html}
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -817,6 +852,20 @@ with tab_audit:
                         st.link_button("💳 Купить разовый аудит (850 ₽)", one_off_url, use_container_width=True, type="primary")
                     with col_pay2:
                         st.info("💡 Подписка Pro выгоднее, если у вас много документов!")
+                    
+                    st.write("")
+                    if st.button("🔄 Я уже здесь оплатил, обновить статус", use_container_width=True, type="secondary"):
+                        with st.spinner("Проверяем статус оплаты..."):
+                            if supabase:
+                                try:
+                                    res = supabase.table("audits").select("is_paid_one_off").eq("id", audit_payment_id).single().execute()
+                                    if res.data and res.data.get("is_paid_one_off"):
+                                        st.session_state.is_paid_one_off = True
+                                        st.rerun()
+                                    else:
+                                        st.warning("Оплата пока не поступила. Это может занять несколько секунд, попробуйте снова.")
+                                except Exception as e:
+                                    st.error("Не удалось проверить статус оплаты.")
                 else:
                     # ПОЛНЫЙ ДОСТУП
                     st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
