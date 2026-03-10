@@ -10,27 +10,6 @@ from io import BytesIO
 import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
-import uuid
-from datetime import datetime
-import json
-import logging
-
-# --- 0. ЛОГИРОВАНИЕ ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-def log_action(message, data=None):
-    """Подробное логирование для отладки"""
-    if data:
-        logger.info(f"{message} | DATA: {json.dumps(data, default=str, ensure_ascii=False)}")
-        # Также выводим в Streamlit для пользователя, если включен режим отладки
-        if st.session_state.get("debug_mode"):
-            st.write(f"🔍 DEBUG: {message}")
-            st.json(data)
-    else:
-        logger.info(message)
-        if st.session_state.get("debug_mode"):
-            st.write(f"🔍 DEBUG: {message}")
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -43,18 +22,6 @@ st.set_page_config(
 # --- ИНИЦИАЛИЗАЦИЯ ---
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
-
-if 'user' not in st.session_state:
-    st.session_state.user = None
-
-if 'profile' not in st.session_state:
-    st.session_state.profile = None
-
-if 'session_id' not in st.session_state:
-    st.session_state.session_id = str(uuid.uuid4())
-
-if 'debug_mode' not in st.session_state:
-    st.session_state.debug_mode = False
 
 # (Авторизация удалена по требованию пользователя)
 
@@ -205,138 +172,16 @@ def get_risk_params(score):
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Supabase
+# Попытка инициализации из секретов Streamlit (рекомендуемый способ)
 try:
     url: str = st.secrets["SUPABASE_URL"]
+    # Пробуем взять Service Key для полной свободы действий, если он есть, иначе Anon Key
     key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
     supabase: Client = create_client(url, key)
 except Exception as e:
     st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
+    # Создаем фиктивный клиент, чтобы приложение не вылетало сразу при отрисовке UI
     supabase = None
-
-# --- ФУНКЦИИ АУТЕНТИФИКАЦИИ ---
-def sign_in(email, password):
-    if not supabase: return False
-    try:
-        log_action("Попытка входа", {"email": email})
-        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        if response.user:
-            st.session_state.user = response.user
-            get_profile(response.user.id)
-            log_action("Вход успешен", {"user_id": response.user.id})
-            return True
-    except Exception as e:
-        st.error(f"Ошибка входа: {e}")
-        log_action("Ошибка входа", {"error": str(e)})
-    return False
-
-def sign_up(email, password):
-    if not supabase: return False
-    try:
-        log_action("Попытка регистрации", {"email": email})
-        response = supabase.auth.sign_up({"email": email, "password": password})
-        if response.user:
-            st.success("Регистрация успешна! Теперь вы можете войти.")
-            log_action("Регистрация успешна", {"user_id": response.user.id})
-            return True
-    except Exception as e:
-        st.error(f"Ошибка регистрации: {e}")
-        log_action("Ошибка регистрации", {"error": str(e)})
-    return False
-
-def sign_out():
-    if not supabase: return
-    log_action("Выход из системы", {"user_id": st.session_state.user.id if st.session_state.user else "N/A"})
-    supabase.auth.sign_out()
-    st.session_state.user = None
-    st.session_state.profile = None
-    st.rerun()
-
-def get_profile(user_id):
-    if not supabase: return None
-    try:
-        log_action("Получение профиля", {"user_id": user_id})
-        res = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
-        if res.data:
-            st.session_state.profile = res.data
-            log_action("Профиль получен", res.data)
-            return res.data
-    except Exception as e:
-        log_action("Ошибка получения профиля", {"error": str(e)})
-    return None
-
-def save_audit(file_name, contract_type, user_role, analysis_text, score, is_paid=False):
-    if not supabase: return None
-    try:
-        user_id = st.session_state.user.id if st.session_state.user else None
-        data = {
-            "user_id": user_id,
-            "file_name": file_name,
-            "contract_type": contract_type,
-            "user_role": user_role,
-            "analysis_text": analysis_text,
-            "score": score,
-            "is_paid_one_off": is_paid,
-            "session_id": st.session_state.session_id if not user_id else None
-        }
-        log_action("Сохранение аудита", {k: v for k, v in data.items() if k != "analysis_text"})
-        res = supabase.table("audits").insert(data).execute()
-        if res.data:
-            new_id = res.data[0]['id']
-            log_action("Аудит сохранен", {"id": new_id})
-            return new_id
-    except Exception as e:
-        log_action("Ошибка сохранения аудита", {"error": str(e)})
-    return None
-
-def get_user_audits():
-    if not supabase or not st.session_state.user: return []
-    try:
-        log_action("Запрос истории аудитов", {"user_id": st.session_state.user.id})
-        res = supabase.table("audits").select("*").eq("user_id", st.session_state.user.id).order("created_at", desc=True).execute()
-        return res.data
-    except Exception as e:
-        log_action("Ошибка получения истории", {"error": str(e)})
-        return []
-
-def get_user_status():
-    if not st.session_state.user:
-        return "guest"
-    if st.session_state.profile and st.session_state.profile.get("subscription_status") == "pro":
-        return "pro"
-    return "free"
-
-# --- ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ДЛЯ СОХРАНЕНИЯ СЕССИИ (F5 / РЕДИРЕКТ) ---
-# 1. Загрузка данных по audit_id (работает и при F5, и при редиректе)
-if "audit_id" in st.query_params and "analysis_result" not in st.session_state:
-    audit_id = st.query_params.get("audit_id")
-    if supabase:
-        try:
-            res = supabase.table("audits").select("*").eq("id", audit_id).single().execute()
-            if res.data:
-                st.session_state.analysis_result = res.data["analysis_text"]
-                st.session_state.audit_score = res.data["score"]
-                st.session_state.current_audit_db_id = audit_id
-                if res.data.get("is_paid_one_off"):
-                    st.session_state.is_paid_one_off = True
-                else:
-                    st.session_state.temp_audit_id = audit_id
-        except Exception:
-            pass
-
-# 2. Обработка успешной оплаты
-if st.query_params.get("payment") == "success":
-    st.success("🎉 Оплата успешно завершена! Спасибо за покупку.")
-    
-    # Редирект после покупки подписки
-    if st.query_params.get("type") == "pro":
-        if st.session_state.user:
-            get_profile(st.session_state.user.id)
-            st.info("💡 Ваша подписка успешно активирована!")
-        else:
-            st.info("💡 Ваша подписка активирована! Войдите в аккаунт, чтобы пользоваться безлимитом.")
-        del st.query_params["type"]
-        
-    del st.query_params["payment"]
 
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
@@ -381,9 +226,6 @@ def extract_text_from_pdf(file_bytes):
 
 # --- ФУНКЦИЯ СОЗДАНИЯ PDF (ИНТЕГРИРОВАНА НОВАЯ ПРОВЕРКА ШРИФТА) ---
 def create_pdf(text):
-    if not text:
-        return None
-        
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15) # Авто-перенос страниц
     pdf.add_page()
@@ -407,9 +249,6 @@ def create_pdf(text):
 
 # --- ФУНКЦИЯ СОЗДАНИЯ WORD ---
 def create_docx(text):
-    if not text:
-        return None
-        
     doc = Document()
     doc.add_heading('Результат анализа договора - JurisClear AI', 0)
     
@@ -490,7 +329,81 @@ def analyze_long_text(full_text, contract_type, user_role, special_instructions,
     
     return final_response.choices[0].message.content
 
+# --- НОВАЯ ФУНКЦИЯ АНАЛИЗА (INTEGRATED) ---
+def generate_analysis(full_text, contract_type, user_role, special_reqs):
 
+    # --- НАСТРОЙКИ ЧАНКИНГА ---
+    MAX_CHUNK_SIZE = 15000  # Примерно 3000-4000 токенов
+
+    # 1. Если текст короткий, анализируем в один проход
+    if len(full_text) < MAX_CHUNK_SIZE:
+        prompt = f"""
+        Ты — профессиональный корпоративный юрист. Проведи полный аудит договора: {contract_type}.
+        Моя роль: {user_role}. Особые требования: {special_reqs if special_reqs else 'Нет'}.
+        Текст договора:
+        {full_text}
+        
+        Выдай отчет в Markdown: Резюме, Риски (Критический/Средний/Низкий), Топ-3 опасных пункта, Рекомендации.
+        """
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2
+        )
+        return response.choices[0].message.content
+
+    # 2. Если текст длинный — включаем логику ЧАНКИНГА
+    st.info(f"⏳ Договор очень длинный ({len(full_text)} симв.). Анализирую по частям...")
+    
+    paragraphs = full_text.split('\n\n')
+    chunks = []
+    current_chunk = ""
+    for p in paragraphs:
+        if len(current_chunk) + len(p) < MAX_CHUNK_SIZE:
+            current_chunk += p + "\n\n"
+        else:
+            chunks.append(current_chunk)
+            current_chunk = p + "\n\n"
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    # Собираем риски из каждой части
+    partial_risks = []
+    progress_bar = st.progress(0)
+    
+    for i, chunk in enumerate(chunks):
+        st.write(f"Сканирую часть {i+1} из {len(chunks)}...")
+        chunk_prompt = f"Найди все юридические риски в этой части договора {contract_type} для роли {user_role}. Текст:\n{chunk}"
+        
+        chunk_res = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": chunk_prompt}],
+            temperature=0
+        )
+        partial_risks.append(chunk_res.choices[0].message.content)
+        progress_bar.progress((i + 1) / len(chunks))
+
+    # --- ФИНАЛЬНЫЙ СИНТЕЗ ---
+    st.write("Сборка финального отчета...")
+    all_risks_text = "\n\n".join(partial_risks)
+    
+    final_prompt = f"""
+    Ты — старший юрист. Перед тобой список рисков, найденных в разных частях одного договора ({contract_type}).
+    Твоя задача: объединить их в один логичный, структурированный отчет для клиента ({user_role}).
+    Исключи повторы и выдели самые критические моменты.
+    
+    Список всех найденных рисков:
+    {all_risks_text}
+    
+    Выдай финальный отчет в Markdown: Резюме, Общая оценка рисков, Детальный список ловушек, Рекомендации.
+    """
+    
+    final_res = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": final_prompt}],
+        temperature=0.2
+    )
+    return final_res.choices[0].message.content
 
 # === НОВЫЙ ПРОФЕССИОНАЛЬНЫЙ ПРИМЕР ОТЧЕТА ===
 sample_text = """
@@ -535,44 +448,9 @@ with header_col1:
     """, unsafe_allow_html=True)
 
 with header_col2:
-    if st.session_state.user:
-        # Отображаем email и кнопку выхода, если пользователь вошел
-        user_email = st.session_state.user.email
-        status = get_user_status()
-        status_color = "var(--accent-green)" if status == "pro" else "var(--secondary-text)"
-        
-        st.markdown(f"""
-            <div style="text-align: right;">
-                <div style="font-size: 14px; font-weight: 600;">{user_email}</div>
-                <div style="font-size: 12px; color: {status_color}; text-transform: uppercase;">Статус: {status}</div>
-            </div>
-        """, unsafe_allow_html=True)
-        if st.button("Выйти", key="logout_btn", use_container_width=True):
-            sign_out()
-    else:
-        # Кнопки входа/регистрации, если не вошел
-        with st.popover("🔑 Войти / Регистрация", use_container_width=True):
-            auth_mode = st.radio("Действие", ["Вход", "Регистрация"], horizontal=True, label_visibility="collapsed")
-            email = st.text_input("Email", key="auth_email")
-            password = st.text_input("Пароль", type="password", key="auth_password")
-            
-            if auth_mode == "Вход":
-                if st.button("Войти", type="primary", use_container_width=True):
-                    if sign_in(email, password):
-                        st.rerun()
-            else:
-                if st.button("Зарегистрироваться", type="primary", use_container_width=True):
-                    if sign_up(email, password):
-                        st.info("Проверьте email для подтверждения (если включено) или попробуйте войти.")
+    st.write("") # Место для будущего профиля
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
-
-# Кнопка отладки (для пользователя по запросу)
-with st.expander("🛠️ Отладка"):
-    st.session_state.debug_mode = st.toggle("Включить подробные логи", value=st.session_state.debug_mode)
-    if st.button("Очистить кэш сессии"):
-        st.session_state.clear()
-        st.rerun()
 
 # --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
 col_tar1, col_tar2 = st.columns(2)
@@ -610,15 +488,7 @@ with col_tar1:
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    is_logged_in = st.session_state.user is not None
-    user_id = st.session_state.user.id if is_logged_in else "guest"
-    sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8?checkout[custom][user_id]={user_id}"
-    
-    if is_logged_in:
-        button_html = f'<a href="{sub_checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>'
-    else:
-        button_html = f'<div style="background: rgba(255,255,255,0.3); color: white; text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: not-allowed; border: 1px solid rgba(255,255,255,0.4);">Для подписки нужно войти в аккаунт 👆</div>'
-
+    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
@@ -634,7 +504,7 @@ with col_tar2:
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div style="height: 33px;"></div> <!-- Spacer for alignment -->
-                {button_html}
+                <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -680,27 +550,8 @@ with c2:
         key=f"type_pills_{st.session_state.reset_counter}"
     )
 
-# Определение доступных вкладок
-user_status = get_user_status()
-tabs_list = ["🚀 ИИ Аудит", "📝 Пример отчета"]
-
-if user_status != "guest":
-    tabs_list.insert(1, "🔄 Сравнение версий")
-    if user_status == "pro":
-        tabs_list.append("📁 История")
-
-tabs = st.tabs(tabs_list)
-
-# Распределение логики по индексам (нужно учитывать динамический список)
-tab_audit = tabs[0]
-idx = 1
-tab_redline = None
-if user_status != "guest":
-    tab_redline = tabs[idx]
-    idx += 1
-tab_demo = tabs[idx]
-idx += 1
-tab_history = tabs[idx] if user_status == "pro" else None
+# Рабочее пространство (Вкладки)
+tab_audit, tab_redline, tab_demo = st.tabs(["🚀 ИИ Аудит", "🔄 Сравнение версий", "📝 Пример отчета"])
 
 with tab_audit:
     # --- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР ---
@@ -792,24 +643,6 @@ with tab_audit:
                     if clean_res:
                         st.session_state.analysis_result = clean_res
                         st.session_state.audit_score = score
-                        
-                        # СОХРАНЕНИЕ В БД
-                        audit_db_id = None
-                        if st.session_state.user:
-                            # Для обычных и про сохраняем в БД
-                            audit_db_id = save_audit(file.name, contract_type, user_role, clean_res, score)
-                            st.session_state.current_audit_db_id = audit_db_id
-                            log_action("Результат сохранен для зарегистрированного пользователя", {"audit_id": audit_db_id})
-                        else:
-                            # Для гостей создаем временную запись для оплаты
-                            audit_db_id = save_audit(file.name, contract_type, user_role, clean_res, score)
-                            st.session_state.current_audit_db_id = audit_db_id
-                            st.session_state.temp_audit_id = audit_db_id # Используем ID из БД вместо UUID для гостей тоже
-                            log_action("Создана запись в БД для гостя", {"audit_id": audit_db_id})
-                            
-                        if audit_db_id:
-                            st.query_params["audit_id"] = audit_db_id
-                            
                         st.rerun()
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
@@ -830,147 +663,52 @@ with tab_audit:
                 st.success("✅ Анализ и протокол разногласий успешно сформированы!")
 
                 clean_res = st.session_state.analysis_result
-                user_status = get_user_status()
                 
-                # --- ЛОГИКА ОГРАНИЧЕНИЯ ДОСТУПА ---
-                is_unlocked = (user_status == "pro") or st.session_state.get("is_paid_one_off", False)
-                
-                if not is_unlocked:
-                    # Показываем только часть (Резюме и Риски), остальное блюрим
-                    parts = clean_res.split("## 🛠️ Протокол разногласий")
-                    preview_text = parts[0]
-                    
-                    st.markdown(f"<div class='report-card'>{preview_text.strip()}</div>", unsafe_allow_html=True)
-                    
-                    st.markdown("""
-                        <div style="background: rgba(59, 130, 246, 0.1); border: 2px dashed #3b82f6; padding: 30px; border-radius: 15px; text-align: center; margin-top: 20px;">
-                            <h3 style="color: #3b82f6; margin-top: 0;">🔒 Полный отчет заблокирован</h3>
-                            <p>Чтобы увидеть <b>Протокол разногласий</b> с готовыми правками и скачать отчет в <b>PDF/Word</b>, приобретите разовый аудит или оформите подписку.</p>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Кнопка разовой оплаты
-                    audit_payment_id = st.session_state.get("current_audit_db_id", "unknown")
-                    one_off_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61?checkout[custom][audit_id]={audit_payment_id}"
-                    
-                    col_pay1, col_pay2 = st.columns(2)
-                    with col_pay1:
-                        st.link_button("💳 Купить разовый аудит (850 ₽)", one_off_url, use_container_width=True, type="primary")
-                    with col_pay2:
-                        st.info("💡 Подписка Pro выгоднее, если у вас много документов!")
-                    
-                    st.write("")
-                    if st.button("🔄 Я уже здесь оплатил, обновить статус", use_container_width=True, type="secondary"):
-                        with st.spinner("Проверяем статус оплаты..."):
-                            if supabase:
-                                try:
-                                    res = supabase.table("audits").select("is_paid_one_off").eq("id", audit_payment_id).single().execute()
-                                    if res.data and res.data.get("is_paid_one_off"):
-                                        st.session_state.is_paid_one_off = True
-                                        st.rerun()
-                                    else:
-                                        st.warning("Оплата пока не поступила. Это может занять несколько секунд, попробуйте снова.")
-                                except Exception as e:
-                                    st.error("Не удалось проверить статус оплаты.")
-                else:
-                    # ПОЛНЫЙ ДОСТУП
-                    st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
+                # Показываем результат сразу
+                st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
                 
                 # Три колонки для кнопок (ID заменен на фейковый или удален)
                 col_pdf, col_word, col_sup = st.columns(3)
                 
                 with col_pdf:
-                    if is_unlocked:
-                        pdf_bytes = create_pdf(clean_res)
-                        if pdf_bytes:
-                            st.download_button(
-                                label="📥 PDF",
-                                data=bytes(pdf_bytes),
-                                file_name=f"audit_report.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
+                    pdf_bytes = create_pdf(clean_res)
+                    if pdf_bytes:
+                        st.download_button(
+                            label="📥 PDF",
+                            data=bytes(pdf_bytes),
+                            file_name=f"audit_report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
                     else:
-                        st.button("📥 PDF (Заблокировано)", disabled=True, use_container_width=True)
+                        st.warning("PDF не доступен")
                 
                 with col_word:
-                    if is_unlocked:
-                        try:
-                            word_bytes = create_docx(clean_res)
-                            if word_bytes:
-                                st.download_button(
-                                    label="📝 Word",
-                                    data=word_bytes,
-                                    file_name=f"audit_report.docx",
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    use_container_width=True
-                                )
-                        except Exception as e:
-                            st.error("Ошибка Word")
-                    else:
-                        st.button("📝 Word (Заблокировано)", disabled=True, use_container_width=True)
+                    try:
+                        word_bytes = create_docx(clean_res)
+                        if word_bytes:
+                            st.download_button(
+                                label="📝 Word",
+                                data=word_bytes,
+                                file_name=f"audit_report.docx",
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True
+                            )
+                        else:
+                            st.warning("Word не доступен")
+                    except Exception as e:
+                        st.error("Ошибка Word")
                 
                 with col_sup:
-                    st.link_button("🆘 Поддержка", "mailto:support@jurisclear.com", use_container_width=True)
+                    st.link_button("🆘 Поддержка", "https://t.me/твой_логин", use_container_width=True)
 
                 st.write("")
                 if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
                     st.session_state.reset_counter += 1
-                    keys_to_clear = ["analysis_result", "audit_score", "temp_audit_id", "is_paid_one_off"]
+                    keys_to_clear = ["analysis_result", "audit_score"]
                     for k in keys_to_clear:
                         if k in st.session_state: del st.session_state[k]
                     st.rerun()
-if tab_redline is not None:
-    with tab_redline:
-        if user_status == "guest":
-            st.warning("🔄 Сравнение версий доступно только для зарегистрированных пользователей.")
-            st.info("Пожалуйста, войдите или зарегистрируйтесь, чтобы использовать эту функцию.")
-        else:
-            st.markdown("### 🔄 Сравнение версий договора")
-            st.write("Загрузите две версии одного документа, чтобы увидеть различия.")
-            
-            col_v1, col_v2 = st.columns(2)
-            with col_v1:
-                file1 = st.file_uploader("Версия №1 (Оригинал)", type=['pdf'], key="redline_v1")
-            with col_v2:
-                file2 = st.file_uploader("Версия №2 (С правками)", type=['pdf'], key="redline_v2")
-                
-            if file1 and file2:
-                if st.button("Сравнить версии", type="primary", use_container_width=True):
-                    with st.spinner("ИИ анализирует различия..."):
-                        try:
-                            text1_raw = extract_text_from_pdf(file1.read())
-                            text2_raw = extract_text_from_pdf(file2.read())
-                            
-                            text1_str = str(text1_raw)
-                            text2_str = str(text2_raw)
-                            
-                            prompt = f"""
-                            Ты — юрист. Сравни эти два текста договора. 
-                            Выдели ЧТО ИМЕННО изменилось и КАКИЕ РИСКИ это несет.
-                            Текст 1: {text1_str[:5000]}...
-                            Текст 2: {text2_str[:5000]}...
-                            
-                            Ответ дай в формате: Список изменений, Анализ рисков новых правок.
-                            """
-                            response = client.chat.completions.create(
-                                model="gpt-4o-mini",
-                                messages=[{"role": "user", "content": prompt}]
-                            )
-                            diff_res = response.choices[0].message.content
-                            st.markdown(f"<div class='report-card'>{diff_res}</div>", unsafe_allow_html=True)
-                            
-                            # Кнопки скачивания
-                            c_p, c_w = st.columns(2)
-                            with c_p:
-                                p_b = create_pdf(diff_res)
-                                if p_b: st.download_button("📥 PDF", p_b, "diff.pdf", "application/pdf", use_container_width=True)
-                            with c_w:
-                                w_b = create_docx(diff_res)
-                                if w_b: st.download_button("📝 Word", w_b, "diff.docx", use_container_width=True)
-                        except Exception as e:
-                            st.error(f"Ошибка сравнения: {e}")
-
 with tab_demo:
     st.write("### Так выглядит результат анализа:")
     bar_color, bar_shadow, risk_text = get_risk_params(9)
@@ -984,34 +722,6 @@ with tab_demo:
         </div>
     """, unsafe_allow_html=True)
     st.markdown(f"<div class='report-card'>{sample_text}</div>", unsafe_allow_html=True)
-
-if tab_history is not None:
-    with tab_history:
-        st.markdown("### 📁 Ваша история анализов")
-        audits = get_user_audits()
-        if not audits:
-            st.info("У вас пока нет сохраненных анализов.")
-        else:
-            for audit in audits:
-                audit_date = datetime.fromisoformat(audit['created_at']).strftime('%d.%m.%Y %H:%M')
-                with st.expander(f"📄 {audit['file_name']} (от {audit_date})"):
-                    st.write(f"**Тип:** {audit['contract_type']} | **Роль:** {audit['user_role']}")
-                    
-                    bar_c, bar_s, risk_t = get_risk_params(audit['score'])
-                    st.markdown(f"""
-                        <div style="height:20px; width:{audit['score']*10}%; background:{bar_c}; border-radius:5px; margin-bottom:10px;"></div>
-                    """, unsafe_allow_html=True)
-                    
-                    st.markdown(f"<div style='background: var(--card-bg); padding:15px; border-radius:10px; max-height: 400px; overflow-y: scroll;'>{audit['analysis_text']}</div>", unsafe_allow_html=True)
-                    
-                    c_p, c_w = st.columns(2)
-                    audit_uuid_str = str(audit['id'])
-                    with c_p:
-                        p_b = create_pdf(audit['analysis_text'])
-                        if p_b: st.download_button("📥 PDF", bytes(p_b), f"audit_{audit_uuid_str[:8]}.pdf", mime="application/pdf", use_container_width=True, key=f"p_{audit_uuid_str}")
-                    with c_w:
-                        w_b = create_docx(audit['analysis_text'])
-                        if w_b: st.download_button("📝 Word", w_b, f"audit_{audit_uuid_str[:8]}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True, key=f"w_{audit_uuid_str}")
 
 st.divider()
 col_f1, col_f2, col_f3 = st.columns(3)
