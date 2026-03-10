@@ -305,35 +305,38 @@ def get_user_status():
         return "pro"
     return "free"
 
-# --- ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПОСЛЕ ОПЛАТЫ (РЕДИРЕКТ ИЗ LEMON SQUEEZY) ---
+# --- ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ДЛЯ СОХРАНЕНИЯ СЕССИИ (F5 / РЕДИРЕКТ) ---
+# 1. Загрузка данных по audit_id (работает и при F5, и при редиректе)
+if "audit_id" in st.query_params and "analysis_result" not in st.session_state:
+    audit_id = st.query_params.get("audit_id")
+    if supabase:
+        try:
+            res = supabase.table("audits").select("*").eq("id", audit_id).single().execute()
+            if res.data:
+                st.session_state.analysis_result = res.data["analysis_text"]
+                st.session_state.audit_score = res.data["score"]
+                st.session_state.current_audit_db_id = audit_id
+                if res.data.get("is_paid_one_off"):
+                    st.session_state.is_paid_one_off = True
+                else:
+                    st.session_state.temp_audit_id = audit_id
+        except Exception:
+            pass
+
+# 2. Обработка успешной оплаты
 if st.query_params.get("payment") == "success":
     st.success("🎉 Оплата успешно завершена! Спасибо за покупку.")
     
-    # Редирект после разового аудита
-    if "audit_id" in st.query_params and "analysis_result" not in st.session_state:
-        audit_id = st.query_params.get("audit_id")
-        if supabase:
-            try:
-                res = supabase.table("audits").select("*").eq("id", audit_id).single().execute()
-                # Если уже оплачено, грузим результат из БД
-                if res.data and res.data.get("is_paid_one_off"):
-                    st.session_state.analysis_result = res.data["analysis_text"]
-                    st.session_state.audit_score = res.data["score"]
-                    st.session_state.is_paid_one_off = True
-                    st.session_state.current_audit_db_id = audit_id
-            except Exception as e:
-                pass
-                
     # Редирект после покупки подписки
     if st.query_params.get("type") == "pro":
         if st.session_state.user:
-            # Обновляем профиль принудительно
             get_profile(st.session_state.user.id)
             st.info("💡 Ваша подписка успешно активирована!")
         else:
-            st.info("💡 Ваша подписка активирована! Пожалуйста, войдите в свой аккаунт.")
+            st.info("💡 Ваша подписка активирована! Войдите в аккаунт, чтобы пользоваться безлимитом.")
+        del st.query_params["type"]
         
-    st.query_params.clear()
+    del st.query_params["payment"]
 
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
@@ -804,6 +807,9 @@ with tab_audit:
                             st.session_state.temp_audit_id = audit_db_id # Используем ID из БД вместо UUID для гостей тоже
                             log_action("Создана запись в БД для гостя", {"audit_id": audit_db_id})
                             
+                        if audit_db_id:
+                            st.query_params["audit_id"] = audit_db_id
+                            
                         st.rerun()
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
@@ -996,16 +1002,16 @@ if tab_history is not None:
                         <div style="height:20px; width:{audit['score']*10}%; background:{bar_c}; border-radius:5px; margin-bottom:10px;"></div>
                     """, unsafe_allow_html=True)
                     
-                    st.markdown(f"<div style='background: var(--card-bg); padding:15px; border-radius:10px;'>{audit['analysis_text'][:1000]}...</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background: var(--card-bg); padding:15px; border-radius:10px; max-height: 400px; overflow-y: scroll;'>{audit['analysis_text']}</div>", unsafe_allow_html=True)
                     
                     c_p, c_w = st.columns(2)
                     audit_uuid_str = str(audit['id'])
                     with c_p:
                         p_b = create_pdf(audit['analysis_text'])
-                        if p_b: st.download_button("📥 PDF", p_b, f"audit_{audit_uuid_str[:8]}.pdf", use_container_width=True, key=f"p_{audit_uuid_str}")
+                        if p_b: st.download_button("📥 PDF", bytes(p_b), f"audit_{audit_uuid_str[:8]}.pdf", mime="application/pdf", use_container_width=True, key=f"p_{audit_uuid_str}")
                     with c_w:
                         w_b = create_docx(audit['analysis_text'])
-                        if w_b: st.download_button("📝 Word", w_b, f"audit_{audit_uuid_str[:8]}.docx", use_container_width=True, key=f"w_{audit_uuid_str}")
+                        if w_b: st.download_button("📝 Word", w_b, f"audit_{audit_uuid_str[:8]}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True, key=f"w_{audit_uuid_str}")
 
 st.divider()
 col_f1, col_f2, col_f3 = st.columns(3)
