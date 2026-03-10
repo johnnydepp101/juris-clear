@@ -579,7 +579,7 @@ with col_tar1:
 with col_tar2:
     # URL для оплаты подписки с привязкой к user_id
     user_id = st.session_state.user.id if st.session_state.user else "new_user"
-    sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/buy/1312656?checkout[custom][user_id]={user_id}"
+    sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8?checkout[custom][user_id]={user_id}"
     
     st.markdown(f"""
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
@@ -810,7 +810,7 @@ with tab_audit:
                     
                     # Кнопка разовой оплаты
                     audit_payment_id = st.session_state.get("current_audit_db_id", "unknown")
-                    one_off_url = f"https://jurisclearai.lemonsqueezy.com/buy/1312648?checkout[custom][audit_id]={audit_payment_id}"
+                    one_off_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/a06e3832-bc7a-4d2c-8f1e-113446b2bf61?checkout[custom][audit_id]={audit_payment_id}"
                     
                     col_pay1, col_pay2 = st.columns(2)
                     with col_pay1:
