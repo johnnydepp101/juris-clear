@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import pdfplumber
 import re
-from supabase import create_client, Client  # Добавили импорт Supabase
+from supabase import create_client, Client
 import os
 from fpdf import FPDF
 from docx import Document
@@ -12,6 +12,8 @@ from pdf2image import convert_from_bytes
 from PIL import Image
 import uuid
 from datetime import datetime, timezone
+import streamlit.components.v1 as components
+import json
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -36,6 +38,10 @@ if 'show_signup' not in st.session_state:
     st.session_state.show_signup = False
 if 'current_audit_paid' not in st.session_state:
     st.session_state.current_audit_paid = False
+if 'current_audit_id' not in st.session_state:
+    st.session_state.current_audit_id = None
+if 'auth_restored' not in st.session_state:
+    st.session_state.auth_restored = False
 
 # --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
 st.markdown("""
@@ -235,7 +241,14 @@ def do_login(email, password):
     try:
         res = supabase.auth.sign_in_with_password({"email": email, "password": password})
         st.session_state.auth_user = res.user
+        # Сброс session_id при логине чтобы гостевые оплаты не текли
+        st.session_state.session_id = str(uuid.uuid4())
+        st.session_state.current_audit_paid = False
+        st.session_state.current_audit_id = None
         load_user_profile()
+        # Сохраняем токены для persistence
+        if res.session:
+            save_auth_to_localstorage(res.session.access_token, res.session.refresh_token)
         return True, "Успешный вход!"
     except Exception as e:
         msg = str(e)
@@ -251,7 +264,12 @@ def do_signup(email, password):
         res = supabase.auth.sign_up({"email": email, "password": password})
         if res.user:
             st.session_state.auth_user = res.user
+            st.session_state.session_id = str(uuid.uuid4())
+            st.session_state.current_audit_paid = False
+            st.session_state.current_audit_id = None
             load_user_profile()
+            if res.session:
+                save_auth_to_localstorage(res.session.access_token, res.session.refresh_token)
             return True, "Регистрация успешна!"
         return False, "Не удалось зарегистрироваться"
     except Exception as e:
@@ -272,6 +290,11 @@ def do_logout():
     st.session_state.auth_user = None
     st.session_state.user_profile = None
     st.session_state.current_audit_paid = False
+    st.session_state.current_audit_id = None
+    st.session_state.session_id = str(uuid.uuid4())
+    # Очищаем localStorage
+    clear_auth_from_localstorage()
+    clear_analysis_from_localstorage()
 
 def split_analysis(full_text):
     """Разделяет анализ на бесплатную и платную части по маркеру протокола"""
@@ -301,6 +324,157 @@ def build_checkout_url(base_url, user_id=None, session_id=None, email=None):
     if params:
         return base_url + "?" + "&".join(params)
     return base_url
+
+# --- СОХРАНЕНИЕ АУДИТА В БД ---
+def save_audit_to_db(file_name, contract_type, user_role_str, risk_score, full_analysis):
+    """Сохраняет результат анализа в таблицу audits"""
+    if not supabase:
+        return None
+    try:
+        free_part, paid_part = split_analysis(full_analysis)
+        user_id = None
+        if st.session_state.auth_user:
+            user_id = st.session_state.auth_user.id
+        
+        insert_data = {
+            "session_id": st.session_state.session_id,
+            "file_name": file_name or "document.pdf",
+            "contract_type": contract_type or "Авто-определение",
+            "user_role": user_role_str or "Заказчик",
+            "risk_score": risk_score,
+            "analysis_free": free_part,
+            "analysis_paid": paid_part,
+            "is_paid": False,
+        }
+        if user_id:
+            insert_data["user_id"] = user_id
+        
+        res = supabase.table("audits").insert(insert_data).execute()
+        if res.data:
+            return res.data[0].get("id")
+    except Exception as e:
+        pass  # Не ломаем UX если запись не удалась
+    return None
+
+# --- LOCALSTORAGE PERSISTENCE ---
+def save_auth_to_localstorage(access_token, refresh_token):
+    """Сохраняет токены авторизации в localStorage браузера"""
+    components.html(f"""
+        <script>
+            localStorage.setItem('jc_access_token', '{access_token}');
+            localStorage.setItem('jc_refresh_token', '{refresh_token}');
+        </script>
+    """, height=0)
+
+def clear_auth_from_localstorage():
+    """Очищает токены из localStorage"""
+    components.html("""
+        <script>
+            localStorage.removeItem('jc_access_token');
+            localStorage.removeItem('jc_refresh_token');
+        </script>
+    """, height=0)
+
+def save_analysis_to_localstorage(analysis, score, file_name, audit_id):
+    """Сохраняет результат анализа в localStorage"""
+    safe_analysis = json.dumps(analysis, ensure_ascii=False)
+    components.html(f"""
+        <script>
+            localStorage.setItem('jc_analysis', {safe_analysis});
+            localStorage.setItem('jc_score', '{score}');
+            localStorage.setItem('jc_file_name', '{file_name}');
+            localStorage.setItem('jc_audit_id', '{audit_id or ""}');
+        </script>
+    """, height=0)
+
+def clear_analysis_from_localstorage():
+    """Очищает анализ из localStorage"""
+    components.html("""
+        <script>
+            localStorage.removeItem('jc_analysis');
+            localStorage.removeItem('jc_score');
+            localStorage.removeItem('jc_file_name');
+            localStorage.removeItem('jc_audit_id');
+        </script>
+    """, height=0)
+
+def render_ls_checkout(checkout_url, button_text):
+    """Рендерит кнопку Lemon Squeezy с overlay checkout внутри страницы"""
+    components.html(f"""
+        <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+        <style>
+            .ls-checkout-btn {{
+                display: block;
+                width: 100%;
+                padding: 14px 24px;
+                background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                text-decoration: none;
+                text-align: center;
+                box-sizing: border-box;
+                transition: all 0.2s;
+                font-family: inherit;
+            }}
+            .ls-checkout-btn:hover {{
+                box-shadow: 0 6px 20px rgba(59,130,246,0.5);
+                transform: translateY(-1px);
+            }}
+        </style>
+        <a href="{checkout_url}" class="lemonsqueezy-button ls-checkout-btn">
+            {button_text}
+        </a>
+        <script>
+            // Делаем iframe полноэкранным когда overlay открыт
+            (function() {{
+                var frame = window.frameElement;
+                if (!frame) return;
+                var origStyle = {{}};
+                
+                var observer = new MutationObserver(function(mutations) {{
+                    var overlay = document.querySelector('.lemon-overlay, .ll-overlay, iframe[src*="lemonsqueezy"]');
+                    if (overlay && frame.style.position !== 'fixed') {{
+                        origStyle = {{
+                            position: frame.style.position,
+                            top: frame.style.top,
+                            left: frame.style.left,
+                            width: frame.style.width,
+                            height: frame.style.height,
+                            zIndex: frame.style.zIndex
+                        }};
+                        frame.style.position = 'fixed';
+                        frame.style.top = '0';
+                        frame.style.left = '0'; 
+                        frame.style.width = '100vw';
+                        frame.style.height = '100vh';
+                        frame.style.zIndex = '99999';
+                    }}
+                }});
+                observer.observe(document.body, {{ childList: true, subtree: true }});
+                
+                // Восстанавливаем при закрытии
+                window.addEventListener('message', function(e) {{
+                    if (e.data === 'lr:close' || (e.data && e.data.event === 'Checkout.Success')) {{
+                        frame.style.position = origStyle.position || '';
+                        frame.style.top = origStyle.top || '';
+                        frame.style.left = origStyle.left || '';
+                        frame.style.width = origStyle.width || '';
+                        frame.style.height = origStyle.height || '';
+                        frame.style.zIndex = origStyle.zIndex || '';
+                        
+                        if (e.data && e.data.event === 'Checkout.Success') {{
+                            // Перезагружаем страницу после успешной оплаты
+                            window.parent.location.reload();
+                        }}
+                    }}
+                }});
+            }})();
+        </script>
+    """, height=55, scrolling=False)
 
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
@@ -552,6 +726,53 @@ sample_text = """
 """
 
 # --- 5. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ ---
+
+# --- ВОССТАНОВЛЕНИЕ АВТОРИЗАЦИИ ИЗ LOCALSTORAGE ---
+if not st.session_state.auth_user and not st.session_state.auth_restored:
+    # Пробуем восстановить сессию из query params (устанавливаются JS-ом ниже)
+    qp = st.query_params
+    if 'jc_at' in qp and 'jc_rt' in qp and supabase:
+        try:
+            at = qp['jc_at']
+            rt = qp['jc_rt']
+            res = supabase.auth.set_session(at, rt)
+            if res and res.user:
+                st.session_state.auth_user = res.user
+                load_user_profile()
+        except:
+            pass
+        st.session_state.auth_restored = True
+        # Очищаем query params
+        st.query_params.clear()
+        st.rerun()
+    else:
+        st.session_state.auth_restored = True
+        # JS: читаем localStorage и ставим query params если есть токены
+        components.html("""
+            <script>
+                (function() {
+                    var at = localStorage.getItem('jc_access_token');
+                    var rt = localStorage.getItem('jc_refresh_token');
+                    if (at && rt) {
+                        var url = new URL(window.parent.location);
+                        if (!url.searchParams.has('jc_at')) {
+                            url.searchParams.set('jc_at', at);
+                            url.searchParams.set('jc_rt', rt);
+                            window.parent.location.replace(url.toString());
+                        }
+                    }
+                })();
+            </script>
+        """, height=0)
+
+# --- АВТО-ПРОВЕРКА ОПЛАТЫ ПРИ ЗАГРУЗКЕ ---
+if not st.session_state.current_audit_paid and st.session_state.current_audit_id and supabase:
+    try:
+        audit_res = supabase.table("audits").select("is_paid").eq("id", st.session_state.current_audit_id).maybe_single().execute()
+        if audit_res.data and audit_res.data.get("is_paid"):
+            st.session_state.current_audit_paid = True
+    except:
+        pass
 
 # --- ХЕДЕР ПРИЛОЖЕНИЯ ---
 header_col1, header_col2 = st.columns([3, 1])
@@ -866,10 +1087,16 @@ with tab_audit:
                     if clean_res:
                         st.session_state.analysis_result = clean_res
                         st.session_state.audit_score = score
-                        # Сохраняем имя файла для истории
+                        # Сохраняем метаданные для истории
                         st.session_state.audit_file_name = file.name
                         st.session_state.audit_contract_type = contract_type
                         st.session_state.audit_user_role = user_role
+                        # Сохраняем аудит в БД
+                        audit_id = save_audit_to_db(file.name, contract_type, user_role, score, clean_res)
+                        st.session_state.current_audit_id = audit_id
+                        st.session_state.current_audit_paid = False
+                        # Сохраняем в localStorage
+                        save_analysis_to_localstorage(clean_res, score, file.name, audit_id)
                         st.rerun()
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
@@ -965,7 +1192,7 @@ with tab_audit:
                     """, unsafe_allow_html=True)
                     
                     st.write("")
-                    # Кнопка покупки разового аудита
+                    # Кнопка оплаты разового аудита — оверлей Lemon Squeezy
                     user_id_for_checkout = st.session_state.auth_user.id if st.session_state.auth_user else None
                     user_email_for_checkout = st.session_state.auth_user.email if st.session_state.auth_user else None
                     session_id_for_checkout = st.session_state.session_id
@@ -977,53 +1204,30 @@ with tab_audit:
                         email=user_email_for_checkout
                     )
                     
-                    st.link_button(
-                        "💳 Купить разовый аудит — 850 ₽",
-                        checkout_url,
-                        use_container_width=True,
-                        type="primary"
-                    )
+                    # Оверлей checkout вместо редиректа
+                    render_ls_checkout(checkout_url, "💳 Купить разовый аудит — 850 ₽")
                     
-                    # Кнопка "Я уже оплатил" для проверки статуса
-                    if st.button("🔄 Я уже оплатил — обновить статус", use_container_width=True, key="btn_check_payment"):
-                        if supabase:
+                    # Кнопка проверки оплаты (резервная)
+                    if st.button("🔄 Обновить статус оплаты", use_container_width=True, key="btn_check_payment"):
+                        if supabase and st.session_state.current_audit_id:
                             try:
-                                # Проверяем по session_id или user_id
-                                query = supabase.table("audits").select("is_paid")
-                                if user_id_for_checkout:
-                                    query = query.eq("user_id", user_id_for_checkout)
-                                else:
-                                    query = query.eq("session_id", session_id_for_checkout)
-                                res = query.eq("is_paid", True).order("created_at", desc=True).limit(1).execute()
-                                
-                                if res.data and res.data[0].get("is_paid"):
+                                chk = supabase.table("audits").select("is_paid").eq("id", st.session_state.current_audit_id).maybe_single().execute()
+                                if chk.data and chk.data.get("is_paid"):
                                     st.session_state.current_audit_paid = True
-                                    st.success("✅ Оплата подтверждена! Обновляем...")
+                                    st.success("✅ Оплата подтверждена!")
                                     st.rerun()
                                 else:
-                                    # Также проверяем таблицу payments
-                                    pay_query = supabase.table("payments").select("status")
-                                    if user_id_for_checkout:
-                                        pay_query = pay_query.eq("user_id", user_id_for_checkout)
-                                    else:
-                                        pay_query = pay_query.eq("session_id", session_id_for_checkout)
-                                    pay_res = pay_query.eq("status", "paid").eq("payment_type", "one_off").order("created_at", desc=True).limit(1).execute()
-                                    
-                                    if pay_res.data:
-                                        st.session_state.current_audit_paid = True
-                                        st.success("✅ Оплата подтверждена! Обновляем...")
-                                        st.rerun()
-                                    else:
-                                        st.info("⏳ Оплата ещё не обработана. Подождите 10-30 секунд и попробуйте снова.")
+                                    st.info("⏳ Оплата ещё не обработана. Подождите 10-30 секунд.")
                             except Exception as e:
                                 st.error(f"Ошибка проверки: {e}")
 
                 st.write("")
                 if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
                     st.session_state.reset_counter += 1
-                    keys_to_clear = ["analysis_result", "audit_score", "current_audit_paid", "audit_file_name", "audit_contract_type", "audit_user_role"]
+                    keys_to_clear = ["analysis_result", "audit_score", "current_audit_paid", "current_audit_id", "audit_file_name", "audit_contract_type", "audit_user_role"]
                     for k in keys_to_clear:
                         if k in st.session_state: del st.session_state[k]
+                    clear_analysis_from_localstorage()
                     st.rerun()
 
 # --- ВКЛАДКА СРАВНЕНИЕ ВЕРСИЙ ---
