@@ -13,7 +13,6 @@ from PIL import Image
 import uuid
 from datetime import datetime, timezone
 import streamlit.components.v1 as components
-import json
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -246,9 +245,9 @@ def do_login(email, password):
         st.session_state.current_audit_paid = False
         st.session_state.current_audit_id = None
         load_user_profile()
-        # Сохраняем токены для persistence
-        if res.session:
-            save_auth_to_localstorage(res.session.access_token, res.session.refresh_token)
+        # Создаём DB-сессию для persistence
+        delete_app_session()  # удаляем старую если есть
+        create_app_session(user_id=res.user.id)
         return True, "Успешный вход!"
     except Exception as e:
         msg = str(e)
@@ -268,8 +267,9 @@ def do_signup(email, password):
             st.session_state.current_audit_paid = False
             st.session_state.current_audit_id = None
             load_user_profile()
-            if res.session:
-                save_auth_to_localstorage(res.session.access_token, res.session.refresh_token)
+            # Создаём DB-сессию
+            delete_app_session()
+            create_app_session(user_id=res.user.id)
             return True, "Регистрация успешна!"
         return False, "Не удалось зарегистрироваться"
     except Exception as e:
@@ -287,14 +287,13 @@ def do_logout():
             supabase.auth.sign_out()
         except:
             pass
+    # Удаляем DB-сессию
+    delete_app_session()
     st.session_state.auth_user = None
     st.session_state.user_profile = None
     st.session_state.current_audit_paid = False
     st.session_state.current_audit_id = None
     st.session_state.session_id = str(uuid.uuid4())
-    # Очищаем localStorage
-    clear_auth_from_localstorage()
-    clear_analysis_from_localstorage()
 
 def split_analysis(full_text):
     """Разделяет анализ на бесплатную и платную части по маркеру протокола"""
@@ -356,54 +355,123 @@ def save_audit_to_db(file_name, contract_type, user_role_str, risk_score, full_a
         pass  # Не ломаем UX если запись не удалась
     return None
 
-# --- LOCALSTORAGE PERSISTENCE ---
-def save_auth_to_localstorage(access_token, refresh_token):
-    """Сохраняет токены авторизации в localStorage браузера"""
+# --- DB-BACKED SESSION PERSISTENCE ---
+def create_app_session(user_id=None, session_id=None, audit_id=None, audit_paid=False):
+    """Создаёт сессию в БД и возвращает токен. Сохраняет токен в query params."""
+    if not supabase:
+        return None
+    try:
+        data = {
+            "session_id": session_id or st.session_state.session_id,
+            "audit_paid": audit_paid,
+        }
+        if user_id:
+            data["user_id"] = user_id
+        if audit_id:
+            data["audit_id"] = audit_id
+        
+        res = supabase.table("app_sessions").insert(data).execute()
+        if res.data:
+            token = res.data[0]["token"]
+            st.query_params["s"] = token
+            return token
+    except:
+        pass
+    return None
+
+def update_app_session(**kwargs):
+    """Обновляет текущую сессию в БД."""
+    if not supabase:
+        return
+    token = st.query_params.get("s")
+    if not token:
+        return
+    try:
+        supabase.table("app_sessions").update(kwargs).eq("token", token).execute()
+    except:
+        pass
+
+def restore_session_from_db():
+    """Восстанавливает сессию из БД по токену в query params."""
+    if not supabase:
+        return False
+    token = st.query_params.get("s")
+    if not token:
+        return False
+    try:
+        res = supabase.table("app_sessions").select("*").eq("token", token).maybe_single().execute()
+        if not res.data:
+            return False
+        
+        session = res.data
+        
+        # Восстанавливаем session_id для привязки оплат
+        if session.get("session_id"):
+            st.session_state.session_id = session["session_id"]
+        
+        # Восстанавливаем пользователя
+        if session.get("user_id") and not st.session_state.auth_user:
+            try:
+                profile = supabase.table("profiles").select("*").eq("id", session["user_id"]).maybe_single().execute()
+                if profile.data:
+                    st.session_state.user_profile = profile.data
+                    # Создаём минимальный объект пользователя для отображения UI
+                    class RestoredUser:
+                        def __init__(self, uid, email):
+                            self.id = uid
+                            self.email = email
+                    st.session_state.auth_user = RestoredUser(
+                        profile.data["id"], 
+                        profile.data.get("email", "")
+                    )
+            except:
+                pass
+        
+        # Восстанавливаем audit
+        if session.get("audit_id"):
+            st.session_state.current_audit_id = session["audit_id"]
+            st.session_state.current_audit_paid = session.get("audit_paid", False)
+            
+            # Загружаем анализ из БД
+            if "analysis_result" not in st.session_state:
+                try:
+                    audit = supabase.table("audits").select("*").eq("id", session["audit_id"]).maybe_single().execute()
+                    if audit.data:
+                        full_text = (audit.data.get("analysis_free") or "") + "\n\n" + (audit.data.get("analysis_paid") or "")
+                        st.session_state.analysis_result = full_text.strip()
+                        st.session_state.audit_score = audit.data.get("risk_score", 5)
+                        st.session_state.audit_file_name = audit.data.get("file_name", "document.pdf")
+                        st.session_state.audit_contract_type = audit.data.get("contract_type", "")
+                        st.session_state.audit_user_role = audit.data.get("user_role", "")
+                        # Проверяем актуальный статус оплаты
+                        if audit.data.get("is_paid"):
+                            st.session_state.current_audit_paid = True
+                except:
+                    pass
+        
+        return True
+    except:
+        return False
+
+def delete_app_session():
+    """Удаляет текущую сессию из БД."""
+    if not supabase:
+        return
+    token = st.query_params.get("s")
+    if token:
+        try:
+            supabase.table("app_sessions").delete().eq("token", token).execute()
+        except:
+            pass
+    # Очищаем query params
+    if "s" in st.query_params:
+        del st.query_params["s"]
+
+def render_checkout_popup(checkout_url, button_text):
+    """Рендерит кнопку, открывающую оплату в popup-окне (не теряет состояние страницы)."""
     components.html(f"""
-        <script>
-            localStorage.setItem('jc_access_token', '{access_token}');
-            localStorage.setItem('jc_refresh_token', '{refresh_token}');
-        </script>
-    """, height=0)
-
-def clear_auth_from_localstorage():
-    """Очищает токены из localStorage"""
-    components.html("""
-        <script>
-            localStorage.removeItem('jc_access_token');
-            localStorage.removeItem('jc_refresh_token');
-        </script>
-    """, height=0)
-
-def save_analysis_to_localstorage(analysis, score, file_name, audit_id):
-    """Сохраняет результат анализа в localStorage"""
-    safe_analysis = json.dumps(analysis, ensure_ascii=False)
-    components.html(f"""
-        <script>
-            localStorage.setItem('jc_analysis', {safe_analysis});
-            localStorage.setItem('jc_score', '{score}');
-            localStorage.setItem('jc_file_name', '{file_name}');
-            localStorage.setItem('jc_audit_id', '{audit_id or ""}');
-        </script>
-    """, height=0)
-
-def clear_analysis_from_localstorage():
-    """Очищает анализ из localStorage"""
-    components.html("""
-        <script>
-            localStorage.removeItem('jc_analysis');
-            localStorage.removeItem('jc_score');
-            localStorage.removeItem('jc_file_name');
-            localStorage.removeItem('jc_audit_id');
-        </script>
-    """, height=0)
-
-def render_ls_checkout(checkout_url, button_text):
-    """Рендерит кнопку Lemon Squeezy с overlay checkout внутри страницы"""
-    components.html(f"""
-        <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
         <style>
-            .ls-checkout-btn {{
+            .checkout-btn {{
                 display: block;
                 width: 100%;
                 padding: 14px 24px;
@@ -418,62 +486,16 @@ def render_ls_checkout(checkout_url, button_text):
                 text-align: center;
                 box-sizing: border-box;
                 transition: all 0.2s;
-                font-family: inherit;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }}
-            .ls-checkout-btn:hover {{
+            .checkout-btn:hover {{
                 box-shadow: 0 6px 20px rgba(59,130,246,0.5);
                 transform: translateY(-1px);
             }}
         </style>
-        <a href="{checkout_url}" class="lemonsqueezy-button ls-checkout-btn">
+        <button class="checkout-btn" onclick="window.open('{checkout_url}', 'ls_checkout', 'width=520,height=750,scrollbars=yes,resizable=yes')">
             {button_text}
-        </a>
-        <script>
-            // Делаем iframe полноэкранным когда overlay открыт
-            (function() {{
-                var frame = window.frameElement;
-                if (!frame) return;
-                var origStyle = {{}};
-                
-                var observer = new MutationObserver(function(mutations) {{
-                    var overlay = document.querySelector('.lemon-overlay, .ll-overlay, iframe[src*="lemonsqueezy"]');
-                    if (overlay && frame.style.position !== 'fixed') {{
-                        origStyle = {{
-                            position: frame.style.position,
-                            top: frame.style.top,
-                            left: frame.style.left,
-                            width: frame.style.width,
-                            height: frame.style.height,
-                            zIndex: frame.style.zIndex
-                        }};
-                        frame.style.position = 'fixed';
-                        frame.style.top = '0';
-                        frame.style.left = '0'; 
-                        frame.style.width = '100vw';
-                        frame.style.height = '100vh';
-                        frame.style.zIndex = '99999';
-                    }}
-                }});
-                observer.observe(document.body, {{ childList: true, subtree: true }});
-                
-                // Восстанавливаем при закрытии
-                window.addEventListener('message', function(e) {{
-                    if (e.data === 'lr:close' || (e.data && e.data.event === 'Checkout.Success')) {{
-                        frame.style.position = origStyle.position || '';
-                        frame.style.top = origStyle.top || '';
-                        frame.style.left = origStyle.left || '';
-                        frame.style.width = origStyle.width || '';
-                        frame.style.height = origStyle.height || '';
-                        frame.style.zIndex = origStyle.zIndex || '';
-                        
-                        if (e.data && e.data.event === 'Checkout.Success') {{
-                            // Перезагружаем страницу после успешной оплаты
-                            window.parent.location.reload();
-                        }}
-                    }}
-                }});
-            }})();
-        </script>
+        </button>
     """, height=55, scrolling=False)
 
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
@@ -727,43 +749,15 @@ sample_text = """
 
 # --- 5. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ ---
 
-# --- ВОССТАНОВЛЕНИЕ АВТОРИЗАЦИИ ИЗ LOCALSTORAGE ---
-if not st.session_state.auth_user and not st.session_state.auth_restored:
-    # Пробуем восстановить сессию из query params (устанавливаются JS-ом ниже)
-    qp = st.query_params
-    if 'jc_at' in qp and 'jc_rt' in qp and supabase:
-        try:
-            at = qp['jc_at']
-            rt = qp['jc_rt']
-            res = supabase.auth.set_session(at, rt)
-            if res and res.user:
-                st.session_state.auth_user = res.user
-                load_user_profile()
-        except:
-            pass
-        st.session_state.auth_restored = True
-        # Очищаем query params
-        st.query_params.clear()
+# --- ВОССТАНОВЛЕНИЕ СЕССИИ ИЗ БД ---
+if not st.session_state.auth_restored:
+    st.session_state.auth_restored = True
+    restored = restore_session_from_db()
+    if restored:
         st.rerun()
-    else:
-        st.session_state.auth_restored = True
-        # JS: читаем localStorage и ставим query params если есть токены
-        components.html("""
-            <script>
-                (function() {
-                    var at = localStorage.getItem('jc_access_token');
-                    var rt = localStorage.getItem('jc_refresh_token');
-                    if (at && rt) {
-                        var url = new URL(window.parent.location);
-                        if (!url.searchParams.has('jc_at')) {
-                            url.searchParams.set('jc_at', at);
-                            url.searchParams.set('jc_rt', rt);
-                            window.parent.location.replace(url.toString());
-                        }
-                    }
-                })();
-            </script>
-        """, height=0)
+    elif not st.session_state.auth_user:
+        # Гость без сессии — создаём гостевую сессию
+        create_app_session()
 
 # --- АВТО-ПРОВЕРКА ОПЛАТЫ ПРИ ЗАГРУЗКЕ ---
 if not st.session_state.current_audit_paid and st.session_state.current_audit_id and supabase:
@@ -1095,8 +1089,8 @@ with tab_audit:
                         audit_id = save_audit_to_db(file.name, contract_type, user_role, score, clean_res)
                         st.session_state.current_audit_id = audit_id
                         st.session_state.current_audit_paid = False
-                        # Сохраняем в localStorage
-                        save_analysis_to_localstorage(clean_res, score, file.name, audit_id)
+                        # Обновляем DB-сессию
+                        update_app_session(audit_id=audit_id, audit_paid=False)
                         st.rerun()
         else:
             # --- ИНТЕГРИРОВАННЫЙ БЛОК ВЫВОДА ОТЧЕТА ---
@@ -1204,8 +1198,8 @@ with tab_audit:
                         email=user_email_for_checkout
                     )
                     
-                    # Оверлей checkout вместо редиректа
-                    render_ls_checkout(checkout_url, "💳 Купить разовый аудит — 850 ₽")
+                    # Popup checkout (opens in new window, doesn't freeze page)
+                    render_checkout_popup(checkout_url, "💳 Купить разовый аудит — 850 ₽")
                     
                     # Кнопка проверки оплаты (резервная)
                     if st.button("🔄 Обновить статус оплаты", use_container_width=True, key="btn_check_payment"):
@@ -1227,7 +1221,7 @@ with tab_audit:
                     keys_to_clear = ["analysis_result", "audit_score", "current_audit_paid", "current_audit_id", "audit_file_name", "audit_contract_type", "audit_user_role"]
                     for k in keys_to_clear:
                         if k in st.session_state: del st.session_state[k]
-                    clear_analysis_from_localstorage()
+                    update_app_session(audit_id=None, audit_paid=False)
                     st.rerun()
 
 # --- ВКЛАДКА СРАВНЕНИЕ ВЕРСИЙ ---
