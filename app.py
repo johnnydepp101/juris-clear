@@ -435,151 +435,107 @@ sample_text = """
 *💡 (Примечание: Полная версия отчета содержит конкретные формулировки правок (протокол разногласий) для нейтрализации каждого из указанных рисков.)*
 """
 
-# --- 5. СТРАНИЦА АВТОРИЗАЦИИ ---
-def show_auth_page():
-    """Полноэкранная форма входа/регистрации с дизайном проекта."""
-    st.markdown("""
-        <style>
-        .auth-container {
-            max-width: 460px;
-            margin: 60px auto 0 auto;
-            background: var(--card-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            padding: 40px 35px;
-            box-shadow: var(--card-shadow);
-        }
-        .auth-logo {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .auth-logo span.logo-icon {
-            font-size: 48px;
-            line-height: 1;
-        }
-        .auth-logo h2 {
-            color: var(--header-color);
-            font-size: 28px;
-            font-weight: 800;
-            margin: 10px 0 0 0;
-        }
-        .auth-logo h2 span {
-            color: var(--accent-blue);
-        }
-        .auth-subtitle {
-            text-align: center;
-            color: var(--secondary-text);
-            font-size: 0.95rem;
-            margin-bottom: 25px;
-        }
-        .auth-container .stTextInput > div > div > input {
-            background-color: rgba(255,255,255,0.05) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 12px !important;
-            color: var(--text-color) !important;
-            padding: 12px 16px !important;
-            font-size: 15px !important;
-        }
-        .auth-container .stTextInput > div > div > input:focus {
-            border-color: var(--accent-blue) !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
-        }
-        .auth-footer {
-            text-align: center;
-            color: var(--secondary-text);
-            font-size: 0.8rem;
-            margin-top: 20px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+# --- 5. АВТОРИЗАЦИЯ (ОПЦИОНАЛЬНАЯ, В САЙДБАРЕ) ---
+def show_auth_sidebar():
+    """Формы входа/регистрации в боковой панели."""
+    with st.sidebar:
+        st.markdown("### 🔐 Личный кабинет")
+        
+        if st.session_state.user:
+            # Пользователь уже вошел
+            user_email = st.session_state.user.email
+            st.markdown(f"""
+                <div style="background: var(--card-bg); backdrop-filter: var(--glass-blur); 
+                     border-radius: 16px; padding: 20px; border: 1px solid var(--border-color);
+                     margin-bottom: 15px;">
+                    <p style="margin: 0 0 5px 0; font-size: 13px; color: var(--secondary-text);">Вы вошли как:</p>
+                    <p style="margin: 0; font-weight: 700; color: var(--text-color); font-size: 15px;">👤 {user_email}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("🚪 Выйти из аккаунта", use_container_width=True, key="sidebar_logout"):
+                try:
+                    supabase_auth.auth.sign_out()
+                except Exception:
+                    pass
+                st.session_state.user = None
+                keys_to_clear = ["analysis_result", "audit_score"]
+                for k in keys_to_clear:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                st.rerun()
+        else:
+            # Пользователь не вошел — показываем формы
+            tab_login, tab_register = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-    st.markdown("""
-        <div class="auth-container">
-            <div class="auth-logo">
-                <span class="logo-icon">⚖️</span>
-                <h2>JurisClear <span>AI</span></h2>
-            </div>
-            <p class="auth-subtitle">Профессиональный юридический аудит договоров</p>
-        </div>
-    """, unsafe_allow_html=True)
+            with tab_login:
+                with st.form("login_form", clear_on_submit=False):
+                    email = st.text_input("Email", placeholder="name@example.com", key="login_email")
+                    password = st.text_input("Пароль", type="password", placeholder="Минимум 6 символов", key="login_password")
+                    submit = st.form_submit_button("Войти", use_container_width=True, type="primary")
 
-    # Создаем невидимый контейнер для формы с тем же max-width
-    spacer_l, form_col, spacer_r = st.columns([1, 2, 1])
-
-    with form_col:
-        tab_login, tab_register = st.tabs(["🔑 Вход", "📝 Регистрация"])
-
-        with tab_login:
-            with st.form("login_form", clear_on_submit=False):
-                email = st.text_input("Email", placeholder="name@example.com", key="login_email")
-                password = st.text_input("Пароль", type="password", placeholder="Минимум 6 символов", key="login_password")
-                submit = st.form_submit_button("Войти", use_container_width=True, type="primary")
-
-                if submit:
-                    if not email or not password:
-                        st.error("Заполните все поля")
-                    else:
-                        try:
-                            data = supabase_auth.auth.sign_in_with_password({
-                                "email": email,
-                                "password": password
-                            })
-                            st.session_state.user = data.user
-                            st.rerun()
-                        except Exception as e:
-                            error_msg = str(e)
-                            if "Invalid login credentials" in error_msg:
-                                st.error("❌ Неверный email или пароль")
-                            elif "Email not confirmed" in error_msg:
-                                st.error("📧 Email не подтвержден. Проверьте почту.")
-                            else:
-                                st.error(f"Ошибка входа: {error_msg}")
-
-        with tab_register:
-            with st.form("register_form", clear_on_submit=False):
-                new_email = st.text_input("Email", placeholder="name@example.com", key="reg_email")
-                new_password = st.text_input("Пароль", type="password", placeholder="Минимум 6 символов", key="reg_password")
-                new_password2 = st.text_input("Повторите пароль", type="password", placeholder="Минимум 6 символов", key="reg_password2")
-                submit_reg = st.form_submit_button("Создать аккаунт", use_container_width=True, type="primary")
-
-                if submit_reg:
-                    if not new_email or not new_password or not new_password2:
-                        st.error("Заполните все поля")
-                    elif new_password != new_password2:
-                        st.error("❌ Пароли не совпадают")
-                    elif len(new_password) < 6:
-                        st.error("❌ Пароль должен быть не менее 6 символов")
-                    else:
-                        try:
-                            data = supabase_auth.auth.sign_up({
-                                "email": new_email,
-                                "password": new_password
-                            })
-                            # Проверка: если email confirmation отключена, user сразу авторизован
-                            if data.user and data.user.aud == "authenticated":
+                    if submit:
+                        if not email or not password:
+                            st.error("Заполните все поля")
+                        else:
+                            try:
+                                data = supabase_auth.auth.sign_in_with_password({
+                                    "email": email,
+                                    "password": password
+                                })
                                 st.session_state.user = data.user
-                                st.success("✅ Регистрация прошла успешно! Перенаправление...")
                                 st.rerun()
-                            else:
-                                st.success("✅ Аккаунт создан! Проверьте почту для подтверждения.")
-                        except Exception as e:
-                            error_msg = str(e)
-                            if "User already registered" in error_msg:
-                                st.error("❌ Пользователь с таким email уже существует")
-                            elif "rate limit" in error_msg.lower():
-                                st.error("⏳ Слишком много попыток. Подождите минуту.")
-                            else:
-                                st.error(f"Ошибка регистрации: {error_msg}")
+                            except Exception as e:
+                                error_msg = str(e)
+                                if "Invalid login credentials" in error_msg:
+                                    st.error("❌ Неверный email или пароль")
+                                elif "Email not confirmed" in error_msg:
+                                    st.error("📧 Email не подтвержден. Проверьте почту.")
+                                else:
+                                    st.error(f"Ошибка входа: {error_msg}")
 
-        st.markdown("<p class='auth-footer'>🔒 Данные защищены шифрованием Supabase</p>", unsafe_allow_html=True)
+            with tab_register:
+                with st.form("register_form", clear_on_submit=False):
+                    new_email = st.text_input("Email", placeholder="name@example.com", key="reg_email")
+                    new_password = st.text_input("Пароль", type="password", placeholder="Минимум 6 символов", key="reg_password")
+                    new_password2 = st.text_input("Повторите пароль", type="password", placeholder="Минимум 6 символов", key="reg_password2")
+                    submit_reg = st.form_submit_button("Создать аккаунт", use_container_width=True, type="primary")
 
-# --- ПРОВЕРКА АВТОРИЗАЦИИ ---
-if st.session_state.user is None:
-    show_auth_page()
-    st.stop()
+                    if submit_reg:
+                        if not new_email or not new_password or not new_password2:
+                            st.error("Заполните все поля")
+                        elif new_password != new_password2:
+                            st.error("❌ Пароли не совпадают")
+                        elif len(new_password) < 6:
+                            st.error("❌ Пароль должен быть не менее 6 символов")
+                        else:
+                            try:
+                                data = supabase_auth.auth.sign_up({
+                                    "email": new_email,
+                                    "password": new_password
+                                })
+                                # Проверка: если email confirmation отключена, user сразу авторизован
+                                if data.user and data.user.aud == "authenticated":
+                                    st.session_state.user = data.user
+                                    st.success("✅ Регистрация прошла успешно!")
+                                    st.rerun()
+                                else:
+                                    st.success("✅ Аккаунт создан! Проверьте почту для подтверждения.")
+                            except Exception as e:
+                                error_msg = str(e)
+                                if "User already registered" in error_msg:
+                                    st.error("❌ Пользователь с таким email уже существует")
+                                elif "rate limit" in error_msg.lower():
+                                    st.error("⏳ Слишком много попыток. Подождите минуту.")
+                                else:
+                                    st.error(f"Ошибка регистрации: {error_msg}")
 
-# --- 6. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ (только для авторизованных) ---
+            st.markdown("<p style='text-align: center; color: var(--secondary-text); font-size: 0.8rem; margin-top: 15px;'>🔒 Данные защищены шифрованием Supabase</p>", unsafe_allow_html=True)
+
+# Вызываем сайдбар авторизации
+show_auth_sidebar()
+
+# --- 6. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ (доступен всем) ---
 
 # --- ХЕДЕР ПРИЛОЖЕНИЯ ---
 header_col1, header_col2 = st.columns([3, 1])
@@ -597,7 +553,6 @@ with header_col1:
 with header_col2:
     if st.session_state.user:
         user_email = st.session_state.user.email
-        # Показываем email + кнопку выхода
         st.markdown(f"""
             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; height: 100%;">
                 <span style="color: var(--secondary-text); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;" title="{user_email}">
@@ -605,18 +560,8 @@ with header_col2:
                 </span>
             </div>
         """, unsafe_allow_html=True)
-        if st.button("🚪 Выйти", key="btn_logout", type="tertiary"):
-            try:
-                supabase_auth.auth.sign_out()
-            except Exception:
-                pass
-            st.session_state.user = None
-            # Очищаем все данные анализа при выходе
-            keys_to_clear = ["analysis_result", "audit_score"]
-            for k in keys_to_clear:
-                if k in st.session_state:
-                    del st.session_state[k]
-            st.rerun()
+    else:
+        st.write("") # Место для будущего профиля
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
