@@ -26,294 +26,248 @@ if 'user' not in st.session_state:
     st.session_state.user = None
 
 # --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
+# --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
 st.markdown("""
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-    html, body, [data-testid="stAppViewContainer"] {
-        font-family: 'Inter', sans-serif !important;
-    }
-    /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+html, body, [data-testid="stAppViewContainer"] {
+    font-family: 'Inter', sans-serif !important;
+}
+:root {
+    --bg-color: #05070a;
+    --card-bg: rgba(15, 23, 42, 0.6);
+    --text-color: #f8fafc;
+    --secondary-text: #94a3b8;
+    --border-color: rgba(59, 130, 246, 0.2);
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-green: #10b981;
+    --glass-blur: blur(12px);
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --header-color: #ffffff;
+    --glow-color: rgba(59, 130, 246, 0.3);
+}
+@media (prefers-color-scheme: light) {
     :root {
-        --bg-color: #05070a;
-        --card-bg: rgba(15, 23, 42, 0.6);
-        --text-color: #f8fafc;
-        --secondary-text: #94a3b8;
-        --border-color: rgba(59, 130, 246, 0.2);
-        --accent-blue: #3b82f6;
-        --accent-cyan: #06b6d4;
-        --accent-green: #10b981;
-        --glass-blur: blur(12px);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-        --header-color: #ffffff;
-        --glow-color: rgba(59, 130, 246, 0.3);
+        --bg-color: #f1f5f9;
+        --card-bg: rgba(255, 255, 255, 0.7);
+        --text-color: #0f172a;
+        --secondary-text: #475569;
+        --border-color: rgba(59, 130, 246, 0.1);
+        --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        --header-color: #1e293b;
+        --glow-color: rgba(59, 130, 246, 0.1);
     }
-
-    @media (prefers-color-scheme: light) {
-        :root {
-            --bg-color: #f1f5f9;
-            --card-bg: rgba(255, 255, 255, 0.7);
-            --text-color: #0f172a;
-            --secondary-text: #475569;
-            --border-color: rgba(59, 130, 246, 0.1);
-            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-            --header-color: #1e293b;
-            --glow-color: rgba(59, 130, 246, 0.1);
-        }
-    }
-
-    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-    [data-testid="stHeader"] {display: none;}
-    
+}
+#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+[data-testid="stHeader"] {display: none;}
+.block-container {
+    padding-top: 2rem; 
+    max-width: 100%;
+    padding-left: 5rem;
+    padding-right: 5rem;
+}
+@media (max-width: 1200px) {
     .block-container {
-        padding-top: 2rem; 
-        max-width: 100%;
-        padding-left: 5rem;
-        padding-right: 5rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
-
-    @media (max-width: 1200px) {
-        .block-container {
-            padding-left: 2rem;
-            padding-right: 2rem;
-        }
+}
+@media (max-width: 768px) {
+    .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 1rem;
     }
-
-    @media (max-width: 768px) {
-        .block-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
-            padding-top: 1rem;
-        }
-        
-        /* Mobile adjustments for headers */
-        h1 {
-            font-size: 24px !important;
-        }
-        
-        .stMarkdown div[data-testid="stMarkdownHeader"] h1 {
-            font-size: 24px !important;
-        }
-
-        /* Adjust card heights for mobile if needed */
-        [style*="height: 420px"] {
-            height: auto !important;
-            min-height: 400px;
-            margin-bottom: 15px;
-        }
+    h1 {
+        font-size: 24px !important;
     }
-    
-    /* ГЛОБАЛЬНЫЕ СТИЛИ */
-    [data-testid="stAppViewContainer"] {
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        transition: all 0.4s ease;
+    .stMarkdown div[data-testid="stMarkdownHeader"] h1 {
+        font-size: 24px !important;
     }
-
-    /* УБИРАЕМ ЯКОРЯ */
-    .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, 
-    .stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display: none !important; }
-    [data-testid="stMarkdownHeader"] a { display: none !important; }
-
-    /* ХЕДЕР И ВЫРАВНИВАНИЕ */
-    [data-testid="stHorizontalBlock"] { align-items: center !important; }
-
-    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (FUTURE LOGIC) */
-    .pricing-card-container {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
+    [style*="height: 420px"] {
+        height: auto !important;
+        min-height: 400px;
+        margin-bottom: 15px;
     }
-
-    .pricing-card {
-        flex: 1;
-        min-width: 300px;
-        background: var(--card-bg);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        padding: 30px; 
-        border-radius: 24px; 
-        border: 1px solid var(--border-color); 
-        text-align: left; 
-        color: var(--text-color);
-        box-shadow: var(--card-shadow);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .pricing-card:hover {
-        transform: translateY(-10px);
-        border-color: var(--accent-blue);
-        box-shadow: 0 15px 45px var(--glow-color);
-    }
-
-    .pricing-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 4px;
-        background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
-        opacity: 0.7;
-    }
-
-    .pricing-card-pro::before {
-        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
-    }
-
-    .pricing-header {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: var(--secondary-text);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .pricing-price {
-        font-size: 2.5rem;
-        font-weight: 800;
-        margin-bottom: 1.5rem;
-        color: var(--header-color);
-    }
-
-    .pricing-features {
-        list-style: none;
-        padding: 0;
-        margin-bottom: 2rem;
-    }
-
-    .pricing-features li {
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.95rem;
-    }
-
-    .pricing-features li::before {
-        content: "✦";
-        color: var(--accent-blue);
-        font-size: 0.8rem;
-    }
-    
-    /* КАРТОЧКА ОТЧЕТА */
-    .report-card {
-        background-color: var(--card-bg);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-color);
-        padding: 40px; 
-        border-radius: 24px; 
-        margin-top: 25px; 
-        color: var(--text-color);
-        box-shadow: var(--card-shadow);
-        position: relative;
-    }
-
-    .report-card::after {
-        content: "";
-        position: absolute;
-        top: -1px; left: -1px; right: -1px; bottom: -1px;
-        border-radius: 24px;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent 50%);
-        pointer-events: none;
-    }
-    
-    /* АНИМАЦИИ */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .stAppViewContainer [data-testid="stVerticalBlock"] > div {
-        animation: fadeIn 0.6s ease-out forwards;
-    }
-
-    /* ШКАЛА РИСКА (FUTURE LOOK) */
-    .risk-meter-container {
-        background: rgba(0, 0, 0, 0.4); 
-        border-radius: 20px; 
-        padding: 6px;
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); 
-        border: 1px solid var(--border-color); 
-        margin: 25px 0;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .risk-meter-bar {
-        height: 35px; 
-        border-radius: 14px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        color: white; 
-        font-weight: 900; 
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-    }
-
-    .risk-meter-bar::after {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        animation: glow 2s infinite;
-    }
-
-    @keyframes glow {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-    
-    /* КНОПКИ */
-    .stButton > button, .stLinkButton > a, .stDownloadButton > button {
-        border-radius: 16px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.8px !important;
-        text-transform: uppercase !important;
-        font-size: 13px !important;
-        padding: 0.6rem 1.5rem !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid var(--border-color) !important;
-        background: var(--card-bg) !important;
-        color: var(--text-color) !important;
-    }
-
-    .stButton > button:hover {
-        background: var(--accent-blue) !important;
-        color: white !important;
-        border-color: var(--accent-blue) !important;
-        box-shadow: 0 0 20px var(--glow-color) !important;
-        transform: scale(1.02);
-    }
-
-    .stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)) !important;
-        color: white !important;
-        border: none !important;
-    }
-
-    /* FILE UPLOADER */
-    [data-testid="stFileUploader"] {
-        background: var(--card-bg);
-        padding: 2.5rem;
-        border-radius: 24px;
-        border: 2px dashed var(--border-color);
-        transition: all 0.3s ease;
-    }
-    [data-testid="stFileUploader"]:hover {
-        border-color: var(--accent-blue);
-        background: rgba(59, 130, 246, 0.05);
-    }
-    
-    /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
-    .secondary-text {
-        color: var(--secondary-text);
-        font-size: 0.9rem;
-    }
-    </style>
+}
+[data-testid="stAppViewContainer"] {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.4s ease;
+}
+.stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, 
+.stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display: none !important; }
+[data-testid="stMarkdownHeader"] a { display: none !important; }
+[data-testid="stHorizontalBlock"] { align-items: center !important; }
+.pricing-card-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+.pricing-card {
+    flex: 1;
+    min-width: 300px;
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 30px; 
+    border-radius: 24px; 
+    border: 1px solid var(--border-color); 
+    text-align: left; 
+    color: var(--text-color);
+    box-shadow: var(--card-shadow);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+.pricing-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--accent-blue);
+    box-shadow: 0 15px 45px var(--glow-color);
+}
+.pricing-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 4px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+    opacity: 0.7;
+}
+.pricing-card-pro::before {
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+}
+.pricing-header {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.pricing-price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: var(--header-color);
+}
+.pricing-features {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+.pricing-features li {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+}
+.pricing-features li::before {
+    content: "✦";
+    color: var(--accent-blue);
+    font-size: 0.8rem;
+}
+.report-card {
+    background-color: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-color);
+    padding: 40px; 
+    border-radius: 24px; 
+    margin-top: 25px; 
+    color: var(--text-color);
+    box-shadow: var(--card-shadow);
+    position: relative;
+}
+.report-card::after {
+    content: "";
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; bottom: -1px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent 50%);
+    pointer-events: none;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.stAppViewContainer [data-testid="stVerticalBlock"] > div {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+.risk-meter-container {
+    background: rgba(0, 0, 0, 0.4); 
+    border-radius: 20px; 
+    padding: 6px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); 
+    border: 1px solid var(--border-color); 
+    margin: 25px 0;
+    overflow: hidden;
+    position: relative;
+}
+.risk-meter-bar {
+    height: 35px; 
+    border-radius: 14px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: white; 
+    font-weight: 900; 
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+.risk-meter-bar::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: glow 2s infinite;
+}
+@keyframes glow {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+.stButton > button, .stLinkButton > a, .stDownloadButton > button {
+    border-radius: 16px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.8px !important;
+    text-transform: uppercase !important;
+    font-size: 13px !important;
+    padding: 0.6rem 1.5rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+.stButton > button:hover {
+    background: var(--accent-blue) !important;
+    color: white !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 20px var(--glow-color) !important;
+    transform: scale(1.02);
+}
+.stButton > button[kind="primary"] {
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)) !important;
+    color: white !important;
+    border: none !important;
+}
+[data-testid="stFileUploader"] {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 24px;
+    border: 2px dashed var(--border-color);
+    transition: all 0.3s ease;
+}
+[data-testid="stFileUploader"]:hover {
+    border-color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.05);
+}
+.secondary-text {
+    color: var(--secondary-text);
+    font-size: 0.9rem;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # --- 3. ЛОГИКА ДИНАМИЧЕСКОЙ ШКАЛЫ ---
@@ -602,24 +556,24 @@ header_col1, header_col2 = st.columns([3, 1])
 
 with header_col1:
     st.markdown(f"""
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <span style="font-size: 40px; line-height: 1;">⚖️</span>
-            <div style="display: flex; flex-direction: column;">
-                <h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+<div style="display: flex; align-items: center; gap: 15px;">
+<span style="font-size: 40px; line-height: 1;">⚖️</span>
+<div style="display: flex; flex-direction: column;">
+<h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
 with header_col2:
     if st.session_state.user:
         user_email = st.session_state.user.email
         with st.popover(f"👤 {user_email}", use_container_width=True):
             st.markdown(f"""
-                <div style="padding: 5px 0;">
-                    <p style="margin: 0 0 5px 0; font-size: 13px; color: var(--secondary-text);">Вы вошли как:</p>
-                    <p style="margin: 0 0 15px 0; font-weight: 700; color: var(--text-color); font-size: 14px;">{user_email}</p>
-                </div>
-            """, unsafe_allow_html=True)
+<div style="padding: 5px 0;">
+<p style="margin: 0 0 5px 0; font-size: 13px; color: var(--secondary-text);">Вы вошли как:</p>
+<p style="margin: 0 0 15px 0; font-weight: 700; color: var(--text-color); font-size: 14px;">{user_email}</p>
+</div>
+""", unsafe_allow_html=True)
             if st.button("🚪 Выйти из аккаунта", use_container_width=True, key="btn_logout"):
                 try:
                     supabase_auth.auth.sign_out()
@@ -704,41 +658,40 @@ st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-w
 checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
 
 st.markdown(f"""
-    <div class="pricing-card-container">
-        <!-- КАРТОЧКА 1: РАЗОВЫЙ АУДИТ -->
-        <div class="pricing-card">
-            <div class="pricing-header">Базовый</div>
-            <div class="pricing-price">850 ₽</div>
-            <ul class="pricing-features">
-                <li><b>Бесплатное резюме</b> основных рисков</li>
-                <li>Детальный юридический разбор (Full Report)</li>
-                <li>Конкретные правки для защиты интересов</li>
-                <li>Экспорт отчета в PDF и Word</li>
-            </ul>
-            <div style="background: rgba(59, 130, 246, 0.15); padding: 12px; border-radius: 12px; text-align: center; font-size: 11px; color: var(--accent-blue); margin-bottom: 20px;">
-                ℹ️ Оплачивайте только если результат вас устроит
-            </div>
-            <div style="width: 100%; background: rgba(255,255,255,0.05); color: var(--secondary-text); border: 1px dashed var(--border-color); padding: 14px; border-radius: 14px; text-align: center; font-weight: 600;">
-                Анализ доступен ниже 👇
-            </div>
-        </div>
-        
-        <!-- КАРТОЧКА 2: БЕЗЛИМИТ PRO -->
-        <div class="pricing-card pricing-card-pro">
-            <div class="pricing-header" style="color: var(--accent-green);">Премиум</div>
-            <div class="pricing-price">2500 ₽ <span style="font-size: 14px; opacity: 0.6; font-weight: 400;">/мес</span></div>
-            <ul class="pricing-features">
-                <li><b>Неограниченное</b> количество документов</li>
-                <li>Полные отчеты <b>мгновенно</b> без доплат</li>
-                <li>Доступ к результату в истории навсегда</li>
-                <li>Персональный архив всех проверок</li>
-                <li>Самая мощная модель ИИ (GPT-4o)</li>
-            </ul>
-            <a href="{checkout_url}" target="_blank" style="display: block; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); color: white; text-align: center; padding: 14px; border-radius: 14px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
-                🚀 Оформить подписку
-            </a>
-        </div>
-    </div>
+<div class="pricing-card-container">
+<!-- КАРТОЧКА 1: РАЗОВЫЙ АУДИТ -->
+<div class="pricing-card">
+<div class="pricing-header">Базовый</div>
+<div class="pricing-price">850 ₽</div>
+<ul class="pricing-features">
+<li><b>Бесплатное резюме</b> основных рисков</li>
+<li>Детальный юридический разбор (Full Report)</li>
+<li>Конкретные правки для защиты интересов</li>
+<li>Экспорт отчета в PDF и Word</li>
+</ul>
+<div style="background: rgba(59, 130, 246, 0.15); padding: 12px; border-radius: 12px; text-align: center; font-size: 11px; color: var(--accent-blue); margin-bottom: 20px;">
+ℹ️ Оплачивайте только если результат вас устроит
+</div>
+<div style="width: 100%; background: rgba(255,255,255,0.05); color: var(--secondary-text); border: 1px dashed var(--border-color); padding: 14px; border-radius: 14px; text-align: center; font-weight: 600;">
+Анализ доступен ниже 👇
+</div>
+</div>
+<!-- КАРТОЧКА 2: БЕЗЛИМИТ PRO -->
+<div class="pricing-card pricing-card-pro">
+<div class="pricing-header" style="color: var(--accent-green);">Премиум</div>
+<div class="pricing-price">2500 ₽ <span style="font-size: 14px; opacity: 0.6; font-weight: 400;">/мес</span></div>
+<ul class="pricing-features">
+<li><b>Неограниченное</b> количество документов</li>
+<li>Полные отчеты <b>мгновенно</b> без доплат</li>
+<li>Доступ к результату в истории навсегда</li>
+<li>Персональный архив всех проверок</li>
+<li>Самая мощная модель ИИ (GPT-4o)</li>
+</ul>
+<a href="{checkout_url}" target="_blank" style="display: block; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); color: white; text-align: center; padding: 14px; border-radius: 14px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+🚀 Оформить подписку
+</a>
+</div>
+</div>
 """, unsafe_allow_html=True)
 
 st.divider()
