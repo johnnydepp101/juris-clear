@@ -27,31 +27,37 @@ if 'user' not in st.session_state:
 
 # --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
 st.markdown("""
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+    html, body, [data-testid="stAppViewContainer"] {
+        font-family: 'Inter', sans-serif !important;
+    }
     /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
     :root {
-        --bg-color: #0d1117;
-        --card-bg: rgba(30, 41, 59, 0.7);
-        --text-color: #f0f6fc;
-        --secondary-text: #8b949e;
-        --border-color: rgba(255, 255, 255, 0.1);
+        --bg-color: #05070a;
+        --card-bg: rgba(15, 23, 42, 0.6);
+        --text-color: #f8fafc;
+        --secondary-text: #94a3b8;
+        --border-color: rgba(59, 130, 246, 0.2);
         --accent-blue: #3b82f6;
+        --accent-cyan: #06b6d4;
         --accent-green: #10b981;
-        --glass-blur: blur(10px);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        --glass-blur: blur(12px);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         --header-color: #ffffff;
+        --glow-color: rgba(59, 130, 246, 0.3);
     }
 
-    /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
     @media (prefers-color-scheme: light) {
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --text-color: #1e293b;
-            --secondary-text: #64748b;
-            --border-color: rgba(0, 0, 0, 0.1);
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --text-color: #0f172a;
+            --secondary-text: #475569;
+            --border-color: rgba(59, 130, 246, 0.1);
             --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-            --header-color: #0f172a;
+            --header-color: #1e293b;
+            --glow-color: rgba(59, 130, 246, 0.1);
         }
     }
 
@@ -111,76 +117,195 @@ st.markdown("""
     /* ХЕДЕР И ВЫРАВНИВАНИЕ */
     [data-testid="stHorizontalBlock"] { align-items: center !important; }
 
-    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
-    .pricing-card-single {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
-        backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
-        text-align: center; color: white;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
+    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (FUTURE LOGIC) */
+    .pricing-card-container {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
     }
-    .pricing-card-pro {
-        background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
+
+    .pricing-card {
+        flex: 1;
+        min-width: 300px;
+        background: var(--card-bg);
         backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
-        text-align: center; color: white;
+        -webkit-backdrop-filter: var(--glass-blur);
+        padding: 30px; 
+        border-radius: 24px; 
+        border: 1px solid var(--border-color); 
+        text-align: left; 
+        color: var(--text-color);
         box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
     }
-    .pricing-card-single:hover, .pricing-card-pro:hover {
-        transform: translateY(-5px);
+
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--accent-blue);
+        box-shadow: 0 15px 45px var(--glow-color);
+    }
+
+    .pricing-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+        opacity: 0.7;
+    }
+
+    .pricing-card-pro::before {
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+    }
+
+    .pricing-header {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--secondary-text);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .pricing-price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        color: var(--header-color);
+    }
+
+    .pricing-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 2rem;
+    }
+
+    .pricing-features li {
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95rem;
+    }
+
+    .pricing-features li::before {
+        content: "✦";
+        color: var(--accent-blue);
+        font-size: 0.8rem;
     }
     
     /* КАРТОЧКА ОТЧЕТА */
     .report-card {
         background-color: var(--card-bg);
         backdrop-filter: var(--glass-blur);
-        border-left: 6px solid var(--accent-blue);
-        padding: 30px; border-radius: 16px; 
-        margin-top: 25px; color: var(--text-color);
-        border-top: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-color);
+        padding: 40px; 
+        border-radius: 24px; 
+        margin-top: 25px; 
+        color: var(--text-color);
         box-shadow: var(--card-shadow);
+        position: relative;
+    }
+
+    .report-card::after {
+        content: "";
+        position: absolute;
+        top: -1px; left: -1px; right: -1px; bottom: -1px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent 50%);
+        pointer-events: none;
     }
     
-    /* ШКАЛА РИСКА */
+    /* АНИМАЦИИ */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stAppViewContainer [data-testid="stVerticalBlock"] > div {
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    /* ШКАЛА РИСКА (FUTURE LOOK) */
     .risk-meter-container {
-        background: rgba(0, 0, 0, 0.2); 
-        border-radius: 20px; padding: 10px;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); 
+        background: rgba(0, 0, 0, 0.4); 
+        border-radius: 20px; 
+        padding: 6px;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); 
         border: 1px solid var(--border-color); 
-        margin: 20px 0;
+        margin: 25px 0;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .risk-meter-bar {
+        height: 35px; 
+        border-radius: 14px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        color: white; 
+        font-weight: 900; 
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .risk-meter-bar::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        animation: glow 2s infinite;
+    }
+
+    @keyframes glow {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
     }
     
     /* КНОПКИ */
     .stButton > button, .stLinkButton > a, .stDownloadButton > button {
-        border-radius: 12px !important;
+        border-radius: 16px !important;
         font-weight: 700 !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 0.8px !important;
         text-transform: uppercase !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
+        padding: 0.6rem 1.5rem !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: none !important;
+        border: 1px solid var(--border-color) !important;
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
     }
 
     .stButton > button:hover {
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+        background: var(--accent-blue) !important;
+        color: white !important;
+        border-color: var(--accent-blue) !important;
+        box-shadow: 0 0 20px var(--glow-color) !important;
         transform: scale(1.02);
     }
 
-    .stLinkButton > a {
-        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)) !important;
         color: white !important;
+        border: none !important;
     }
 
-    .stDownloadButton > button {
-        background: var(--border-color) !important;
-        color: var(--text-color) !important;
-        border: 1px solid var(--border-color) !important;
+    /* FILE UPLOADER */
+    [data-testid="stFileUploader"] {
+        background: var(--card-bg);
+        padding: 2.5rem;
+        border-radius: 24px;
+        border: 2px dashed var(--border-color);
+        transition: all 0.3s ease;
+    }
+    [data-testid="stFileUploader"]:hover {
+        border-color: var(--accent-blue);
+        background: rgba(59, 130, 246, 0.05);
     }
     
     /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
@@ -575,62 +700,46 @@ with header_col2:
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
-# --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
-col_tar1, col_tar2 = st.columns(2)
+# --- ОБНОВЛЕННЫЕ ТАРИФЫ (FUTURE LOGIC) ---
+checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
 
-card_style = """
-    display: flex; 
-    flex-direction: column; 
-    justify-content: space-between; 
-    padding: 25px; 
-    border-radius: 15px; 
-    height: 420px; 
-    color: white;
-"""
-
-with col_tar1:
-    st.markdown(f"""
-        <div style="{card_style} background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); border: 1px solid #3b82f6;">
-            <div>
-                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
-                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">850 ₽</div>
-                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
-                    • <b>Бесплатное резюме</b> основных рисков<br>
-                    • Детальный юридический разбор (Full Report)<br>
-                    • Конкретные правки для защиты ваших интересов<br>
-                    • Экспорт отчета в PDF и Word<br>
-                </div>
+st.markdown(f"""
+    <div class="pricing-card-container">
+        <!-- КАРТОЧКА 1: РАЗОВЫЙ АУДИТ -->
+        <div class="pricing-card">
+            <div class="pricing-header">Базовый</div>
+            <div class="pricing-price">850 ₽</div>
+            <ul class="pricing-features">
+                <li><b>Бесплатное резюме</b> основных рисков</li>
+                <li>Детальный юридический разбор (Full Report)</li>
+                <li>Конкретные правки для защиты интересов</li>
+                <li>Экспорт отчета в PDF и Word</li>
+            </ul>
+            <div style="background: rgba(59, 130, 246, 0.15); padding: 12px; border-radius: 12px; text-align: center; font-size: 11px; color: var(--accent-blue); margin-bottom: 20px;">
+                ℹ️ Оплачивайте только если результат вас устроит
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; text-align: center; font-size: 11px;">
-                    ℹ️ Оплачивайте только если результат вас устроит
-                </div>
-                <button style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px; border-radius: 10px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
+            <div style="width: 100%; background: rgba(255,255,255,0.05); color: var(--secondary-text); border: 1px dashed var(--border-color); padding: 14px; border-radius: 14px; text-align: center; font-weight: 600;">
+                Анализ доступен ниже 👇
             </div>
         </div>
-    """, unsafe_allow_html=True)
-
-with col_tar2:
-    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
-    st.markdown(f"""
-        <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
-            <div>
-                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
-                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">2500 ₽ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
-                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
-                    • <b>Неограниченное</b> количество документов<br>
-                    • Полные отчеты <b>мгновенно</b> без доплат<br>
-                    • Доступ к результату в истории навсегда<br>
-                    • Персональный архив всех проверок<br>
-                    • Самая мощная модель ИИ (GPT-4o)
-                </div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="height: 33px;"></div> <!-- Spacer for alignment -->
-                <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
-            </div>
+        
+        <!-- КАРТОЧКА 2: БЕЗЛИМИТ PRO -->
+        <div class="pricing-card pricing-card-pro">
+            <div class="pricing-header" style="color: var(--accent-green);">Премиум</div>
+            <div class="pricing-price">2500 ₽ <span style="font-size: 14px; opacity: 0.6; font-weight: 400;">/мес</span></div>
+            <ul class="pricing-features">
+                <li><b>Неограниченное</b> количество документов</li>
+                <li>Полные отчеты <b>мгновенно</b> без доплат</li>
+                <li>Доступ к результату в истории навсегда</li>
+                <li>Персональный архив всех проверок</li>
+                <li>Самая мощная модель ИИ (GPT-4o)</li>
+            </ul>
+            <a href="{checkout_url}" target="_blank" style="display: block; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); color: white; text-align: center; padding: 14px; border-radius: 14px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+                🚀 Оформить подписку
+            </a>
         </div>
-    """, unsafe_allow_html=True)
+    </div>
+""", unsafe_allow_html=True)
 
 st.divider()
 
@@ -774,9 +883,7 @@ with tab_audit:
             st.write("### ИИ Оценка Риска:")
             st.markdown(f"""
                 <div class="risk-meter-container">
-                    <div style="height:35px; width:{score*10}%; background:{bar_color}; 
-                    box-shadow: 0 4px 15px {bar_shadow}; border-radius:10px; 
-                    display:flex; align-items:center; justify-content:center; color:white; font-weight:900;">
+                    <div class="risk-meter-bar" style="width:{score*10}%; background:{bar_color}; box-shadow: 0 4px 15px {bar_shadow};">
                         {risk_text} ({score}/10)
                     </div>
                 </div>
