@@ -727,11 +727,5 @@ st.divider()
 col_f1, col_f2, col_f3 = st.columns(3)
 with col_f1:
     st.caption("© 2026 JurisClear AI | Ереван")
-with col_f2:
-    if st.button("Конфиденциальность", type="tertiary"):
-        st.info("Политика конфиденциальности...")
-with col_f3:
-    if st.button("Условия", type="tertiary"):
-        st.info("Условия использования...")
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>support@jurisclear.com</p>", unsafe_allow_html=True)
