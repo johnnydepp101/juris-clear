@@ -75,7 +75,7 @@ with col_tar1:
         <div style="{card_style} background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); border: 1px solid #3b82f6;">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
-                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">850 ₽</div>
+                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">9 $</div>
                 <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
                     • <b>Бесплатное резюме</b> основных рисков<br>
                     • Детальный юридический разбор (Full Report)<br>
@@ -98,7 +98,7 @@ with col_tar2:
         <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
-                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">2500 ₽ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
+                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">29 $ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
                 <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
                     • <b>Неограниченное</b> количество документов<br>
                     • Полные отчеты <b>мгновенно</b> без доплат<br>
