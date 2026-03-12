@@ -178,6 +178,15 @@ with tab_audit:
     """, unsafe_allow_html=True)
     
     file = st.file_uploader("Выберите файл договора (PDF)", type=['pdf'], key=f"uploader_{st.session_state.reset_counter}")
+    
+    # --- СБРОС ПАМЯТИ ---
+    # Если файл не загружен (или удален крестиком), очищаем результаты старого анализа
+    if file is None:
+        if "analysis_result" in st.session_state:
+            del st.session_state["analysis_result"]
+        if "audit_score" in st.session_state:
+            del st.session_state["audit_score"]
+            
     if file:
         if "analysis_result" not in st.session_state:
             if st.button("Начать анализ", use_container_width=True, type="primary"):
