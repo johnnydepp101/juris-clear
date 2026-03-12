@@ -108,8 +108,13 @@ with col_tar2:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="height: 33px;"></div> <!-- Spacer for alignment -->
-                <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
+                <div style="height: 10px;"></div> <!-- Spacer -->
+                <div style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.3); cursor: not-allowed;">
+                    🚀 Оформить подписку
+                </div>
+                <div style="text-align: center; font-size: 12px; opacity: 0.9; font-weight: 500;">
+                    🔐 Для оформления подписки нужно зарегистрироваться
+                </div>
             </div>
         </div>
     """, unsafe_allow_html=True)
