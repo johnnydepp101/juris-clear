@@ -89,6 +89,7 @@ def load_css():
         border-right: 1px solid var(--border-color);
         border-bottom: 1px solid var(--border-color);
         box-shadow: var(--card-shadow);
+        margin-bottom: 35px;
     }
     
     /* ШКАЛА РИСКА */
