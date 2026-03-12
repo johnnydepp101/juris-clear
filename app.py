@@ -26,6 +26,8 @@ if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
 if 'user' not in st.session_state:
     st.session_state.user = None
+if 'explicit_logout' not in st.session_state:
+    st.session_state.explicit_logout = False
 
 # --- ВОССТАНОВЛЕНИЕ СЕССИИ ИЗ URL (ДЛЯ JS МОСТА) ---
 if st.session_state.user is None:
@@ -266,6 +268,10 @@ html, body, [data-testid="stAppViewContainer"] {
 # --- JS МОСТ ДЛЯ LOCALSTORAGE ---
 # Этот скрипт синхронизирует сессию Supabase между браузером и Streamlit
 user_status = "logged_in" if st.session_state.user else "logged_out"
+if st.session_state.get('explicit_logout'):
+    user_status = "explicit_logout"
+    st.session_state.explicit_logout = False # Сбрасываем для следующего цикла
+
 current_session = "{}"
 if st.session_state.user and 'session_data' in st.session_state:
     current_session = json.dumps(st.session_state.session_data)
@@ -284,10 +290,10 @@ st.components.v1.html(f"""
         localStorage.setItem(US_KEY, JSON.stringify(sessionToSave));
     }}
 
-    // 2. Если пользователь вышел в Python, но в localStorage еще есть данные - удаляем
-    if (status === "logged_out") {{
+    // 2. Если пользователь ВЫШЕЛ ЯВНО - удаляем из localStorage
+    if (status === "explicit_logout") {{
         if (localStorage.getItem(US_KEY)) {{
-            console.log("[JurisClear Bridge] Clearing session from localStorage...");
+            console.log("[JurisClear Bridge] Explicit logout detected. Clearing localStorage...");
             localStorage.removeItem(US_KEY);
         }}
     }}
@@ -624,6 +630,7 @@ with header_col2:
                 except Exception:
                     pass
                 st.session_state.user = None
+                st.session_state.explicit_logout = True # Сигнал для JS моста
                 keys_to_clear = ["analysis_result", "audit_score", "session_data"]
                 for k in keys_to_clear:
                     if k in st.session_state:
