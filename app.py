@@ -276,40 +276,33 @@ with tab_audit:
                 # Показываем результат сразу
                 st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
                 
-                # Три колонки для кнопок (ID заменен на фейковый или удален)
-                col_pdf, col_word, col_sup = st.columns(3)
+                # Две колонки для кнопок скачивания
+                col_pdf, col_word = st.columns(2)
                 
                 with col_pdf:
                     pdf_bytes = create_pdf(clean_res)
                     if pdf_bytes:
                         st.download_button(
-                            label="📥 PDF",
+                            label="📥 Скачать PDF",
                             data=bytes(pdf_bytes),
                             file_name=f"audit_report.pdf",
                             mime="application/pdf",
                             use_container_width=True
                         )
-                    else:
-                        st.warning("PDF не доступен")
                 
                 with col_word:
                     try:
                         word_bytes = create_docx(clean_res)
                         if word_bytes:
                             st.download_button(
-                                label="📝 Word",
+                                label="📝 Скачать Word",
                                 data=word_bytes,
                                 file_name=f"audit_report.docx",
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 use_container_width=True
                             )
-                        else:
-                            st.warning("Word не доступен")
                     except Exception as e:
-                        st.error("Ошибка Word")
-                
-                with col_sup:
-                    st.link_button("🆘 Поддержка", "https://t.me/твой_логин", use_container_width=True)
+                        pass
 
                 st.write("")
                 if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
