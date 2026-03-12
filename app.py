@@ -33,12 +33,19 @@ if st.session_state.user is None:
     if "access_token" in params and "refresh_token" in params:
         try:
             # Используем supabase_auth, так как это Auth-операция
+            st.toast("🔄 Восстановление сессии...")
             session = supabase_auth.auth.set_session(params["access_token"], params["refresh_token"])
             st.session_state.user = session.user
-            # Очищаем параметры URL, чтобы они не мозолили глаза
+            # Сохраняем в session_state для JS моста (чтобы он не удалил из localStorage)
+            st.session_state.session_data = {
+                "access_token": params["access_token"],
+                "refresh_token": params["refresh_token"]
+            }
+            # Очищаем параметры URL
             st.query_params.clear()
             st.rerun()
-        except Exception:
+        except Exception as e:
+            st.toast(f"❌ Ошибка: {e}")
             pass
 
 # --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
@@ -265,38 +272,45 @@ if st.session_state.user and 'session_data' in st.session_state:
 
 st.components.v1.html(f"""
 <script>
-    const US_KEY = 'supabase.auth.token'; // Стандартный ключ Supabase или наш кастомный
+    const US_KEY = 'supabase.auth.token';
     const status = "{user_status}";
     const sessionToSave = {current_session};
 
+    console.log("[JurisClear Bridge] Python Status:", status);
+
     // 1. Если пользователь вошел в Python, но в localStorage пусто - сохраняем
     if (status === "logged_in" && Object.keys(sessionToSave).length > 0) {{
+        console.log("[JurisClear Bridge] Saving session to localStorage...");
         localStorage.setItem(US_KEY, JSON.stringify(sessionToSave));
     }}
 
     // 2. Если пользователь вышел в Python, но в localStorage еще есть данные - удаляем
     if (status === "logged_out") {{
-        localStorage.removeItem(US_KEY);
+        if (localStorage.getItem(US_KEY)) {{
+            console.log("[JurisClear Bridge] Clearing session from localStorage...");
+            localStorage.removeItem(US_KEY);
+        }}
     }}
 
     // 3. Главная магия: Авто-восстановление при загрузке
-    // Если в Python пользователя нет, а в localStorage есть сессия - перенаправляем с токенами
     const savedSessionStr = localStorage.getItem(US_KEY);
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(window.parent.location.search);
     
     if (status === "logged_out" && savedSessionStr && !urlParams.has('access_token')) {{
         try {{
             const savedSession = JSON.parse(savedSessionStr);
             if (savedSession && savedSession.access_token && savedSession.refresh_token) {{
-                // Добавляем токены в URL, чтобы Python их подхватил
+                console.log("[JurisClear Bridge] Session found in localStorage! Redirecting parent window...");
                 urlParams.set('access_token', savedSession.access_token);
                 urlParams.set('refresh_token', savedSession.refresh_token);
-                window.location.search = urlParams.toString();
+                window.parent.location.search = urlParams.toString();
             }}
-        }} catch (e) {{
-            console.error("Failed to restore session from localStorage", e);
-        }}
-    }}
+        } catch (e) {
+            console.error("[JurisClear Bridge] Error parsing session:", e);
+        }
+    }} else {
+        console.log("[JurisClear Bridge] No session restoration needed.");
+    }
 </script>
 """, height=0)
 
