@@ -60,7 +60,9 @@ st.markdown("""
     
     .block-container {
         padding-top: 2rem; 
-        max-width: 1000px;
+        max-width: 100%;
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
     
     /* ГЛОБАЛЬНЫЕ СТИЛИ */
