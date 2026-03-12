@@ -60,7 +60,40 @@ st.markdown("""
     
     .block-container {
         padding-top: 2rem; 
-        max-width: 1000px;
+        max-width: 100%;
+        padding-left: 5rem;
+        padding-right: 5rem;
+    }
+
+    @media (max-width: 1200px) {
+        .block-container {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 1rem;
+        }
+        
+        /* Mobile adjustments for headers */
+        h1 {
+            font-size: 24px !important;
+        }
+        
+        .stMarkdown div[data-testid="stMarkdownHeader"] h1 {
+            font-size: 24px !important;
+        }
+
+        /* Adjust card heights for mobile if needed */
+        [style*="height: 420px"] {
+            height: auto !important;
+            min-height: 400px;
+            margin-bottom: 15px;
+        }
     }
     
     /* ГЛОБАЛЬНЫЕ СТИЛИ */
