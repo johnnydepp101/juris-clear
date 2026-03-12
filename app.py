@@ -108,12 +108,11 @@ with col_tar2:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="height: 10px;"></div> <!-- Spacer -->
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
+                    🔐 Для оформления подписки нужно зарегистрироваться
+                </div>
                 <div style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.3); cursor: not-allowed;">
                     🚀 Оформить подписку
-                </div>
-                <div style="text-align: center; font-size: 12px; opacity: 0.9; font-weight: 500;">
-                    🔐 Для оформления подписки нужно зарегистрироваться
                 </div>
             </div>
         </div>
