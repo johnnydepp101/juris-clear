@@ -435,25 +435,34 @@ sample_text = """
 *💡 (Примечание: Полная версия отчета содержит конкретные формулировки правок (протокол разногласий) для нейтрализации каждого из указанных рисков.)*
 """
 
-# --- 5. АВТОРИЗАЦИЯ (ОПЦИОНАЛЬНАЯ, В САЙДБАРЕ) ---
-def show_auth_sidebar():
-    """Формы входа/регистрации в боковой панели."""
-    with st.sidebar:
-        st.markdown("### 🔐 Личный кабинет")
-        
-        if st.session_state.user:
-            # Пользователь уже вошел
-            user_email = st.session_state.user.email
+
+
+# --- 6. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ (доступен всем) ---
+
+# --- ХЕДЕР ПРИЛОЖЕНИЯ ---
+header_col1, header_col2 = st.columns([3, 1])
+
+with header_col1:
+    st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 40px; line-height: 1;">⚖️</span>
+            <div style="display: flex; flex-direction: column;">
+                <h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with header_col2:
+    if st.session_state.user:
+        user_email = st.session_state.user.email
+        with st.popover(f"👤 {user_email}", use_container_width=True):
             st.markdown(f"""
-                <div style="background: var(--card-bg); backdrop-filter: var(--glass-blur); 
-                     border-radius: 16px; padding: 20px; border: 1px solid var(--border-color);
-                     margin-bottom: 15px;">
+                <div style="padding: 5px 0;">
                     <p style="margin: 0 0 5px 0; font-size: 13px; color: var(--secondary-text);">Вы вошли как:</p>
-                    <p style="margin: 0; font-weight: 700; color: var(--text-color); font-size: 15px;">👤 {user_email}</p>
+                    <p style="margin: 0 0 15px 0; font-weight: 700; color: var(--text-color); font-size: 14px;">{user_email}</p>
                 </div>
             """, unsafe_allow_html=True)
-            
-            if st.button("🚪 Выйти из аккаунта", use_container_width=True, key="sidebar_logout"):
+            if st.button("🚪 Выйти из аккаунта", use_container_width=True, key="btn_logout"):
                 try:
                     supabase_auth.auth.sign_out()
                 except Exception:
@@ -464,8 +473,8 @@ def show_auth_sidebar():
                     if k in st.session_state:
                         del st.session_state[k]
                 st.rerun()
-        else:
-            # Пользователь не вошел — показываем формы
+    else:
+        with st.popover("🔐 Войти", use_container_width=True):
             tab_login, tab_register = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
             with tab_login:
@@ -514,7 +523,6 @@ def show_auth_sidebar():
                                     "email": new_email,
                                     "password": new_password
                                 })
-                                # Проверка: если email confirmation отключена, user сразу авторизован
                                 if data.user and data.user.aud == "authenticated":
                                     st.session_state.user = data.user
                                     st.success("✅ Регистрация прошла успешно!")
@@ -530,38 +538,7 @@ def show_auth_sidebar():
                                 else:
                                     st.error(f"Ошибка регистрации: {error_msg}")
 
-            st.markdown("<p style='text-align: center; color: var(--secondary-text); font-size: 0.8rem; margin-top: 15px;'>🔒 Данные защищены шифрованием Supabase</p>", unsafe_allow_html=True)
-
-# Вызываем сайдбар авторизации
-show_auth_sidebar()
-
-# --- 6. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ (доступен всем) ---
-
-# --- ХЕДЕР ПРИЛОЖЕНИЯ ---
-header_col1, header_col2 = st.columns([3, 1])
-
-with header_col1:
-    st.markdown(f"""
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <span style="font-size: 40px; line-height: 1;">⚖️</span>
-            <div style="display: flex; flex-direction: column;">
-                <h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with header_col2:
-    if st.session_state.user:
-        user_email = st.session_state.user.email
-        st.markdown(f"""
-            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; height: 100%;">
-                <span style="color: var(--secondary-text); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;" title="{user_email}">
-                    👤 {user_email}
-                </span>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.write("") # Место для будущего профиля
+            st.markdown("<p style='text-align: center; color: var(--secondary-text); font-size: 0.75rem; margin-top: 10px;'>🔒 Данные защищены шифрованием</p>", unsafe_allow_html=True)
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
