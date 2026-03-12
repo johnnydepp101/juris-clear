@@ -11,7 +11,7 @@ import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
 import json
-from streamlit.components.v1 import html
+from streamlit.components.v1 import html, declare_component
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -21,34 +21,59 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ИНИЦИАЛИЗАЦИЯ ---
-if 'reset_counter' not in st.session_state:
-    st.session_state.reset_counter = 0
-if 'user' not in st.session_state:
-    st.session_state.user = None
-if 'explicit_logout' not in st.session_state:
+# --- ПОДКЛЮЧЕНИЕ SUPABASE (ПЕРЕНЕСЕНО ВВЕРХ ДЛЯ ВОССТАНОВЛЕНИЯ СЕССИИ) ---
+try:
+    url: str = st.secrets["SUPABASE_URL"]
+    key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
+    supabase: Client = create_client(url, key)
+    supabase_auth: Client = create_client(url, st.secrets["SUPABASE_KEY"])
+except Exception as e:
+    st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
+    supabase = None
+    supabase_auth = None
+
+# --- ИНИЦИАЛИЗАЦИЯ CUSTOM COMPONENT BRIDGE ---
+parent_dir = os.path.dirname(os.path.abspath(__file__))
+build_dir = os.path.join(parent_dir, "ls_bridge")
+_ls_bridge_func = declare_component("ls_bridge", path=build_dir)
+
+def ls_bridge(key, mode='get', value=None):
+    return _ls_bridge_func(key=key, mode=mode, value=value, default="PENDING")
+
+# --- ЛОГИКА ВОССТАНОВЛЕНИЯ И СИНХРОНИЗАЦИИ СЕССИИ ---
+# Определяем режим работы моста
+bridge_mode = 'get'
+bridge_value = None
+
+if st.session_state.get('save_session'):
+    bridge_mode = 'set'
+    bridge_value = json.dumps(st.session_state.get('session_data', {}))
+    st.session_state.save_session = False
+elif st.session_state.get('explicit_logout'):
+    bridge_mode = 'remove'
     st.session_state.explicit_logout = False
 
-# --- ВОССТАНОВЛЕНИЕ СЕССИИ ИЗ URL (ДЛЯ JS МОСТА) ---
-if st.session_state.user is None:
-    params = st.query_params
-    if "access_token" in params and "refresh_token" in params:
+# Вызываем компонент (он всегда должен быть в дереве для работы)
+ls_data = ls_bridge(key='supabase.auth.token', mode=bridge_mode, value=bridge_value)
+
+# Обработка восстановления (только если мы НЕ сохраняем и НЕ удаляем сейчас)
+if bridge_mode == 'get' and st.session_state.user is None:
+    if ls_data and ls_data != "PENDING":
         try:
-            # Используем supabase_auth, так как это Auth-операция
-            st.toast("🔄 Восстановление сессии...")
-            session = supabase_auth.auth.set_session(params["access_token"], params["refresh_token"])
-            st.session_state.user = session.user
-            # Сохраняем в session_state для JS моста (чтобы он не удалил из localStorage)
-            st.session_state.session_data = {
-                "access_token": params["access_token"],
-                "refresh_token": params["refresh_token"]
-            }
-            # Очищаем параметры URL
-            st.query_params.clear()
-            st.rerun()
-        except Exception as e:
-            st.toast(f"❌ Ошибка: {e}")
+            saved_session = json.loads(ls_data)
+            if saved_session and "access_token" in saved_session:
+                st.toast("🔄 Восстановление сессии...")
+                session = supabase_auth.auth.set_session(saved_session["access_token"], saved_session["refresh_token"])
+                st.session_state.user = session.user
+                st.session_state.session_data = saved_session
+                st.rerun()
+        except Exception:
+            # Если не вышло - возможно токен протух или его нет
             pass
+
+# --- УДАЛЕНИЕ СТАРЫХ ПАРАМЕТРОВ URL (ЕСЛИ ОНИ ЕСТЬ) ---
+if "access_token" in st.query_params:
+    st.query_params.clear()
 
 # --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
 st.markdown("""
@@ -265,60 +290,7 @@ html, body, [data-testid="stAppViewContainer"] {
 </style>
 """, unsafe_allow_html=True)
 
-# --- JS МОСТ ДЛЯ LOCALSTORAGE ---
-# Этот скрипт синхронизирует сессию Supabase между браузером и Streamlit
-user_status = "logged_in" if st.session_state.user else "logged_out"
-if st.session_state.get('explicit_logout'):
-    user_status = "explicit_logout"
-    st.session_state.explicit_logout = False # Сбрасываем для следующего цикла
-
-current_session = "{}"
-if st.session_state.user and 'session_data' in st.session_state:
-    current_session = json.dumps(st.session_state.session_data)
-
-st.components.v1.html(f"""
-<script>
-    const US_KEY = 'supabase.auth.token';
-    const status = "{user_status}";
-    const sessionToSave = {current_session};
-
-    console.log("[JurisClear Bridge] Python Status:", status);
-
-    // 1. Если пользователь вошел в Python, но в localStorage пусто - сохраняем
-    if (status === "logged_in" && Object.keys(sessionToSave).length > 0) {{
-        console.log("[JurisClear Bridge] Saving session to localStorage...");
-        localStorage.setItem(US_KEY, JSON.stringify(sessionToSave));
-    }}
-
-    // 2. Если пользователь ВЫШЕЛ ЯВНО - удаляем из localStorage
-    if (status === "explicit_logout") {{
-        if (localStorage.getItem(US_KEY)) {{
-            console.log("[JurisClear Bridge] Explicit logout detected. Clearing localStorage...");
-            localStorage.removeItem(US_KEY);
-        }}
-    }}
-
-    // 3. Главная магия: Авто-восстановление при загрузке
-    const savedSessionStr = localStorage.getItem(US_KEY);
-    const urlParams = new URLSearchParams(window.parent.location.search);
-    
-    if (status === "logged_out" && savedSessionStr && !urlParams.has('access_token')) {{
-        try {{
-            const savedSession = JSON.parse(savedSessionStr);
-            if (savedSession && savedSession.access_token && savedSession.refresh_token) {{
-                console.log("[JurisClear Bridge] Session found in localStorage! Redirecting parent window...");
-                urlParams.set('access_token', savedSession.access_token);
-                urlParams.set('refresh_token', savedSession.refresh_token);
-                window.parent.location.search = urlParams.toString();
-            }}
-        }} catch (e) {{
-            console.error("[JurisClear Bridge] Error parsing session:", e);
-        }}
-    }} else {{
-        console.log("[JurisClear Bridge] No session restoration needed.");
-    }}
-</script>
-""", height=0)
+# --- JS МОСТ (ОТКЛЮЧЕН, ТАК КАК ИСПОЛЬЗУЕТСЯ CUSTOM COMPONENT) ---
 
 # --- 3. ЛОГИКА ДИНАМИЧЕСКОЙ ШКАЛЫ ---
 def get_risk_params(score):
@@ -333,20 +305,8 @@ def get_risk_params(score):
 # OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Supabase
-# Попытка инициализации из секретов Streamlit (рекомендуемый способ)
-try:
-    url: str = st.secrets["SUPABASE_URL"]
-    # Пробуем взять Service Key для полной свободы действий, если он есть, иначе Anon Key
-    key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
-    supabase: Client = create_client(url, key)
-    # Auth-клиент (anon key) — для регистрации/входа (service key НЕ подходит для auth)
-    supabase_auth: Client = create_client(url, st.secrets["SUPABASE_KEY"])
-except Exception as e:
-    st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
-    # Создаем фиктивный клиент, чтобы приложение не вылетало сразу при отрисовке UI
-    supabase = None
-    supabase_auth = None
+# (Supabase уже инициализирован выше)
+# st.secrets["SUPABASE_URL"] и т.д.
 
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
@@ -630,7 +590,7 @@ with header_col2:
                 except Exception:
                     pass
                 st.session_state.user = None
-                st.session_state.explicit_logout = True # Сигнал для JS моста
+                st.session_state.explicit_logout = True # Сигнал для моста
                 keys_to_clear = ["analysis_result", "audit_score", "session_data"]
                 for k in keys_to_clear:
                     if k in st.session_state:
@@ -656,12 +616,13 @@ with header_col2:
                                     "password": password
                                 })
                                 st.session_state.user = data.user
-                                # Сохраняем данные сессии для JS моста
+                                # Сохраняем данные сессии
                                 st.session_state.session_data = {
                                     "access_token": data.session.access_token,
                                     "refresh_token": data.session.refresh_token,
                                     "expires_at": data.session.expires_at
                                 }
+                                st.session_state.save_session = True # Сигнал для моста
                                 st.rerun()
                             except Exception as e:
                                 error_msg = str(e)
@@ -701,6 +662,7 @@ with header_col2:
                                             "refresh_token": data.session.refresh_token,
                                             "expires_at": data.session.expires_at
                                         }
+                                        st.session_state.save_session = True # Сигнал для моста
                                     st.success("✅ Регистрация прошла успешно!")
                                     st.rerun()
                                 else:
