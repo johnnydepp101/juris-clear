@@ -10,8 +10,6 @@ from io import BytesIO
 import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
-import json
-from streamlit.components.v1 import html, declare_component
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -21,276 +19,144 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ПОДКЛЮЧЕНИЕ SUPABASE (ПЕРЕНЕСЕНО ВВЕРХ ДЛЯ ВОССТАНОВЛЕНИЯ СЕССИИ) ---
-try:
-    url: str = st.secrets["SUPABASE_URL"]
-    key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
-    supabase: Client = create_client(url, key)
-    supabase_auth: Client = create_client(url, st.secrets["SUPABASE_KEY"])
-except Exception as e:
-    st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
-    supabase = None
-    supabase_auth = None
+# --- ИНИЦИАЛИЗАЦИЯ ---
+if 'reset_counter' not in st.session_state:
+    st.session_state.reset_counter = 0
 
-# --- ИНИЦИАЛИЗАЦИЯ CUSTOM COMPONENT BRIDGE ---
-parent_dir = os.path.dirname(os.path.abspath(__file__))
-build_dir = os.path.join(parent_dir, "ls_bridge")
-_ls_bridge_func = declare_component("ls_bridge", path=build_dir)
-
-def ls_bridge(key, mode='get', value=None):
-    return _ls_bridge_func(key=key, mode=mode, value=value, default="PENDING")
-
-# --- ЛОГИКА ВОССТАНОВЛЕНИЯ И СИНХРОНИЗАЦИИ СЕССИИ ---
-# Определяем режим работы моста
-bridge_mode = 'get'
-bridge_value = None
-
-if st.session_state.get('save_session'):
-    bridge_mode = 'set'
-    bridge_value = json.dumps(st.session_state.get('session_data', {}))
-    st.session_state.save_session = False
-elif st.session_state.get('explicit_logout'):
-    bridge_mode = 'remove'
-    st.session_state.explicit_logout = False
-
-# Вызываем компонент (он всегда должен быть в дереве для работы)
-ls_data = ls_bridge(key='supabase.auth.token', mode=bridge_mode, value=bridge_value)
-
-# Обработка восстановления (только если мы НЕ сохраняем и НЕ удаляем сейчас)
-if bridge_mode == 'get' and st.session_state.user is None:
-    if ls_data and ls_data != "PENDING":
-        try:
-            saved_session = json.loads(ls_data)
-            if saved_session and "access_token" in saved_session:
-                st.toast("🔄 Восстановление сессии...")
-                session = supabase_auth.auth.set_session(saved_session["access_token"], saved_session["refresh_token"])
-                st.session_state.user = session.user
-                st.session_state.session_data = saved_session
-                st.rerun()
-        except Exception:
-            # Если не вышло - возможно токен протух или его нет
-            pass
-
-# --- УДАЛЕНИЕ СТАРЫХ ПАРАМЕТРОВ URL (ЕСЛИ ОНИ ЕСТЬ) ---
-if "access_token" in st.query_params:
-    st.query_params.clear()
+# (Авторизация удалена по требованию пользователя)
 
 # --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
 st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-html, body, [data-testid="stAppViewContainer"] {
-    font-family: 'Inter', sans-serif !important;
-}
-:root {
-    --bg-color: #0c0e12;
-    --card-bg: rgba(22, 27, 34, 0.7);
-    --text-color: #e2e8f0;
-    --secondary-text: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.08); /* Ультра-тонкие границы */
-    --accent-blue: #3266e3; /* Royal Blue */
-    --accent-cyan: #4cc9f0;
-    --accent-green: #2ecc71;
-    --glass-blur: blur(8px); /* Более чистое размытие */
-    --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-    --header-color: #ffffff;
-    --glow-color: rgba(50, 102, 227, 0.2);
-}
-@media (prefers-color-scheme: light) {
+    <style>
+    /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
     :root {
-        --bg-color: #f8fafc;
-        --card-bg: rgba(255, 255, 255, 0.8);
-        --text-color: #0f172a;
-        --secondary-text: #64748b;
-        --border-color: rgba(0, 0, 0, 0.05);
-        --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
-        --header-color: #1e293b;
-        --glow-color: rgba(50, 102, 227, 0.05);
+        --bg-color: #0d1117;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --text-color: #f0f6fc;
+        --secondary-text: #8b949e;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --accent-blue: #3b82f6;
+        --accent-green: #10b981;
+        --glass-blur: blur(10px);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        --header-color: #ffffff;
     }
-}
-#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-[data-testid="stHeader"] {display: none;}
-.block-container {
-    padding-top: 3rem; /* Больше воздуха сверху */
-    max-width: 100%;
-    padding-left: 6rem;
-    padding-right: 6rem;
-}
-@media (max-width: 1200px) {
-    .block-container {
-        padding-left: 3rem;
-        padding-right: 3rem;
-    }
-}
-@media (max-width: 768px) {
-    .block-container {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-        padding-top: 2rem;
-    }
-    h1 {
-        font-size: 26px !important;
-    }
-    .stMarkdown div[data-testid="stMarkdownHeader"] h1 {
-        font-size: 26px !important;
-    }
-}
-[data-testid="stAppViewContainer"] {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    transition: background-color 0.5s ease;
-}
-.stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, 
-.stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display: none !important; }
-[data-testid="stMarkdownHeader"] a { display: none !important; }
-[data-testid="stHorizontalBlock"] { align-items: center !important; }
-.pricing-card-container {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-}
-.pricing-card {
-    flex: 1;
-    min-width: 300px;
-    background: var(--card-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    padding: 40px; 
-    border-radius: 20px; 
-    border: 1px solid var(--border-color); 
-    text-align: left; 
-    color: var(--text-color);
-    box-shadow: var(--card-shadow);
-    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease, border-color 0.4s ease;
-    position: relative;
-    overflow: hidden;
-}
-.pricing-card:hover {
-    transform: translateY(-8px);
-    border-color: rgba(50, 102, 227, 0.4);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-.pricing-card::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 2px;
-    background: var(--accent-blue);
-    opacity: 0.5;
-}
-.pricing-card-pro::before {
-    background: var(--accent-green);
-}
-.pricing-header {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--secondary-text);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.pricing-price {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
-    color: var(--header-color);
-}
-.pricing-features {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 2rem;
-}
-.pricing-features li {
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.95rem;
-}
-.pricing-features li::before {
-    content: "✦";
-    color: var(--accent-blue);
-    font-size: 0.8rem;
-}
-.report-card {
-    background-color: var(--card-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--border-color);
-    padding: 50px; 
-    border-radius: 20px; 
-    margin-top: 30px; 
-    color: var(--text-color);
-    box-shadow: var(--card-shadow);
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.stAppViewContainer [data-testid="stVerticalBlock"] > div {
-    animation: fadeIn 0.6s ease-out forwards;
-}
-.risk-meter-container {
-    background: rgba(0, 0, 0, 0.2); 
-    border-radius: 12px; 
-    padding: 4px;
-    border: 1px solid var(--border-color); 
-    margin: 30px 0;
-    overflow: hidden;
-}
-.risk-meter-bar {
-    height: 30px; 
-    border-radius: 8px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: white; 
-    font-weight: 700; 
-    font-size: 14px;
-    letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    transition: width 1s ease-in-out;
-}
-.stButton > button, .stLinkButton > a, .stDownloadButton > button {
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.3px !important;
-    font-size: 14px !important;
-    padding: 0.75rem 2rem !important;
-    transition: all 0.3s ease !important;
-    border: 1px solid var(--border-color) !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-    color: var(--text-color) !important;
-}
-.stButton > button:hover {
-    border-color: var(--accent-blue) !important;
-    background: rgba(50, 102, 227, 0.1) !important;
-    transform: translateY(-2px);
-}
-.stButton > button[kind="primary"] {
-    background: var(--accent-blue) !important;
-    color: white !important;
-    border: none !important;
-}
-[data-testid="stFileUploader"] {
-    background: var(--card-bg);
-    padding: 3rem;
-    border-radius: 20px;
-    border: 1px dashed var(--border-color);
-    transition: background 0.3s ease, border-color 0.3s ease;
-}
-[data-testid="stFileUploader"]:hover {
-    border-color: var(--accent-blue);
-    background: rgba(50, 102, 227, 0.03);
-}
-.secondary-text {
-    color: var(--secondary-text);
-    font-size: 0.9rem;
-}
-</style>
-""", unsafe_allow_html=True)
 
-# --- JS МОСТ (ОТКЛЮЧЕН, ТАК КАК ИСПОЛЬЗУЕТСЯ CUSTOM COMPONENT) ---
+    /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #1e293b;
+            --secondary-text: #64748b;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --header-color: #0f172a;
+        }
+    }
+
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+    [data-testid="stHeader"] {display: none;}
+    
+    .block-container {
+        padding-top: 2rem; 
+        max-width: 1000px;
+    }
+    
+    /* ГЛОБАЛЬНЫЕ СТИЛИ */
+    [data-testid="stAppViewContainer"] {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: all 0.4s ease;
+    }
+
+    /* УБИРАЕМ ЯКОРЯ */
+    .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, 
+    .stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display: none !important; }
+    [data-testid="stMarkdownHeader"] a { display: none !important; }
+
+    /* ХЕДЕР И ВЫРАВНИВАНИЕ */
+    [data-testid="stHorizontalBlock"] { align-items: center !important; }
+
+    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
+    .pricing-card-single {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
+        backdrop-filter: var(--glass-blur);
+        padding: 25px; border-radius: 20px; 
+        border: 1px solid rgba(255, 255, 255, 0.2); 
+        text-align: center; color: white;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+    }
+    .pricing-card-pro {
+        background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
+        backdrop-filter: var(--glass-blur);
+        padding: 25px; border-radius: 20px; 
+        border: 1px solid rgba(255, 255, 255, 0.2); 
+        text-align: center; color: white;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+    }
+    .pricing-card-single:hover, .pricing-card-pro:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* КАРТОЧКА ОТЧЕТА */
+    .report-card {
+        background-color: var(--card-bg);
+        backdrop-filter: var(--glass-blur);
+        border-left: 6px solid var(--accent-blue);
+        padding: 30px; border-radius: 16px; 
+        margin-top: 25px; color: var(--text-color);
+        border-top: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+    }
+    
+    /* ШКАЛА РИСКА */
+    .risk-meter-container {
+        background: rgba(0, 0, 0, 0.2); 
+        border-radius: 20px; padding: 10px;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); 
+        border: 1px solid var(--border-color); 
+        margin: 20px 0;
+    }
+    
+    /* КНОПКИ */
+    .stButton > button, .stLinkButton > a, .stDownloadButton > button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        font-size: 14px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: none !important;
+    }
+
+    .stButton > button:hover {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+        transform: scale(1.02);
+    }
+
+    .stLinkButton > a {
+        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+        color: white !important;
+    }
+
+    .stDownloadButton > button {
+        background: var(--border-color) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
+    .secondary-text {
+        color: var(--secondary-text);
+        font-size: 0.9rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- 3. ЛОГИКА ДИНАМИЧЕСКОЙ ШКАЛЫ ---
 def get_risk_params(score):
@@ -305,8 +171,17 @@ def get_risk_params(score):
 # OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# (Supabase уже инициализирован выше)
-# st.secrets["SUPABASE_URL"] и т.д.
+# Supabase
+# Попытка инициализации из секретов Streamlit (рекомендуемый способ)
+try:
+    url: str = st.secrets["SUPABASE_URL"]
+    # Пробуем взять Service Key для полной свободы действий, если он есть, иначе Anon Key
+    key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
+    supabase: Client = create_client(url, key)
+except Exception as e:
+    st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
+    # Создаем фиктивный клиент, чтобы приложение не вылетало сразу при отрисовке UI
+    supabase = None
 
 # --- ФУНКЦИЯ ИЗВЛЕЧЕНИЯ ТЕКСТА (ОБНОВЛЕННАЯ С ГИБРИДНЫМ OCR) ---
 def extract_text_from_pdf(file_bytes):
@@ -557,168 +432,82 @@ sample_text = """
 *💡 (Примечание: Полная версия отчета содержит конкретные формулировки правок (протокол разногласий) для нейтрализации каждого из указанных рисков.)*
 """
 
-
-
-# --- 6. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ (доступен всем) ---
+# --- 5. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ ---
 
 # --- ХЕДЕР ПРИЛОЖЕНИЯ ---
 header_col1, header_col2 = st.columns([3, 1])
 
 with header_col1:
     st.markdown(f"""
-<div style="display: flex; align-items: center; gap: 15px;">
-<span style="font-size: 40px; line-height: 1;">⚖️</span>
-<div style="display: flex; flex-direction: column;">
-<h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
-</div>
-</div>
-""", unsafe_allow_html=True)
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 40px; line-height: 1;">⚖️</span>
+            <div style="display: flex; flex-direction: column;">
+                <h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
 with header_col2:
-    if st.session_state.user:
-        user_email = st.session_state.user.email
-        with st.popover(f"👤 {user_email}", use_container_width=True):
-            st.markdown(f"""
-<div style="padding: 5px 0;">
-<p style="margin: 0 0 5px 0; font-size: 13px; color: var(--secondary-text);">Вы вошли как:</p>
-<p style="margin: 0 0 15px 0; font-weight: 700; color: var(--text-color); font-size: 14px;">{user_email}</p>
-</div>
-""", unsafe_allow_html=True)
-            if st.button("🚪 Выйти из аккаунта", use_container_width=True, key="btn_logout"):
-                try:
-                    supabase_auth.auth.sign_out()
-                except Exception:
-                    pass
-                st.session_state.user = None
-                st.session_state.explicit_logout = True # Сигнал для моста
-                keys_to_clear = ["analysis_result", "audit_score", "session_data"]
-                for k in keys_to_clear:
-                    if k in st.session_state:
-                        del st.session_state[k]
-                st.rerun()
-    else:
-        with st.popover("🔐 Войти", use_container_width=True):
-            tab_login, tab_register = st.tabs(["🔑 Вход", "📝 Регистрация"])
-
-            with tab_login:
-                with st.form("login_form", clear_on_submit=False):
-                    email = st.text_input("Email", placeholder="name@example.com", key="login_email")
-                    password = st.text_input("Пароль", type="password", placeholder="Минимум 6 символов", key="login_password")
-                    submit = st.form_submit_button("Войти", use_container_width=True, type="primary")
-
-                    if submit:
-                        if not email or not password:
-                            st.error("Заполните все поля")
-                        else:
-                            try:
-                                data = supabase_auth.auth.sign_in_with_password({
-                                    "email": email,
-                                    "password": password
-                                })
-                                st.session_state.user = data.user
-                                # Сохраняем данные сессии
-                                st.session_state.session_data = {
-                                    "access_token": data.session.access_token,
-                                    "refresh_token": data.session.refresh_token,
-                                    "expires_at": data.session.expires_at
-                                }
-                                st.session_state.save_session = True # Сигнал для моста
-                                st.rerun()
-                            except Exception as e:
-                                error_msg = str(e)
-                                if "Invalid login credentials" in error_msg:
-                                    st.error("❌ Неверный email или пароль")
-                                elif "Email not confirmed" in error_msg:
-                                    st.error("📧 Email не подтвержден. Проверьте почту.")
-                                else:
-                                    st.error(f"Ошибка входа: {error_msg}")
-
-            with tab_register:
-                with st.form("register_form", clear_on_submit=False):
-                    new_email = st.text_input("Email", placeholder="name@example.com", key="reg_email")
-                    new_password = st.text_input("Пароль", type="password", placeholder="Минимум 6 символов", key="reg_password")
-                    new_password2 = st.text_input("Повторите пароль", type="password", placeholder="Минимум 6 символов", key="reg_password2")
-                    submit_reg = st.form_submit_button("Создать аккаунт", use_container_width=True, type="primary")
-
-                    if submit_reg:
-                        if not new_email or not new_password or not new_password2:
-                            st.error("Заполните все поля")
-                        elif new_password != new_password2:
-                            st.error("❌ Пароли не совпадают")
-                        elif len(new_password) < 6:
-                            st.error("❌ Пароль должен быть не менее 6 символов")
-                        else:
-                            try:
-                                data = supabase_auth.auth.sign_up({
-                                    "email": new_email,
-                                    "password": new_password
-                                })
-                                if data.user and data.user.aud == "authenticated":
-                                    st.session_state.user = data.user
-                                    # Сохраняем данные сессии для JS моста
-                                    if hasattr(data, 'session') and data.session:
-                                        st.session_state.session_data = {
-                                            "access_token": data.session.access_token,
-                                            "refresh_token": data.session.refresh_token,
-                                            "expires_at": data.session.expires_at
-                                        }
-                                        st.session_state.save_session = True # Сигнал для моста
-                                    st.success("✅ Регистрация прошла успешно!")
-                                    st.rerun()
-                                else:
-                                    st.success("✅ Аккаунт создан! Проверьте почту для подтверждения.")
-                            except Exception as e:
-                                error_msg = str(e)
-                                if "User already registered" in error_msg:
-                                    st.error("❌ Пользователь с таким email уже существует")
-                                elif "rate limit" in error_msg.lower():
-                                    st.error("⏳ Слишком много попыток. Подождите минуту.")
-                                else:
-                                    st.error(f"Ошибка регистрации: {error_msg}")
-
-            st.markdown("<p style='text-align: center; color: var(--secondary-text); font-size: 0.75rem; margin-top: 10px;'>🔒 Данные защищены шифрованием</p>", unsafe_allow_html=True)
+    st.write("") # Место для будущего профиля
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
-# --- ОБНОВЛЕННЫЕ ТАРИФЫ (FUTURE LOGIC) ---
-checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
+# --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
+col_tar1, col_tar2 = st.columns(2)
 
-st.markdown(f"""
-<div class="pricing-card-container">
-<!-- КАРТОЧКА 1: РАЗОВЫЙ АУДИТ -->
-<div class="pricing-card">
-<div class="pricing-header">Базовый</div>
-<div class="pricing-price">850 ₽</div>
-<ul class="pricing-features">
-<li><b>Бесплатное резюме</b> основных рисков</li>
-<li>Детальный юридический разбор (Full Report)</li>
-<li>Конкретные правки для защиты интересов</li>
-<li>Экспорт отчета в PDF и Word</li>
-</ul>
-<div style="background: rgba(59, 130, 246, 0.15); padding: 12px; border-radius: 12px; text-align: center; font-size: 11px; color: var(--accent-blue); margin-bottom: 20px;">
-ℹ️ Оплачивайте только если результат вас устроит
-</div>
-<div style="width: 100%; background: rgba(255,255,255,0.05); color: var(--secondary-text); border: 1px dashed var(--border-color); padding: 14px; border-radius: 14px; text-align: center; font-weight: 600;">
-Анализ доступен ниже 👇
-</div>
-</div>
-<!-- КАРТОЧКА 2: БЕЗЛИМИТ PRO -->
-<div class="pricing-card pricing-card-pro">
-<div class="pricing-header" style="color: var(--accent-green);">Премиум</div>
-<div class="pricing-price">2500 ₽ <span style="font-size: 14px; opacity: 0.6; font-weight: 400;">/мес</span></div>
-<ul class="pricing-features">
-<li><b>Неограниченное</b> количество документов</li>
-<li>Полные отчеты <b>мгновенно</b> без доплат</li>
-<li>Доступ к результату в истории навсегда</li>
-<li>Персональный архив всех проверок</li>
-<li>Самая мощная модель ИИ (GPT-4o)</li>
-</ul>
-<a href="{checkout_url}" target="_blank" style="display: block; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); color: white; text-align: center; padding: 14px; border-radius: 14px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
-🚀 Оформить подписку
-</a>
-</div>
-</div>
-""", unsafe_allow_html=True)
+card_style = """
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    padding: 25px; 
+    border-radius: 15px; 
+    height: 420px; 
+    color: white;
+"""
+
+with col_tar1:
+    st.markdown(f"""
+        <div style="{card_style} background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); border: 1px solid #3b82f6;">
+            <div>
+                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
+                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">850 ₽</div>
+                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                    • <b>Бесплатное резюме</b> основных рисков<br>
+                    • Детальный юридический разбор (Full Report)<br>
+                    • Конкретные правки для защиты ваших интересов<br>
+                    • Экспорт отчета в PDF и Word<br>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; text-align: center; font-size: 11px;">
+                    ℹ️ Оплачивайте только если результат вас устроит
+                </div>
+                <button style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px; border-radius: 10px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col_tar2:
+    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
+    st.markdown(f"""
+        <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
+            <div>
+                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
+                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">2500 ₽ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
+                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                    • <b>Неограниченное</b> количество документов<br>
+                    • Полные отчеты <b>мгновенно</b> без доплат<br>
+                    • Доступ к результату в истории навсегда<br>
+                    • Персональный архив всех проверок<br>
+                    • Самая мощная модель ИИ (GPT-4o)
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="height: 33px;"></div> <!-- Spacer for alignment -->
+                <a href="{checkout_url}" target="_blank" style="display: block; background: white; color: #1d4ed8; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">🚀 Оформить подписку</a>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
 st.divider()
 
@@ -862,7 +651,9 @@ with tab_audit:
             st.write("### ИИ Оценка Риска:")
             st.markdown(f"""
                 <div class="risk-meter-container">
-                    <div class="risk-meter-bar" style="width:{score*10}%; background:{bar_color}; box-shadow: 0 4px 15px {bar_shadow};">
+                    <div style="height:35px; width:{score*10}%; background:{bar_color}; 
+                    box-shadow: 0 4px 15px {bar_shadow}; border-radius:10px; 
+                    display:flex; align-items:center; justify-content:center; color:white; font-weight:900;">
                         {risk_text} ({score}/10)
                     </div>
                 </div>
