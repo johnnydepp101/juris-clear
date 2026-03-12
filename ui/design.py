@@ -1,0 +1,170 @@
+import streamlit as st
+
+def load_css():
+    st.markdown("""
+    <style>
+    /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
+    :root {
+        --bg-color: #0d1117;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --text-color: #f0f6fc;
+        --secondary-text: #8b949e;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --accent-blue: #3b82f6;
+        --accent-green: #10b981;
+        --glass-blur: blur(10px);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        --header-color: #ffffff;
+    }
+
+    /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #1e293b;
+            --secondary-text: #64748b;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --header-color: #0f172a;
+        }
+    }
+
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+    [data-testid="stHeader"] {display: none;}
+    
+    .block-container {
+        padding-top: 2rem; 
+        max-width: 100%;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    
+    /* ГЛОБАЛЬНЫЕ СТИЛИ */
+    [data-testid="stAppViewContainer"] {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: all 0.4s ease;
+    }
+
+    /* УБИРАЕМ ЯКОРЯ */
+    .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, 
+    .stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display: none !important; }
+    [data-testid="stMarkdownHeader"] a { display: none !important; }
+
+    /* ХЕДЕР И ВЫРАВНИВАНИЕ */
+    [data-testid="stHorizontalBlock"] { align-items: center !important; }
+
+    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
+    .pricing-card-single {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
+        backdrop-filter: var(--glass-blur);
+        padding: 25px; border-radius: 20px; 
+        border: 1px solid rgba(255, 255, 255, 0.2); 
+        text-align: center; color: white;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+    }
+    .pricing-card-pro {
+        background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
+        backdrop-filter: var(--glass-blur);
+        padding: 25px; border-radius: 20px; 
+        border: 1px solid rgba(255, 255, 255, 0.2); 
+        text-align: center; color: white;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+    }
+    .pricing-card-single:hover, .pricing-card-pro:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* КАРТОЧКА ОТЧЕТА */
+    .report-card {
+        background-color: var(--card-bg);
+        backdrop-filter: var(--glass-blur);
+        border-left: 6px solid var(--accent-blue);
+        padding: 30px; border-radius: 16px; 
+        margin-top: 25px; color: var(--text-color);
+        border-top: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+    }
+    
+    /* ШКАЛА РИСКА */
+    .risk-meter-container {
+        background: rgba(0, 0, 0, 0.2); 
+        border-radius: 20px; padding: 10px;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); 
+        border: 1px solid var(--border-color); 
+        margin: 20px 0;
+    }
+    
+    /* КНОПКИ */
+    .stButton > button, .stLinkButton > a, .stDownloadButton > button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        font-size: 14px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: none !important;
+    }
+
+    .stButton > button:hover {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+        transform: scale(1.02);
+    }
+
+    .stLinkButton > a {
+        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+        color: white !important;
+    }
+
+    .stDownloadButton > button {
+        background: var(--border-color) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
+    .secondary-text {
+        color: var(--secondary-text);
+        font-size: 0.9rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def get_risk_params(score):
+    if score <= 3:
+        return "linear-gradient(90deg, #059669 0%, #10b981 100%)", "rgba(16, 185, 129, 0.5)", "НИЗКИЙ"
+    elif score <= 6:
+        return "linear-gradient(90deg, #d97706 0%, #fbbf24 100%)", "rgba(251, 191, 36, 0.5)", "СРЕДНИЙ"
+    else:
+        return "linear-gradient(90deg, #dc2626 0%, #ef4444 100%)", "rgba(239, 68, 68, 0.5)", "КРИТИЧЕСКИЙ"
+
+sample_text = """
+### 📋 КРАТКОЕ РЕЗЮМЕ АУДИТА: ДОГОВОР ОКАЗАНИЯ УСЛУГ
+
+**ОБЩИЙ ВЕРДИКТ:** Договор составлен с существенным перекосом баланса интересов в пользу Исполнителя и содержит условия, способные нанести значительный финансовый ущерб Заказчику. Настоятельно рекомендуется доработка перед подписанием.
+
+---
+
+#### 1. ФИНАНСОВЫЕ РИСКИ И ОТВЕТСТВЕННОСТЬ
+
+**🔴 Критическая угроза: Кабальная неустойка (Пункт 6.1)**
+* **Суть условия:** Установлена пеня за просрочку оплаты в размере **1% в день** от суммы задолженности.
+* **Юридический анализ:** Это эквивалентно **365% годовых**, что более чем в 10 раз превышает стандартную деловую практику (обычно 0,1%). Суд с высокой вероятностью признает такую неустойку несоразмерной, но до этого момента вы будете накапливать огромный долг. Риск потери ликвидности.
+
+**🟠 Высокая угроза: Неконтролируемое изменение цены (Пункт 4.2)**
+* **Суть условия:** Исполнитель имеет право в одностороннем порядке повышать стоимость услуг, уведомив Заказчика за 5 рабочих дней.
+* **Юридический анализ:** Отсутствует механизм согласования новой цены или безусловное право Заказчика на расторжение договора без штрафов в случае несогласия с новой ценой. Риск непланируемых расходов.
+
+#### 2. РИСКИ РАСТОРЖЕНИЯ И РАЗРЕШЕНИЯ СПОРОВ
+
+**🟡 Средняя угроза: Невыгодная договорная подсудность (Пункт 9.3)**
+* **Суть условия:** Все споры по договору подлежат рассмотрению в арбитражном суде по месту нахождения Исполнителя (г. Владивосток).
+* **Юридический анализ:** Это существенно усложняет и удорожает процесс защиты ваших прав (транспортные расходы, наем локальных представителей), если ваша компания находится в другом регионе.
+
+*💡 (Примечание: Полная версия отчета содержит конкретные формулировки правок (протокол разногласий) для нейтрализации каждого из указанных рисков.)*
+"""
