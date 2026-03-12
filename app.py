@@ -10,6 +10,8 @@ from io import BytesIO
 import pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
+import json
+from streamlit.components.v1 import html
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -25,7 +27,20 @@ if 'reset_counter' not in st.session_state:
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-# --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
+# --- ВОССТАНОВЛЕНИЕ СЕССИИ ИЗ URL (ДЛЯ JS МОСТА) ---
+if st.session_state.user is None:
+    params = st.query_params
+    if "access_token" in params and "refresh_token" in params:
+        try:
+            # Используем supabase_auth, так как это Auth-операция
+            session = supabase_auth.auth.set_session(params["access_token"], params["refresh_token"])
+            st.session_state.user = session.user
+            # Очищаем параметры URL, чтобы они не мозолили глаза
+            st.query_params.clear()
+            st.rerun()
+        except Exception:
+            pass
+
 # --- 2. ВЕСЬ ДИЗАЙН (ПРЕМИАЛЬНЫЙ АДАПТИВНЫЙ CSS) ---
 st.markdown("""
 <style>
@@ -240,6 +255,50 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 </style>
 """, unsafe_allow_html=True)
+
+# --- JS МОСТ ДЛЯ LOCALSTORAGE ---
+# Этот скрипт синхронизирует сессию Supabase между браузером и Streamlit
+user_status = "logged_in" if st.session_state.user else "logged_out"
+current_session = "{}"
+if st.session_state.user and 'session_data' in st.session_state:
+    current_session = json.dumps(st.session_state.session_data)
+
+st.components.v1.html(f"""
+<script>
+    const US_KEY = 'supabase.auth.token'; // Стандартный ключ Supabase или наш кастомный
+    const status = "{user_status}";
+    const sessionToSave = {current_session};
+
+    // 1. Если пользователь вошел в Python, но в localStorage пусто - сохраняем
+    if (status === "logged_in" && Object.keys(sessionToSave).length > 0) {{
+        localStorage.setItem(US_KEY, JSON.stringify(sessionToSave));
+    }}
+
+    // 2. Если пользователь вышел в Python, но в localStorage еще есть данные - удаляем
+    if (status === "logged_out") {{
+        localStorage.removeItem(US_KEY);
+    }}
+
+    // 3. Главная магия: Авто-восстановление при загрузке
+    // Если в Python пользователя нет, а в localStorage есть сессия - перенаправляем с токенами
+    const savedSessionStr = localStorage.getItem(US_KEY);
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (status === "logged_out" && savedSessionStr && !urlParams.has('access_token')) {{
+        try {{
+            const savedSession = JSON.parse(savedSessionStr);
+            if (savedSession && savedSession.access_token && savedSession.refresh_token) {{
+                // Добавляем токены в URL, чтобы Python их подхватил
+                urlParams.set('access_token', savedSession.access_token);
+                urlParams.set('refresh_token', savedSession.refresh_token);
+                window.location.search = urlParams.toString();
+            }}
+        }} catch (e) {{
+            console.error("Failed to restore session from localStorage", e);
+        }}
+    }}
+</script>
+""", height=0)
 
 # --- 3. ЛОГИКА ДИНАМИЧЕСКОЙ ШКАЛЫ ---
 def get_risk_params(score):
@@ -551,7 +610,7 @@ with header_col2:
                 except Exception:
                     pass
                 st.session_state.user = None
-                keys_to_clear = ["analysis_result", "audit_score"]
+                keys_to_clear = ["analysis_result", "audit_score", "session_data"]
                 for k in keys_to_clear:
                     if k in st.session_state:
                         del st.session_state[k]
@@ -576,6 +635,12 @@ with header_col2:
                                     "password": password
                                 })
                                 st.session_state.user = data.user
+                                # Сохраняем данные сессии для JS моста
+                                st.session_state.session_data = {
+                                    "access_token": data.session.access_token,
+                                    "refresh_token": data.session.refresh_token,
+                                    "expires_at": data.session.expires_at
+                                }
                                 st.rerun()
                             except Exception as e:
                                 error_msg = str(e)
@@ -608,6 +673,13 @@ with header_col2:
                                 })
                                 if data.user and data.user.aud == "authenticated":
                                     st.session_state.user = data.user
+                                    # Сохраняем данные сессии для JS моста
+                                    if hasattr(data, 'session') and data.session:
+                                        st.session_state.session_data = {
+                                            "access_token": data.session.access_token,
+                                            "refresh_token": data.session.refresh_token,
+                                            "expires_at": data.session.expires_at
+                                        }
                                     st.success("✅ Регистрация прошла успешно!")
                                     st.rerun()
                                 else:
