@@ -143,7 +143,7 @@ def load_css():
     /* СТИЛИ ДЛЯ ТАБЛИЦ В ОТЧЕТЕ */
     .report-card table {
         margin-top: 25px !important;
-        margin-bottom: 20px !important;
+        margin-bottom: 40px !important;
         border-collapse: collapse;
         width: 100%;
     }
