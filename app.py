@@ -34,67 +34,62 @@ html, body, [data-testid="stAppViewContainer"] {
     font-family: 'Inter', sans-serif !important;
 }
 :root {
-    --bg-color: #05070a;
-    --card-bg: rgba(15, 23, 42, 0.6);
-    --text-color: #f8fafc;
+    --bg-color: #0c0e12;
+    --card-bg: rgba(22, 27, 34, 0.7);
+    --text-color: #e2e8f0;
     --secondary-text: #94a3b8;
-    --border-color: rgba(59, 130, 246, 0.2);
-    --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
-    --accent-green: #10b981;
-    --glass-blur: blur(12px);
-    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --border-color: rgba(255, 255, 255, 0.08); /* Ультра-тонкие границы */
+    --accent-blue: #3266e3; /* Royal Blue */
+    --accent-cyan: #4cc9f0;
+    --accent-green: #2ecc71;
+    --glass-blur: blur(8px); /* Более чистое размытие */
+    --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     --header-color: #ffffff;
-    --glow-color: rgba(59, 130, 246, 0.3);
+    --glow-color: rgba(50, 102, 227, 0.2);
 }
 @media (prefers-color-scheme: light) {
     :root {
-        --bg-color: #f1f5f9;
-        --card-bg: rgba(255, 255, 255, 0.7);
+        --bg-color: #f8fafc;
+        --card-bg: rgba(255, 255, 255, 0.8);
         --text-color: #0f172a;
-        --secondary-text: #475569;
-        --border-color: rgba(59, 130, 246, 0.1);
-        --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        --secondary-text: #64748b;
+        --border-color: rgba(0, 0, 0, 0.05);
+        --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
         --header-color: #1e293b;
-        --glow-color: rgba(59, 130, 246, 0.1);
+        --glow-color: rgba(50, 102, 227, 0.05);
     }
 }
 #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
 [data-testid="stHeader"] {display: none;}
 .block-container {
-    padding-top: 2rem; 
+    padding-top: 3rem; /* Больше воздуха сверху */
     max-width: 100%;
-    padding-left: 5rem;
-    padding-right: 5rem;
+    padding-left: 6rem;
+    padding-right: 6rem;
 }
 @media (max-width: 1200px) {
     .block-container {
-        padding-left: 2rem;
-        padding-right: 2rem;
+        padding-left: 3rem;
+        padding-right: 3rem;
     }
 }
 @media (max-width: 768px) {
     .block-container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-        padding-top: 1rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-top: 2rem;
     }
     h1 {
-        font-size: 24px !important;
+        font-size: 26px !important;
     }
     .stMarkdown div[data-testid="stMarkdownHeader"] h1 {
-        font-size: 24px !important;
-    }
-    [style*="height: 420px"] {
-        height: auto !important;
-        min-height: 400px;
-        margin-bottom: 15px;
+        font-size: 26px !important;
     }
 }
 [data-testid="stAppViewContainer"] {
     background-color: var(--bg-color);
     color: var(--text-color);
-    transition: all 0.4s ease;
+    transition: background-color 0.5s ease;
 }
 .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, 
 .stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display: none !important; }
@@ -112,30 +107,30 @@ html, body, [data-testid="stAppViewContainer"] {
     background: var(--card-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    padding: 30px; 
-    border-radius: 24px; 
+    padding: 40px; 
+    border-radius: 20px; 
     border: 1px solid var(--border-color); 
     text-align: left; 
     color: var(--text-color);
     box-shadow: var(--card-shadow);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease, border-color 0.4s ease;
     position: relative;
     overflow: hidden;
 }
 .pricing-card:hover {
-    transform: translateY(-10px);
-    border-color: var(--accent-blue);
-    box-shadow: 0 15px 45px var(--glow-color);
+    transform: translateY(-8px);
+    border-color: rgba(50, 102, 227, 0.4);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 .pricing-card::before {
     content: "";
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 4px;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
-    opacity: 0.7;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: var(--accent-blue);
+    opacity: 0.5;
 }
 .pricing-card-pro::before {
-    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+    background: var(--accent-green);
 }
 .pricing-header {
     font-size: 1.2rem;
@@ -173,20 +168,11 @@ html, body, [data-testid="stAppViewContainer"] {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border-color);
-    padding: 40px; 
-    border-radius: 24px; 
-    margin-top: 25px; 
+    padding: 50px; 
+    border-radius: 20px; 
+    margin-top: 30px; 
     color: var(--text-color);
     box-shadow: var(--card-shadow);
-    position: relative;
-}
-.report-card::after {
-    content: "";
-    position: absolute;
-    top: -1px; left: -1px; right: -1px; bottom: -1px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent 50%);
-    pointer-events: none;
 }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -196,72 +182,57 @@ html, body, [data-testid="stAppViewContainer"] {
     animation: fadeIn 0.6s ease-out forwards;
 }
 .risk-meter-container {
-    background: rgba(0, 0, 0, 0.4); 
-    border-radius: 20px; 
-    padding: 6px;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); 
+    background: rgba(0, 0, 0, 0.2); 
+    border-radius: 12px; 
+    padding: 4px;
     border: 1px solid var(--border-color); 
-    margin: 25px 0;
+    margin: 30px 0;
     overflow: hidden;
-    position: relative;
 }
 .risk-meter-bar {
-    height: 35px; 
-    border-radius: 14px; 
+    height: 30px; 
+    border-radius: 8px; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     color: white; 
-    font-weight: 900; 
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-}
-.risk-meter-bar::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: glow 2s infinite;
-}
-@keyframes glow {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    font-weight: 700; 
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    transition: width 1s ease-in-out;
 }
 .stButton > button, .stLinkButton > a, .stDownloadButton > button {
-    border-radius: 16px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.8px !important;
-    text-transform: uppercase !important;
-    font-size: 13px !important;
-    padding: 0.6rem 1.5rem !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
+    font-size: 14px !important;
+    padding: 0.75rem 2rem !important;
+    transition: all 0.3s ease !important;
     border: 1px solid var(--border-color) !important;
-    background: var(--card-bg) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
     color: var(--text-color) !important;
 }
 .stButton > button:hover {
-    background: var(--accent-blue) !important;
-    color: white !important;
     border-color: var(--accent-blue) !important;
-    box-shadow: 0 0 20px var(--glow-color) !important;
-    transform: scale(1.02);
+    background: rgba(50, 102, 227, 0.1) !important;
+    transform: translateY(-2px);
 }
 .stButton > button[kind="primary"] {
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)) !important;
+    background: var(--accent-blue) !important;
     color: white !important;
     border: none !important;
 }
 [data-testid="stFileUploader"] {
     background: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 24px;
-    border: 2px dashed var(--border-color);
-    transition: all 0.3s ease;
+    padding: 3rem;
+    border-radius: 20px;
+    border: 1px dashed var(--border-color);
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 [data-testid="stFileUploader"]:hover {
     border-color: var(--accent-blue);
-    background: rgba(59, 130, 246, 0.05);
+    background: rgba(50, 102, 227, 0.03);
 }
 .secondary-text {
     color: var(--secondary-text);
