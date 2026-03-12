@@ -305,12 +305,12 @@ st.components.v1.html(f"""
                 urlParams.set('refresh_token', savedSession.refresh_token);
                 window.parent.location.search = urlParams.toString();
             }}
-        } catch (e) {
+        }} catch (e) {{
             console.error("[JurisClear Bridge] Error parsing session:", e);
-        }
-    }} else {
+        }}
+    }} else {{
         console.log("[JurisClear Bridge] No session restoration needed.");
-    }
+    }}
 </script>
 """, height=0)
 
