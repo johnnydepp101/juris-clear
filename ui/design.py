@@ -101,32 +101,52 @@ def load_css():
     }
     
     /* КНОПКИ */
-    .stButton > button, .stLinkButton > a, .stDownloadButton > button {
+    .stButton > button {
         border-radius: 12px !important;
         font-weight: 700 !important;
         letter-spacing: 0.5px !important;
         text-transform: uppercase !important;
         font-size: 14px !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        color: white !important;
+        padding: 12px 24px !important;
     }
 
     .stButton > button:hover {
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
-        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
     }
 
     .stLinkButton > a {
         background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
         color: white !important;
+        border-radius: 12px !important;
     }
 
     .stDownloadButton > button {
-        background: var(--border-color) !important;
-        color: var(--text-color) !important;
-        border: 1px solid var(--border-color) !important;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+    }
+
+    .stDownloadButton > button:hover {
+        border: 1px solid var(--accent-blue) !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2) !important;
     }
     
+    /* СТИЛИ ДЛЯ ТАБЛИЦ В ОТЧЕТЕ */
+    .report-card table {
+        margin-top: 25px !important;
+        margin-bottom: 20px !important;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
     /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
     .secondary-text {
         color: var(--secondary-text);
