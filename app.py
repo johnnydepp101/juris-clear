@@ -275,6 +275,8 @@ with tab_audit:
                 
                 # Показываем результат сразу
                 st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
+
+                st.divider()
                 
                 # Две колонки для кнопок скачивания
                 col_pdf, col_word = st.columns(2)
