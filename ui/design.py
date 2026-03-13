@@ -21,6 +21,7 @@ def load_css():
         --font-main: 'Inter', sans-serif;
         --font-header: 'Outfit', sans-serif;
         --mesh-opacity: 0.15;
+        --container-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%);
     }
 
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА */
@@ -34,10 +35,11 @@ def load_css():
             --card-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.1);
             --header-color: #0f172a;
             --mesh-opacity: 0.25;
+            --container-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 245, 249, 0.95) 100%);
         }
         
         div[data-testid="stVerticalBlockBorderWrapper"] {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 245, 249, 0.95) 100%) !important;
+            background: var(--container-bg) !important;
         }
     }
 
@@ -144,14 +146,14 @@ def load_css():
 
     /* GLASS PANEL / CONTAINER (Parameters & Sections) */
     div[data-testid="stVerticalBlockBorderWrapper"], .glass-panel {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%) !important;
-        background-color: #1e293b !important;
-        backdrop-filter: blur(25px) !important;
-        -webkit-backdrop-filter: blur(25px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        background: var(--container-bg) !important;
+        background-color: var(--card-bg) !important;
+        backdrop-filter: var(--glass-blur) !important;
+        -webkit-backdrop-filter: var(--glass-blur) !important;
+        border: 1px solid var(--border-color) !important;
         border-radius: 20px !important;
         padding: 25px !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        box-shadow: var(--card-shadow) !important;
         margin-bottom: 25px !important;
     }
     
