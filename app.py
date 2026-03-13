@@ -24,6 +24,56 @@ if 'reset_counter' not in st.session_state:
 # Загружаем дизайн
 load_css()
 
+# --- 3. ИНИЦИАЛИЗАЦИЯ AUTH STATE ---
+if 'is_authenticated' not in st.session_state:
+    st.session_state.is_authenticated = False
+if 'user_email' not in st.session_state:
+    st.session_state.user_email = ""
+
+@st.dialog("JurisClear AI")
+def show_auth_modal():
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 20px;'>
+            <h3 style='margin-bottom: 5px;'>Добро пожаловать</h3>
+            <p style='color: var(--secondary-text); font-size: 14px;'>Войдите в систему для доступа к Pro функциям</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    tabs = st.tabs(["🔐 Вход", "📝 Регистрация"])
+    
+    with tabs[0]:
+        st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+        email = st.text_input("Электронная почта", placeholder="example@mail.com", key="login_email")
+        password = st.text_input("Пароль", type="password", placeholder="••••••••", key="login_pass")
+        
+        st.markdown("""
+            <div style='display: flex; justify-content: flex-end; margin-bottom: 15px;'>
+                <a href='#' style='font-size: 12px; color: var(--accent-blue); text-decoration: none; opacity: 0.8;'>Забыли пароль?</a>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("Войти", use_container_width=True, type="primary"):
+            # Имитация входа для демонстрации UI
+            st.session_state.is_authenticated = True
+            st.session_state.user_email = email if email else "user@example.com"
+            st.rerun()
+
+    with tabs[1]:
+        st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+        reg_name = st.text_input("Имя", placeholder="Иван Иванов", key="reg_name")
+        reg_email = st.text_input("Электронная почта", placeholder="example@mail.com", key="reg_email")
+        reg_password = st.text_input("Пароль", type="password", placeholder="••••••••", key="reg_pass")
+        
+        if st.button("Создать аккаунт", use_container_width=True, type="primary"):
+            st.toast("Функционал регистрации будет доступен скоро! ✨", icon="⚙️")
+
+    st.markdown("""
+        <div class="auth-footer">
+            Продолжая, вы соглашаетесь с нашими <br> 
+            <a href='#' style='color: var(--accent-blue);'>Условиями использования</a>
+        </div>
+    """, unsafe_allow_html=True)
+
 # --- 4. ПОДКЛЮЧЕНИЕ API И БАЗЫ ДАННЫХ ---
 # OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -53,7 +103,26 @@ with header_col1:
     """, unsafe_allow_html=True)
 
 with header_col2:
-    st.write("") # Место для будущего профиля
+    if not st.session_state.is_authenticated:
+        st.markdown('<div class="login-btn-header">', unsafe_allow_html=True)
+        if st.button("Войти 👤", use_container_width=True):
+            show_auth_modal()
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        # Имитация профиля пользователя
+        cols = st.columns([1, 1.5])
+        with cols[0]:
+            st.markdown(f"""
+                <div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
+                    <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); border: 1px solid rgba(255,255,255,0.2);">
+                        {st.session_state.user_email[0].upper() if st.session_state.user_email else "U"}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+        with cols[1]:
+            if st.button("Выйти", use_container_width=True):
+                st.session_state.is_authenticated = False
+                st.rerun()
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
