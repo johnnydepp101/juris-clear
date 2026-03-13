@@ -179,8 +179,7 @@ with col_tar2:
 st.divider()
 
 # Параметры анализа
-# Параметры анализа
-with st.container(border=True):
+with st.container(border=True, key="analysis_params"):
     st.markdown("### ⚙️ Параметры анализа")
     c1, c2 = st.columns(2)
     with c1:
