@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st # Стили обновлены: Mesh Gradient & Typography
 from openai import OpenAI
 import re
 from supabase import create_client, Client  # Добавили импорт Supabase
