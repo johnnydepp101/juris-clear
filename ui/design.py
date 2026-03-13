@@ -50,16 +50,19 @@ def load_css():
     /* ГЛОБАЛЬНЫЕ СТИЛИ */
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
+        /* Анимированный Mesh + Тонкая Сетка */
         background-image: 
+            linear-gradient(var(--border-color) 1px, transparent 1px),
+            linear-gradient(90deg, var(--border-color) 1px, transparent 1px),
             radial-gradient(at 10% 10%, rgba(99, 102, 241, var(--mesh-opacity)) 0px, transparent 50%),
             radial-gradient(at 90% 10%, rgba(16, 185, 129, calc(var(--mesh-opacity) * 0.7)) 0px, transparent 50%),
             radial-gradient(at 50% 90%, rgba(99, 102, 241, calc(var(--mesh-opacity) * 0.8)) 0px, transparent 50%);
+        background-size: 40px 40px, 40px 40px, 150% 150%, 150% 150%, 150% 150%;
         background-attachment: fixed;
-        background-size: 150% 150%;
-        animation: mesh-gradient 20s ease-in-out infinite;
+        animation: mesh-gradient 25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         color: var(--text-color);
         font-family: var(--font-main);
-        transition: all 0.5s ease;
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     @keyframes mesh-gradient {
@@ -106,8 +109,10 @@ def load_css():
     }
 
     .pricing-card-base:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px -10px rgba(0,0,0,0.2);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
+        border: 1px solid rgba(99, 102, 241, 0.4) !important;
+        background-blend-mode: overlay;
     }
     
     /* КАРТОЧКА ОТЧЕТА */
@@ -138,32 +143,40 @@ def load_css():
         border-radius: 12px !important;
         border: 1px solid var(--border-color) !important;
         background-color: var(--card-bg) !important;
-        transition: all 0.3s ease !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
     .stTextInput input:focus {
         border-color: var(--accent-blue) !important;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), inset 0 2px 4px rgba(0,0,0,0.05) !important;
+        background-color: rgba(30, 41, 59, 0.6) !important;
     }
-    
+
     /* КНОПКИ */
     .stButton > button {
         border-radius: 14px !important;
         font-weight: 600 !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.5px !important;
         font-size: 14px !important;
-        transition: all 0.3s ease !important;
-        border: 1px solid var(--border-color) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
         color: white !important;
         padding: 10px 24px !important;
         box-shadow: 0 4px 15px -5px rgba(99, 102, 241, 0.4) !important;
+        position: relative;
+        overflow: hidden;
     }
 
     .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 10px 25px -10px rgba(99, 102, 241, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 25px -5px rgba(99, 102, 241, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(-1px) scale(0.98) !important;
     }
 
     .stLinkButton > a {
