@@ -146,19 +146,24 @@ def load_css():
 
     /* GLASS PANEL / CONTAINER (Parameters & Sections) */
     div[data-testid="stVerticalBlockBorderWrapper"], .glass-panel {
-        background: var(--container-bg) !important;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
+        background-color: transparent !important;
         backdrop-filter: var(--glass-blur) !important;
         -webkit-backdrop-filter: var(--glass-blur) !important;
         border: 1px solid var(--border-color) !important;
         border-radius: 20px !important;
-        padding: 25px !important;
+        padding: 24px !important;
         box-shadow: var(--card-shadow) !important;
         margin-bottom: 25px !important;
     }
     
-    /* Дополнительный таргетинг для внутренней части контейнера */
-    div[data-testid="stVerticalBlockBorderWrapper"] > div {
+    /* ЖЕСТКИЙ СБРОС ФОНА для внутренних слоев Streamlit */
+    /* Streamlit автоматически ставит непрозрачный фон на вложенные div, поэтому градиент не было видно */
+    div[data-testid="stVerticalBlockBorderWrapper"] > div,
+    div[data-testid="stVerticalBlockBorderWrapper"] > div > div,
+    div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
         background: transparent !important;
+        background-color: transparent !important;
     }
     
     /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (Elite Style) */
