@@ -21,7 +21,7 @@ def load_css():
         --font-main: 'Inter', sans-serif;
         --font-header: 'Outfit', sans-serif;
         --mesh-opacity: 0.15;
-        --container-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%);
+        --container-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%);
     }
 
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА */
@@ -147,7 +147,6 @@ def load_css():
     /* GLASS PANEL / CONTAINER (Parameters & Sections) */
     div[data-testid="stVerticalBlockBorderWrapper"], .glass-panel {
         background: var(--container-bg) !important;
-        background-color: var(--card-bg) !important;
         backdrop-filter: var(--glass-blur) !important;
         -webkit-backdrop-filter: var(--glass-blur) !important;
         border: 1px solid var(--border-color) !important;
