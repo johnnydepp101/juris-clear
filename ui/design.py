@@ -4,17 +4,22 @@ def load_css():
     st.markdown("""
     <style>
     /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
+    /* 0. ПОДКЛЮЧЕНИЕ ШРИФТОВ */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
     :root {
         --bg-color: #0d1117;
-        --card-bg: rgba(30, 41, 59, 0.7);
+        --card-bg: rgba(30, 41, 59, 0.4); /* Делаем чуть прозрачнее для Mesh */
         --text-color: #f0f6fc;
         --secondary-text: #8b949e;
-        --border-color: rgba(255, 255, 255, 0.1);
+        --border-color: rgba(255, 255, 255, 0.08);
         --accent-blue: #3b82f6;
         --accent-green: #10b981;
-        --glass-blur: blur(10px);
+        --glass-blur: blur(12px);
         --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         --header-color: #ffffff;
+        --font-main: 'Inter', sans-serif;
+        --font-header: 'Outfit', sans-serif;
     }
 
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
@@ -43,8 +48,21 @@ def load_css():
     /* ГЛОБАЛЬНЫЕ СТИЛИ */
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
+        /* Анимированный Mesh Background */
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.2) 0px, transparent 50%);
+        background-attachment: fixed;
         color: var(--text-color);
+        font-family: var(--font-main);
         transition: all 0.4s ease;
+    }
+
+    h1, h2, h3, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+        font-family: var(--font-header) !important;
+        letter-spacing: -0.02em !important;
     }
 
     /* УБИРАЕМ ЯКОРЯ */
@@ -57,22 +75,22 @@ def load_css():
 
     /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
     .pricing-card-single {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(59, 130, 246, 0.6) 100%);
         backdrop-filter: var(--glass-blur);
         padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
         text-align: center; color: white;
         box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .pricing-card-pro {
-        background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(16, 185, 129, 0.6) 100%);
         backdrop-filter: var(--glass-blur);
         padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
         text-align: center; color: white;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
+        box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .pricing-card-single:hover, .pricing-card-pro:hover {
         transform: translateY(-5px);
