@@ -48,16 +48,22 @@ def load_css():
     /* ГЛОБАЛЬНЫЕ СТИЛИ */
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
-        /* Анимированный Mesh Background */
         background-image: 
             radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
             radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-            radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.2) 0px, transparent 50%);
+            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
         background-attachment: fixed;
+        background-size: 200% 200%;
+        animation: mesh-gradient 15s ease infinite;
         color: var(--text-color);
         font-family: var(--font-main);
         transition: all 0.4s ease;
+    }
+
+    @keyframes mesh-gradient {
+        0% { background-position: 0% 0%; }
+        50% { background-position: 100% 100%; }
+        100% { background-position: 0% 0%; }
     }
 
     h1, h2, h3, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
@@ -144,32 +150,45 @@ def load_css():
         border-radius: 12px !important;
     }
 
-    .stDownloadButton > button {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
-        color: white !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-    }
-
     .stDownloadButton > button:hover {
         border: 1px solid var(--accent-blue) !important;
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2) !important;
     }
     
-    /* СТИЛИ ДЛЯ ТАБЛИЦ В ОТЧЕТЕ */
-    .report-card table {
-        margin-top: 25px !important;
-        margin-bottom: 40px !important;
-        border-collapse: collapse;
-        width: 100%;
+    /* КАСТОМНЫЙ СКРОЛЛБАР */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.5);
     }
 
-    /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
-    .secondary-text {
-        color: var(--secondary-text);
-        font-size: 0.9rem;
+    /* АНИМАЦИЯ ПОЯВЛЕНИЯ */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* КАРТОЧКА ОТЧЕТА */
+    .report-card {
+        animation: fadeInUp 0.6s ease-out forwards;
+        background-color: var(--card-bg);
+        backdrop-filter: var(--glass-blur);
+        border-left: 6px solid var(--accent-blue);
+        padding: 30px; border-radius: 16px; 
+        margin-top: 25px; color: var(--text-color);
+        border-top: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        margin-bottom: 35px;
     }
 
     /* СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА АВТОРИЗАЦИИ */
