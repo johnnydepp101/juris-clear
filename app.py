@@ -179,45 +179,44 @@ with col_tar2:
 st.divider()
 
 # Параметры анализа
-st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
-st.markdown("### ⚙️ Параметры анализа")
-c1, c2 = st.columns(2)
+# Параметры анализа
+with st.container(border=True):
+    st.markdown("### ⚙️ Параметры анализа")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.write("**Ваша роль:**")
+        user_role = st.pills(
+            "Роль", 
+            [
+                "Заказчик", "Исполнитель", 
+                "Покупатель", "Поставщик", 
+                "Арендатор", "Арендодатель", 
+                "Работник", "Работодатель", 
+                "Инвестор", "Основатель",
+                "Лицензиат", "Лицензиар"
+            ], 
+            selection_mode="single", 
+            default="Заказчик",
+            label_visibility="collapsed",
+            key=f"role_pills_{st.session_state.reset_counter}"
+        )
 
-with c1:
-    st.write("**Ваша роль:**")
-    user_role = st.pills(
-        "Роль", 
-        [
-            "Заказчик", "Исполнитель", 
-            "Покупатель", "Поставщик", 
-            "Арендатор", "Арендодатель", 
-            "Работник", "Работодатель", 
-            "Инвестор", "Основатель",
-            "Лицензиат", "Лицензиар"
-        ], 
-        selection_mode="single", 
-        default="Заказчик",
-        label_visibility="collapsed",
-        key=f"role_pills_{st.session_state.reset_counter}"
-    )
-
-with c2:
-    st.write("**Тип документа:**")
-    contract_type = st.pills(
-        "Тип", 
-        [
-            "Авто-определение", "Услуги", 
-            "Поставка / Купля-продажа", "NDA", 
-            "Аренда", "Трудовой", 
-            "ИТ-разработка", "Лицензионный", 
-            "Займ", "Агентский"
-        ], 
-        selection_mode="single", 
-        default="Авто-определение",
-        label_visibility="collapsed",
-        key=f"type_pills_{st.session_state.reset_counter}"
-    )
-st.markdown('</div>', unsafe_allow_html=True)
+    with c2:
+        st.write("**Тип документа:**")
+        contract_type = st.pills(
+            "Тип", 
+            [
+                "Авто-определение", "Услуги", 
+                "Поставка / Купля-продажа", "NDA", 
+                "Аренда", "Трудовой", 
+                "ИТ-разработка", "Лицензионный", 
+                "Займ", "Агентский"
+            ], 
+            selection_mode="single", 
+            default="Авто-определение",
+            label_visibility="collapsed",
+            key=f"type_pills_{st.session_state.reset_counter}"
+        )
 
 # Рабочее пространство (Вкладки)
 tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отчета"])
@@ -225,8 +224,8 @@ tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отч
 with tab_audit:
     # --- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР ---
     st.markdown("""
-        <div class="legal-disclaimer">
-            <h4>⚖️ Внимание: Юридический отказ от ответственности</h4>
+        <div class="legal-disclaimer" style="display: block !important;">
+            <h4 style="color: #ef4444 !important;">⚖️ Внимание: Юридический отказ от ответственности</h4>
             <p style="font-size: 0.9em; line-height: 1.5; margin-bottom: 0; color: var(--text-color); opacity: 0.9;">
                 Данный сервис работает на базе искусственного интеллекта и <b>не является юридической консультацией</b>. 
                 ИИ может ошибаться или пропускать важные детали. 
