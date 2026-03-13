@@ -84,7 +84,7 @@ with col_tar1:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; text-align: center; font-size: 13px;">
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
                     ℹ️ Оплачивайте только если результат вас устроит
                 </div>
                 <button style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px; border-radius: 10px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
