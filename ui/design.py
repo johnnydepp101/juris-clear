@@ -27,13 +27,17 @@ def load_css():
     @media (prefers-color-scheme: light) {
         :root {
             --bg-color: #f1f5f9; /* Мягкий светло-серый */
-            --card-bg: rgba(255, 255, 255, 0.65);
+            --card-bg: rgba(255, 255, 255, 0.8);
             --text-color: #1e293b;
             --secondary-text: #64748b;
-            --border-color: rgba(0, 0, 0, 0.05);
-            --card-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.08);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.1);
             --header-color: #0f172a;
             --mesh-opacity: 0.25;
+        }
+        
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 245, 249, 0.95) 100%) !important;
         }
     }
 
@@ -140,12 +144,13 @@ def load_css():
 
     /* GLASS PANEL / CONTAINER (Для секций) */
     .glass-panel, div[data-testid="stVerticalBlockBorderWrapper"] {
-        background: var(--card-bg) !important;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%) !important;
         backdrop-filter: var(--glass-blur) !important;
         border: 1px solid var(--border-color) !important;
-        border-radius: 20px !important;
-        padding: 2px !important; /* Уменьшаем внутренний отступ обертки */
+        border-radius: 24px !important;
+        padding: 25px !important;
         box-shadow: var(--card-shadow) !important;
+        margin-bottom: 30px !important;
     }
     
     /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (Elite Style) */
