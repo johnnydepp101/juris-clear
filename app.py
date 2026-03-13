@@ -179,6 +179,7 @@ with col_tar2:
 st.divider()
 
 # Параметры анализа
+st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
 st.markdown("### ⚙️ Параметры анализа")
 c1, c2 = st.columns(2)
 
@@ -216,6 +217,7 @@ with c2:
         label_visibility="collapsed",
         key=f"type_pills_{st.session_state.reset_counter}"
     )
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Рабочее пространство (Вкладки)
 tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отчета"])
@@ -223,14 +225,13 @@ tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отч
 with tab_audit:
     # --- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР ---
     st.markdown("""
-        <div style="background-color: #ff4b4b22; border: 2px solid #ff4b4b; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <h4 style="margin-top: 0; color: #ff4b4b;">⚖️ Внимание: Юридический отказ от ответственности</h4>
-            <p style="font-size: 0.9em; line-height: 1.4; margin-bottom: 0;">
+        <div class="legal-disclaimer">
+            <h4>⚖️ Внимание: Юридический отказ от ответственности</h4>
+            <p style="font-size: 0.9em; line-height: 1.5; margin-bottom: 0; color: var(--text-color); opacity: 0.9;">
                 Данный сервис работает на базе искусственного интеллекта и <b>не является юридической консультацией</b>. 
-                ИИ может ошибаться, галлюцинировать или пропускать важные детали. 
-                Результаты анализа носят ознакоительный характер. Перед принятием решений обязательно 
+                ИИ может ошибаться или пропускать важные детали. 
+                Результаты анализа носят ознакомительный характер. Перед принятием решений обязательно 
                 <b>проконсультируйтесь с квалифицированным юристом</b>. 
-                Мы не несем ответственности за последствия использования данного инструмента.
             </p>
         </div>
     """, unsafe_allow_html=True)
