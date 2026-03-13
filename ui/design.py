@@ -137,6 +137,36 @@ def load_css():
         border: 1px solid var(--border-color); 
         margin: 25px 0;
     }
+
+    /* GLASS PANEL (Для секций) */
+    .glass-panel {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: var(--card-shadow);
+    }
+    
+    /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (Elite Style) */
+    .legal-disclaimer {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .legal-disclaimer h4 {
+        color: #ef4444 !important;
+        margin-top: 0 !important;
+        font-weight: 700 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
     
     /* ЭЛЕМЕНТЫ ВВОДА (Streamlit) */
     .stTextInput input, .stSelectbox [data-baseweb="select"] {
