@@ -142,15 +142,22 @@ def load_css():
         margin: 25px 0;
     }
 
-    /* GLASS PANEL / CONTAINER (Для секций) */
-    .glass-panel, div[data-testid="stVerticalBlockBorderWrapper"] {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%) !important;
-        backdrop-filter: var(--glass-blur) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 24px !important;
+    /* GLASS PANEL / CONTAINER (Parameters & Sections) */
+    div[data-testid="stVerticalBlockBorderWrapper"], .glass-panel {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%) !important;
+        background-color: #1e293b !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 20px !important;
         padding: 25px !important;
-        box-shadow: var(--card-shadow) !important;
-        margin-bottom: 30px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        margin-bottom: 25px !important;
+    }
+    
+    /* Дополнительный таргетинг для внутренней части контейнера */
+    div[data-testid="stVerticalBlockBorderWrapper"] > div {
+        background: transparent !important;
     }
     
     /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (Elite Style) */
