@@ -143,21 +143,26 @@ def load_css():
     }
 
     /* GLASS PANEL / CONTAINER (Parameters & Sections) */
-    div[data-testid="stVerticalBlockBorderWrapper"], .glass-panel {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%) !important;
+    /* Используем максимально широкий и мощный селектор для всех контейнеров с рамкой */
+    div[data-testid="stVerticalBlockBorderWrapper"], 
+    div[data-testid="stVerticalBlock"], 
+    .glass-panel, 
+    .st-key-analysis_params {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
         background-color: #1e293b !important;
-        backdrop-filter: blur(25px) !important;
-        -webkit-backdrop-filter: blur(25px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 20px !important;
+        backdrop-filter: blur(30px) !important;
+        -webkit-backdrop-filter: blur(30px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 22px !important;
         padding: 25px !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
-        margin-bottom: 25px !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
+        margin-bottom: 30px !important;
     }
     
-    /* Дополнительный таргетинг для внутренней части контейнера */
-    div[data-testid="stVerticalBlockBorderWrapper"] > div {
-        background: transparent !important;
+    /* Убираем прозрачность у вложенных элементов Streamlit, которые могут перекрывать фон */
+    div[data-testid="stVerticalBlockBorderWrapper"] > div,
+    div[data-testid="stVerticalBlock"] > div {
+        background-color: transparent !important;
     }
     
     /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (Elite Style) */
