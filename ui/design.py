@@ -9,29 +9,31 @@ def load_css():
 
     :root {
         --bg-color: #0d1117;
-        --card-bg: rgba(30, 41, 59, 0.4); /* Делаем чуть прозрачнее для Mesh */
-        --text-color: #f0f6fc;
-        --secondary-text: #8b949e;
-        --border-color: rgba(255, 255, 255, 0.08);
-        --accent-blue: #3b82f6;
+        --card-bg: rgba(30, 41, 59, 0.45);
+        --text-color: #e2e8f0; /* Более мягкий белый */
+        --secondary-text: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.06);
+        --accent-blue: #6366f1; /* Переходим на Indigo для мягкости */
         --accent-green: #10b981;
-        --glass-blur: blur(12px);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        --header-color: #ffffff;
+        --glass-blur: blur(20px);
+        --card-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        --header-color: #f8fafc;
         --font-main: 'Inter', sans-serif;
         --font-header: 'Outfit', sans-serif;
+        --mesh-opacity: 0.15;
     }
 
-    /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
+    /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА */
     @media (prefers-color-scheme: light) {
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.8);
+            --bg-color: #f1f5f9; /* Мягкий светло-серый */
+            --card-bg: rgba(255, 255, 255, 0.65);
             --text-color: #1e293b;
             --secondary-text: #64748b;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --border-color: rgba(0, 0, 0, 0.05);
+            --card-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.08);
             --header-color: #0f172a;
+            --mesh-opacity: 0.25;
         }
     }
 
@@ -49,15 +51,15 @@ def load_css():
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
         background-image: 
-            radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+            radial-gradient(at 10% 10%, rgba(99, 102, 241, var(--mesh-opacity)) 0px, transparent 50%),
+            radial-gradient(at 90% 10%, rgba(16, 185, 129, calc(var(--mesh-opacity) * 0.7)) 0px, transparent 50%),
+            radial-gradient(at 50% 90%, rgba(99, 102, 241, calc(var(--mesh-opacity) * 0.8)) 0px, transparent 50%);
         background-attachment: fixed;
-        background-size: 200% 200%;
-        animation: mesh-gradient 15s ease infinite;
+        background-size: 150% 150%;
+        animation: mesh-gradient 20s ease-in-out infinite;
         color: var(--text-color);
         font-family: var(--font-main);
-        transition: all 0.4s ease;
+        transition: all 0.5s ease;
     }
 
     @keyframes mesh-gradient {
@@ -79,27 +81,33 @@ def load_css():
     /* ХЕДЕР И ВЫРАВНИВАНИЕ */
     [data-testid="stHorizontalBlock"] { align-items: center !important; }
 
-    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
-    .pricing-card-single {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(59, 130, 246, 0.6) 100%);
+    /* ТАРИФНЫЕ КАРТОЧКИ (ОБНОВЛЕННЫЕ) */
+    .pricing-card-base {
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between; 
+        padding: 30px; 
+        border-radius: 20px; 
+        height: 440px; 
+        color: var(--text-color);
         backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        text-align: center; color: white;
+        border: 1px solid var(--border-color);
         box-shadow: var(--card-shadow);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.4s ease;
     }
-    .pricing-card-pro {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(16, 185, 129, 0.6) 100%);
-        backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        text-align: center; color: white;
-        box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
+    .pricing-card-1 {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%);
     }
-    .pricing-card-single:hover, .pricing-card-pro:hover {
+    
+    .pricing-card-2 {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.2) !important;
+    }
+
+    .pricing-card-base:hover {
         transform: translateY(-5px);
+        box-shadow: 0 15px 35px -10px rgba(0,0,0,0.2);
     }
     
     /* КАРТОЧКА ОТЧЕТА */
@@ -118,30 +126,44 @@ def load_css():
     
     /* ШКАЛА РИСКА */
     .risk-meter-container {
-        background: rgba(0, 0, 0, 0.2); 
-        border-radius: 20px; padding: 10px;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); 
+        background: rgba(0, 0, 0, 0.03); 
+        border-radius: 24px; padding: 12px;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); 
         border: 1px solid var(--border-color); 
-        margin: 20px 0;
+        margin: 25px 0;
+    }
+    
+    /* ЭЛЕМЕНТЫ ВВОДА (Streamlit) */
+    .stTextInput input, .stSelectbox [data-baseweb="select"] {
+        border-radius: 12px !important;
+        border: 1px solid var(--border-color) !important;
+        background-color: var(--card-bg) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stTextInput input:focus {
+        border-color: var(--accent-blue) !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
     }
     
     /* КНОПКИ */
     .stButton > button {
-        border-radius: 12px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.5px !important;
-        text-transform: uppercase !important;
+        border-radius: 14px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
         font-size: 14px !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid var(--border-color) !important;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
         color: white !important;
-        padding: 12px 24px !important;
+        padding: 10px 24px !important;
+        box-shadow: 0 4px 15px -5px rgba(99, 102, 241, 0.4) !important;
     }
 
     .stButton > button:hover {
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 10px 25px -10px rgba(99, 102, 241, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
     }
 
     .stLinkButton > a {
@@ -209,6 +231,31 @@ def load_css():
         font-size: 12px;
         color: var(--secondary-text);
         opacity: 0.7;
+    }
+    /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
+    .secondary-text {
+        color: var(--secondary-text);
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+    
+    /* ТАБЫ */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background-color: transparent !important;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 10px 10px 0 0 !important;
+        padding: 10px 20px !important;
+        color: var(--secondary-text) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: var(--card-bg) !important;
+        color: var(--accent-blue) !important;
+        backdrop-filter: var(--glass-blur);
     }
 
     /* АНИМАЦИЯ ДЛЯ КНОПОК */
