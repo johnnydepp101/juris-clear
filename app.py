@@ -1,4 +1,4 @@
-import streamlit as st # UI Updated: Soft Premium Design (Eye-friendly)
+import streamlit as st # UI Updated: Elite Premium Polish (Tactile & Glow)
 from openai import OpenAI
 import re
 from supabase import create_client, Client  # Добавили импорт Supabase
