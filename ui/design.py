@@ -166,6 +166,66 @@ def load_css():
         background-color: transparent !important;
     }
     
+    /* Hover эффект на панель параметров */
+    div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px -10px rgba(0,0,0,0.5) !important;
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+    }
+
+    /* === СТИЛИ ДЛЯ ПИЛЮЛЬ (ST.PILLS) РЕДИЗАЙН === */
+    [data-testid="stPills"] {
+        gap: 8px !important;
+    }
+    
+    /* Состояния по умолчанию для пилюль */
+    [data-testid="stPill"], 
+    [data-testid="stPill"] button {
+        border-radius: 12px !important;
+        background-color: rgba(30, 41, 59, 0.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    [data-testid="stPill"] p {
+        color: var(--secondary-text) !important;
+        font-weight: 500 !important;
+        font-family: var(--font-main) !important;
+        font-size: 14px !important;
+    }
+
+    /* Состояния наведения (Hover) */
+    [data-testid="stPill"]:hover, 
+    [data-testid="stPill"] button:hover {
+        background-color: rgba(99, 102, 241, 0.15) !important;
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+    }
+    
+    [data-testid="stPill"]:hover p {
+        color: var(--text-color) !important;
+    }
+
+    /* Активные / Выбранные Пилюли */
+    [data-testid="stPill"][data-checked="true"],
+    [data-testid="stPill"][aria-pressed="true"], 
+    [data-testid="stPill"][data-checked="true"] button,
+    [data-testid="stPill"][aria-pressed="true"] button {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 4px 15px -3px rgba(99, 102, 241, 0.5) !important;
+        transform: translateY(0); /* Сбрасываем подъем при нажатии */
+    }
+    
+    [data-testid="stPill"][data-checked="true"] p,
+    [data-testid="stPill"][aria-pressed="true"] p {
+        color: white !important;
+        font-weight: 600 !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+    }
+    
     /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (Elite Style) */
     .legal-disclaimer {
         background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
