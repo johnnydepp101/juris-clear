@@ -145,7 +145,7 @@ def load_css():
     }
 
     /* GLASS PANEL / CONTAINER (Parameters & Sections) */
-    div[data-testid="stVerticalBlockBorderWrapper"], .glass-panel {
+    div:has(> div > div > #analysis-params-hook), .glass-panel {
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
         background-color: transparent !important;
         backdrop-filter: var(--glass-blur) !important;
@@ -159,15 +159,15 @@ def load_css():
     
     /* ЖЕСТКИЙ СБРОС ФОНА для внутренних слоев Streamlit */
     /* Streamlit автоматически ставит непрозрачный фон на вложенные div, поэтому градиент не было видно */
-    div[data-testid="stVerticalBlockBorderWrapper"] > div,
-    div[data-testid="stVerticalBlockBorderWrapper"] > div > div,
-    div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {
+    div:has(> div > div > #analysis-params-hook) > div,
+    div:has(> div > div > #analysis-params-hook) > div > div,
+    div:has(> div > div > #analysis-params-hook) div[data-testid="stVerticalBlock"] {
         background: transparent !important;
         background-color: transparent !important;
     }
     
     /* Hover эффект на панель параметров */
-    div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    div:has(> div > div > #analysis-params-hook):hover {
         transform: translateY(-2px);
         box-shadow: 0 15px 35px -10px rgba(0,0,0,0.5) !important;
         border-color: rgba(99, 102, 241, 0.4) !important;
