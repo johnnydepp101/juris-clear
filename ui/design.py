@@ -138,25 +138,24 @@ def load_css():
         margin: 25px 0;
     }
 
-    /* GLASS PANEL (Для секций) */
-    .glass-panel {
-        background: var(--card-bg);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: var(--card-shadow);
+    /* GLASS PANEL / CONTAINER (Для секций) */
+    .glass-panel, div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: var(--card-bg) !important;
+        backdrop-filter: var(--glass-blur) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 20px !important;
+        padding: 2px !important; /* Уменьшаем внутренний отступ обертки */
+        box-shadow: var(--card-shadow) !important;
     }
     
     /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (Elite Style) */
     .legal-disclaimer {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        padding: 20px;
-        border-radius: 16px;
-        margin-bottom: 25px;
-        backdrop-filter: blur(10px);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
+        border: 1px solid rgba(239, 68, 68, 0.4) !important;
+        padding: 20px !important;
+        border-radius: 16px !important;
+        margin-bottom: 25px !important;
+        backdrop-filter: blur(12px) !important;
     }
     
     .legal-disclaimer h4 {
