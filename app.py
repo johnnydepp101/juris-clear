@@ -1,4 +1,4 @@
-import streamlit as st # Стили обновлены: Mesh Gradient & Typography
+import streamlit as st # UI Updated: Soft Premium Design (Eye-friendly)
 from openai import OpenAI
 import re
 from supabase import create_client, Client  # Добавили импорт Supabase
@@ -126,22 +126,12 @@ with header_col2:
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
-# --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
+# --- ОБНОВЛЕННЫЕ ТАРИФЫ (SOFT UI) ---
 col_tar1, col_tar2 = st.columns(2)
-
-card_style = """
-    display: flex; 
-    flex-direction: column; 
-    justify-content: space-between; 
-    padding: 25px; 
-    border-radius: 15px; 
-    height: 420px; 
-    color: white;
-"""
 
 with col_tar1:
     st.markdown(f"""
-        <div style="{card_style} background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); border: 1px solid #3b82f6;">
+        <div class="pricing-card-base pricing-card-1">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">9 $</div>
@@ -153,18 +143,17 @@ with col_tar1:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
+                <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
                     ℹ️ Оплачивайте только если результат вас устроит
                 </div>
-                <button style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px; border-radius: 10px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
+                <div style="width: 100%; background: rgba(99, 102, 241, 0.1); color: var(--accent-blue); border: 1px solid rgba(99, 102, 241, 0.2); padding: 12px; border-radius: 10px; font-weight: 600; text-align: center; cursor: default;">Анализ доступен ниже 👇</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
     st.markdown(f"""
-        <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
+        <div class="pricing-card-base pricing-card-2">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">29 $ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
@@ -177,10 +166,10 @@ with col_tar2:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
+                <div style="background: rgba(99, 102, 241, 0.1); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500; color: var(--accent-blue);">
                     🔐 Для оформления подписки нужно зарегистрироваться
                 </div>
-                <div style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.3); cursor: not-allowed;">
+                <div style="background: rgba(255,255,255,0.05); color: var(--secondary-text); text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px dashed var(--border-color); cursor: not-allowed;">
                     🚀 Оформить подписку
                 </div>
             </div>
@@ -412,4 +401,4 @@ col_f1, col_f2, col_f3 = st.columns(3)
 with col_f1:
     st.caption("© 2026 JurisClear AI | Ереван")
 
-st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>support@jurisclear.com</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 12px; margin-top: 40px; opacity: 0.6;'>support@jurisclear.com</p>", unsafe_allow_html=True)
