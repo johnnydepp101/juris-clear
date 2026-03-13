@@ -153,6 +153,37 @@ def load_css():
         color: var(--secondary-text);
         font-size: 0.9rem;
     }
+
+    /* СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА АВТОРИЗАЦИИ */
+    [data-testid="stDialog"] {
+        border-radius: 24px !important;
+        background: var(--bg-color) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    [data-testid="stDialog"] h2 {
+        color: var(--header-color) !important;
+        font-weight: 800 !important;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        font-size: 12px;
+        color: var(--secondary-text);
+        opacity: 0.7;
+    }
+
+    /* АНИМАЦИЯ ДЛЯ КНОПОК */
+    @keyframes pulse-blue {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+    
+    .login-btn-header {
+        animation: pulse-blue 2s infinite;
+    }
     </style>
     """, unsafe_allow_html=True)
 
