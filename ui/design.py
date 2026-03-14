@@ -145,27 +145,28 @@ def load_css():
     }
 
     /* КОНТЕЙНЕРЫ st.container(border=True) И ПАНЕЛЬ ПАРАМЕТРОВ КАК У КАРТОЧЕК */
-    [data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook), .glass-panel {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%) !important;
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook) {
+        background: var(--container-bg) !important;
         backdrop-filter: var(--glass-blur) !important;
         -webkit-backdrop-filter: var(--glass-blur) !important;
         border: 1px solid var(--border-color) !important;
         border-radius: 20px !important;
-        padding: 30px !important;
+        padding: 0 !important; /* Убираем двойной padding */
         box-shadow: var(--card-shadow) !important;
         margin-bottom: 25px !important;
         transition: all 0.4s ease !important;
+        overflow: hidden !important;
     }
     
-    /* ЖЕСТКИЙ СБРОС ФОНА для внутренних слоев Streamlit */
-    /* Streamlit автоматически добавляет внутренние stVerticalBlock, которым нужно отключить фон */
-    [data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook) div[data-testid="stVerticalBlock"] {
+    /* СБРОС ФОНА для внутренних слоев, чтобы заливка была на всей секции целиком */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook) > div[data-testid="stVerticalBlock"] {
+        padding: 30px !important; /* Устанавливаем padding внутреннему контенту */
         background: transparent !important;
         background-color: transparent !important;
     }
     
-    /* Hover эффект на панель параметров как у карточек pricing-card */
-    [data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook):hover {
+    /* Hover эффект на всю секцию целиком */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook):hover {
         transform: translateY(-8px) scale(1.02);
         box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4) !important;
         border: 1px solid rgba(99, 102, 241, 0.4) !important;
