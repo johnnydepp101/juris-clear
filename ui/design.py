@@ -65,17 +65,11 @@ def load_css():
             radial-gradient(at 50% 90%, rgba(99, 102, 241, calc(var(--mesh-opacity) * 0.8)) 0px, transparent 50%);
         background-size: 40px 40px, 40px 40px, 150% 150%, 150% 150%, 150% 150%;
         background-attachment: fixed;
-        animation: mesh-gradient 25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         color: var(--text-color);
         font-family: var(--font-main);
         transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    @keyframes mesh-gradient {
-        0% { background-position: 0% 0%; }
-        50% { background-position: 100% 100%; }
-        100% { background-position: 0% 0%; }
-    }
 
     h1, h2, h3, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
         font-family: var(--font-header) !important;
@@ -115,7 +109,6 @@ def load_css():
     }
 
     .pricing-card-base:hover {
-        transform: translateY(-8px) scale(1.02);
         box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
         border: 1px solid rgba(99, 102, 241, 0.4) !important;
         background-blend-mode: overlay;
@@ -201,7 +194,6 @@ def load_css():
     [data-testid="stPill"] button:hover {
         background: rgba(99, 102, 241, 0.12) !important;
         border-color: rgba(99, 102, 241, 0.4) !important;
-        transform: translateY(-3px) scale(1.03) !important;
         box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3) !important;
     }
     
@@ -293,7 +285,6 @@ def load_css():
     }
 
     .stButton > button:hover {
-        transform: translateY(-3px) !important;
         box-shadow: 0 12px 25px -5px rgba(99, 102, 241, 0.6) !important;
         border: 1px solid rgba(255, 255, 255, 0.3) !important;
     }
@@ -328,15 +319,9 @@ def load_css():
         background: rgba(59, 130, 246, 0.5);
     }
 
-    /* АНИМАЦИЯ ПОЯВЛЕНИЯ */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
 
     /* КАРТОЧКА ОТЧЕТА */
     .report-card {
-        animation: fadeInUp 0.6s ease-out forwards;
         background-color: var(--card-bg);
         backdrop-filter: var(--glass-blur);
         border-left: 6px solid var(--accent-blue);
@@ -394,15 +379,8 @@ def load_css():
         backdrop-filter: var(--glass-blur);
     }
 
-    /* АНИМАЦИЯ ДЛЯ КНОПОК */
-    @keyframes pulse-blue {
-        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-    }
-    
     .login-btn-header {
-        animation: pulse-blue 2s infinite;
+        /* animation: pulse-blue 2s infinite; */
     }
     </style>
     """, unsafe_allow_html=True)
