@@ -144,34 +144,32 @@ def load_css():
         margin: 25px 0;
     }
 
-    /* GLASS PANEL / CONTAINER (Parameters & Sections) */
-    div:has(> div > div > #analysis-params-hook), .glass-panel {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
-        background-color: transparent !important;
+    /* КОНТЕЙНЕРЫ st.container(border=True) И ПАНЕЛЬ ПАРАМЕТРОВ КАК У КАРТОЧЕК */
+    [data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook), .glass-panel {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%) !important;
         backdrop-filter: var(--glass-blur) !important;
         -webkit-backdrop-filter: var(--glass-blur) !important;
         border: 1px solid var(--border-color) !important;
         border-radius: 20px !important;
-        padding: 24px !important;
+        padding: 30px !important;
         box-shadow: var(--card-shadow) !important;
         margin-bottom: 25px !important;
+        transition: all 0.4s ease !important;
     }
     
     /* ЖЕСТКИЙ СБРОС ФОНА для внутренних слоев Streamlit */
-    /* Streamlit автоматически ставит непрозрачный фон на вложенные div, поэтому градиент не было видно */
-    div:has(> div > div > #analysis-params-hook) > div,
-    div:has(> div > div > #analysis-params-hook) > div > div,
-    div:has(> div > div > #analysis-params-hook) div[data-testid="stVerticalBlock"] {
+    /* Streamlit автоматически добавляет внутренние stVerticalBlock, которым нужно отключить фон */
+    [data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook) div[data-testid="stVerticalBlock"] {
         background: transparent !important;
         background-color: transparent !important;
     }
     
-    /* Hover эффект на панель параметров */
-    div:has(> div > div > #analysis-params-hook):hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 35px -10px rgba(0,0,0,0.5) !important;
-        border-color: rgba(99, 102, 241, 0.4) !important;
-        transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+    /* Hover эффект на панель параметров как у карточек pricing-card */
+    [data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook):hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4) !important;
+        border: 1px solid rgba(99, 102, 241, 0.4) !important;
+        background-blend-mode: overlay;
     }
 
     /* === СТИЛИ ДЛЯ ПИЛЮЛЬ (ST.PILLS) РЕДИЗАЙН === */
