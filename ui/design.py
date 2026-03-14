@@ -144,102 +144,101 @@ def load_css():
         margin: 25px 0;
     }
 
-    /* КОНТЕЙНЕРЫ st.container(border=True) И ПАНЕЛЬ ПАРАМЕТРОВ С ЭФФЕКТОМ СТЕКЛА (БЕЗ HOVER) */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook) {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
-        backdrop-filter: blur(25px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        border-radius: 24px !important;
-        padding: 0 !important;
+    /* КОНТЕЙНЕР ПАРАМЕТРОВ С ЭФФЕКТОМ ГЛУБОКОГО СТЕКЛА (ELITE STATIC) */
+    /* Таргетинг через кастомный класс и :has для охвата всего родительского контейнера */
+    [data-testid="stVerticalBlock"]:has(.params-glass-layer) {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+        backdrop-filter: blur(30px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 28px !important;
+        padding: 40px !important;
         box-shadow: 
-            0 8px 32px 0 rgba(0, 0, 0, 0.3),
+            0 20px 50px rgba(0, 0, 0, 0.3),
             inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
-        margin-bottom: 30px !important;
-        overflow: hidden !important;
-    }
-    
-    /* СБРОС ФОНА для внутренних слоев */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook) > div[data-testid="stVerticalBlock"] {
-        padding: 35px !important; 
-        background: transparent !important;
+        margin-bottom: 40px !important;
+        transition: none !important; /* Убираем все анимации наведения */
     }
 
-    /* Адаптация под светлую тему для контейнера параметров */
+    [data-testid="stVerticalBlock"]:has(.params-glass-layer) * {
+        background-color: transparent !important;
+    }
+
+    /* Адаптация под светлую тему */
     @media (prefers-color-scheme: light) {
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(#analysis-params-hook) {
-            background: rgba(255, 255, 255, 0.7) !important;
-            border: 1px solid rgba(0, 0, 0, 0.05) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+        [data-testid="stVerticalBlock"]:has(.params-glass-layer) {
+            background: rgba(255, 255, 255, 0.6) !important;
+            border: 1px solid rgba(0, 0, 0, 0.06) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05) !important;
+            backdrop-filter: blur(20px) !important;
         }
     }
 
-    /* === СТИЛИ ДЛЯ ПИЛЮЛЬ (ST.PILLS) ПРЕМИУМ РЕДИЗАЙН === */
+    /* === СТИЛИ ДЛЯ ПИЛЮЛЬ (ST.PILLS) ELITE РЕДИЗАЙН === */
     [data-testid="stPills"] {
-        gap: 10px !important;
-        padding: 5px 0 !important;
+        gap: 12px !important;
+        padding: 10px 0 !important;
     }
     
-    [data-testid="stPill"] {
-        margin: 0 !important;
-    }
-
     [data-testid="stPill"] button {
-        border-radius: 14px !important;
-        background: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        padding: 8px 18px !important;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
-        box-shadow: none !important;
+        border-radius: 16px !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 10px 22px !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
     }
     
     [data-testid="stPill"] p {
         color: var(--secondary-text) !important;
-        font-weight: 500 !important;
-        font-size: 13.5px !important;
-        letter-spacing: 0.2px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        letter-spacing: 0.3px !important;
+        transition: color 0.3s ease !important;
     }
 
-    /* Hover эффект для пилюль - универсальный и мягкий */
+    /* Hover эффект */
     [data-testid="stPill"] button:hover {
-        background: rgba(99, 102, 241, 0.08) !important;
-        border-color: rgba(99, 102, 241, 0.3) !important;
-        transform: translateY(-1px);
+        background: rgba(99, 102, 241, 0.12) !important;
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        transform: translateY(-3px) scale(1.03) !important;
+        box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3) !important;
     }
     
     [data-testid="stPill"] button:hover p {
-        color: var(--text-color) !important;
+        color: white !important;
     }
 
-    /* Активные / Выбранные Пилюли - Элегантный акцент */
+    /* Активные / Выбранные Пилюли */
     [data-testid="stPill"][data-checked="true"] button,
     [aria-pressed="true"][data-testid="stPill"] button {
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
         box-shadow: 
-            0 10px 20px -5px rgba(99, 102, 241, 0.4),
-            inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
-        transform: translateY(0) !important;
+            0 12px 25px -5px rgba(99, 102, 241, 0.5),
+            inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transform: translateY(0) scale(1) !important;
     }
     
     [data-testid="stPill"][data-checked="true"] p,
     [aria-pressed="true"][data-testid="stPill"] p {
         color: #ffffff !important;
-        font-weight: 700 !important;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+        font-weight: 800 !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
     }
 
-    /* Адаптация пилюль под светлую тему */
+    /* Светлая тема для пилюль */
     @media (prefers-color-scheme: light) {
         [data-testid="stPill"] button {
-            background: rgba(0, 0, 0, 0.03) !important;
-            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            background: rgba(0, 0, 0, 0.04) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
         }
         [data-testid="stPill"] p {
-            color: #64748b !important;
+            color: #475569 !important;
         }
         [data-testid="stPill"] button:hover {
-            background: rgba(99, 102, 241, 0.05) !important;
+            background: rgba(99, 102, 241, 0.08) !important;
         }
     }
     
