@@ -1,4 +1,4 @@
-import streamlit as st # UI Updated: Elite Premium Polish (Tactile & Glow)
+import streamlit as st
 from openai import OpenAI
 import re
 from supabase import create_client, Client  # Добавили импорт Supabase
@@ -126,12 +126,22 @@ with header_col2:
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
-# --- ОБНОВЛЕННЫЕ ТАРИФЫ (SOFT UI) ---
+# --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
 col_tar1, col_tar2 = st.columns(2)
+
+card_style = """
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    padding: 25px; 
+    border-radius: 15px; 
+    height: 420px; 
+    color: white;
+"""
 
 with col_tar1:
     st.markdown(f"""
-        <div class="pricing-card-base pricing-card-1">
+        <div style="{card_style} background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); border: 1px solid #3b82f6;">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">9 $</div>
@@ -143,17 +153,18 @@ with col_tar1:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
                     ℹ️ Оплачивайте только если результат вас устроит
                 </div>
-                <div style="width: 100%; background: rgba(99, 102, 241, 0.1); color: var(--accent-blue); border: 1px solid rgba(99, 102, 241, 0.2); padding: 12px; border-radius: 10px; font-weight: 600; text-align: center; cursor: default;">Анализ доступен ниже 👇</div>
+                <button style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px; border-radius: 10px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
 with col_tar2:
+    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
     st.markdown(f"""
-        <div class="pricing-card-base pricing-card-2">
+        <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">29 $ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
@@ -166,10 +177,10 @@ with col_tar2:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(99, 102, 241, 0.1); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500; color: var(--accent-blue);">
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
                     🔐 Для оформления подписки нужно зарегистрироваться
                 </div>
-                <div style="background: rgba(255,255,255,0.05); color: var(--secondary-text); text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px dashed var(--border-color); cursor: not-allowed;">
+                <div style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.3); cursor: not-allowed;">
                     🚀 Оформить подписку
                 </div>
             </div>
@@ -179,50 +190,43 @@ with col_tar2:
 st.divider()
 
 # Параметры анализа
-with st.container():
-    st.markdown("""
-        <div id="analysis-params-hook" class="params-glass-layer">
-            <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 25px;'>
-                <div style='background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); border: 1px solid rgba(255,255,255,0.1);'>⚙️</div>
-                <h2 style='margin: 0; font-size: 26px; font-weight: 800; color: var(--header-color); letter-spacing: -0.5px;'>Параметры анализа</h2>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("<p style='font-size: 13px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px;'>Ваша роль</p>", unsafe_allow_html=True)
-        user_role = st.pills(
-            "Роль", 
-            [
-                "Заказчик", "Исполнитель", 
-                "Покупатель", "Поставщик", 
-                "Арендатор", "Арендодатель", 
-                "Работник", "Работодатель", 
-                "Инвестор", "Основатель",
-                "Лицензиат", "Лицензиар"
-            ], 
-            selection_mode="single", 
-            default="Заказчик",
-            label_visibility="collapsed",
-            key=f"role_pills_{st.session_state.reset_counter}"
-        )
+st.markdown("### ⚙️ Параметры анализа")
+c1, c2 = st.columns(2)
 
-    with c2:
-        st.markdown("<p style='font-size: 13px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px;'>Тип документа</p>", unsafe_allow_html=True)
-        contract_type = st.pills(
-            "Тип", 
-            [
-                "Авто-определение", "Услуги", 
-                "Поставка / Купля-продажа", "NDA", 
-                "Аренда", "Трудовой", 
-                "ИТ-разработка", "Лицензионный", 
-                "Займ", "Агентский"
-            ], 
-            selection_mode="single", 
-            default="Авто-определение",
-            label_visibility="collapsed",
-            key=f"type_pills_{st.session_state.reset_counter}"
-        )
+with c1:
+    st.write("**Ваша роль:**")
+    user_role = st.pills(
+        "Роль", 
+        [
+            "Заказчик", "Исполнитель", 
+            "Покупатель", "Поставщик", 
+            "Арендатор", "Арендодатель", 
+            "Работник", "Работодатель", 
+            "Инвестор", "Основатель",
+            "Лицензиат", "Лицензиар"
+        ], 
+        selection_mode="single", 
+        default="Заказчик",
+        label_visibility="collapsed",
+        key=f"role_pills_{st.session_state.reset_counter}"
+    )
+
+with c2:
+    st.write("**Тип документа:**")
+    contract_type = st.pills(
+        "Тип", 
+        [
+            "Авто-определение", "Услуги", 
+            "Поставка / Купля-продажа", "NDA", 
+            "Аренда", "Трудовой", 
+            "ИТ-разработка", "Лицензионный", 
+            "Займ", "Агентский"
+        ], 
+        selection_mode="single", 
+        default="Авто-определение",
+        label_visibility="collapsed",
+        key=f"type_pills_{st.session_state.reset_counter}"
+    )
 
 # Рабочее пространство (Вкладки)
 tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отчета"])
@@ -230,13 +234,14 @@ tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отч
 with tab_audit:
     # --- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР ---
     st.markdown("""
-        <div class="legal-disclaimer" style="display: block !important;">
-            <h4 style="color: #ef4444 !important;">⚖️ Внимание: Юридический отказ от ответственности</h4>
-            <p style="font-size: 0.9em; line-height: 1.5; margin-bottom: 0; color: var(--text-color); opacity: 0.9;">
+        <div style="background-color: #ff4b4b22; border: 2px solid #ff4b4b; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+            <h4 style="margin-top: 0; color: #ff4b4b;">⚖️ Внимание: Юридический отказ от ответственности</h4>
+            <p style="font-size: 0.9em; line-height: 1.4; margin-bottom: 0;">
                 Данный сервис работает на базе искусственного интеллекта и <b>не является юридической консультацией</b>. 
-                ИИ может ошибаться или пропускать важные детали. 
-                Результаты анализа носят ознакомительный характер. Перед принятием решений обязательно 
+                ИИ может ошибаться, галлюцинировать или пропускать важные детали. 
+                Результаты анализа носят ознакоительный характер. Перед принятием решений обязательно 
                 <b>проконсультируйтесь с квалифицированным юристом</b>. 
+                Мы не несем ответственности за последствия использования данного инструмента.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -407,4 +412,4 @@ col_f1, col_f2, col_f3 = st.columns(3)
 with col_f1:
     st.caption("© 2026 JurisClear AI | Ереван")
 
-st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 12px; margin-top: 40px; opacity: 0.6;'>support@jurisclear.com</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>support@jurisclear.com</p>", unsafe_allow_html=True)
