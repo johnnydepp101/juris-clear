@@ -176,7 +176,6 @@ with col_tar2:
         </div>
     """, unsafe_allow_html=True)
 
-st.divider()
 
 # Параметры анализа
 with st.container(border=True):
