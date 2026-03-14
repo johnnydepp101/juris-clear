@@ -179,7 +179,7 @@ with col_tar2:
 st.divider()
 
 # Параметры анализа
-with st.container(border=True):
+with st.container():
     st.markdown("""
         <div id="analysis-params-hook" style='display: flex; align-items: center; gap: 15px; margin-bottom: 25px;'>
             <div style='background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); border: 1px solid rgba(255,255,255,0.1);'>⚙️</div>
