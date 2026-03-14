@@ -184,7 +184,7 @@ with st.container(border=True):
         <div id="analysis-params-hook" style='display: flex; align-items: center; gap: 15px; margin-bottom: 25px;'>
             <div style='background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); border: 1px solid rgba(255,255,255,0.1);'>⚙️</div>
             <h2 style='margin: 0; font-size: 26px; font-weight: 800; color: var(--header-color); letter-spacing: -0.5px;'>Параметры анализа</h2>
-        
+        </div>
     """, unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
@@ -221,7 +221,7 @@ with st.container(border=True):
             label_visibility="collapsed",
             key=f"type_pills_{st.session_state.reset_counter}"
         )
-        </div>
+
 # Рабочее пространство (Вкладки)
 tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отчета"])
 
