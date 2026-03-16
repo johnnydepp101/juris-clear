@@ -74,23 +74,31 @@ def load_css():
 
     /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
     .pricing-card-single {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 450px;
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: var(--glass-blur);
         -webkit-backdrop-filter: var(--glass-blur);
-        padding: 30px; border-radius: 40px; 
+        padding: 35px; border-radius: 40px; 
         border: 1px solid rgba(255, 255, 255, 0.1); 
         text-align: center; color: white;
-        box-shadow: var(--card-shadow), inset 0 0 20px rgba(255, 255, 255, 0.02);
+        box-shadow: var(--card-shadow), inset 0 0 20px rgba(255, 255, 255, 0.05);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .pricing-card-pro {
-        background: rgba(157, 0, 255, 0.05); /* Легкий фиолетовый оттенок для Pro */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 450px;
+        background: rgba(157, 0, 255, 0.05);
         backdrop-filter: var(--glass-blur);
         -webkit-backdrop-filter: var(--glass-blur);
-        padding: 30px; border-radius: 40px; 
+        padding: 35px; border-radius: 40px; 
         border: 1px solid rgba(157, 0, 255, 0.2); 
         text-align: center; color: white;
-        box-shadow: 0 20px 40px rgba(157, 0, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.05);
+        box-shadow: 0 20px 40px rgba(157, 0, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.08);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .pricing-card-single:hover, .pricing-card-pro:hover {
