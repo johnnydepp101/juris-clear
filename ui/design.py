@@ -3,46 +3,54 @@ import streamlit as st
 def load_css():
     st.markdown("""
     <style>
-    /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
+    /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) - Цвета: 593bbe, 342a52, 5a79ea, d235e8, 76e5ff, 3f5fdf, 314dac */
     :root {
-        --bg-color: #0d1117;
-        --card-bg: rgba(30, 41, 59, 0.7);
-        --text-color: #f0f6fc;
-        --secondary-text: #8b949e;
-        --border-color: rgba(255, 255, 255, 0.1);
-        --accent-blue: #3b82f6;
-        --accent-green: #10b981;
-        --glass-blur: blur(10px);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        --bg-gradient: linear-gradient(135deg, #342a52 0%, #593bbe 25%, #3f5fdf 50%, #5a79ea 75%, #314dac 100%);
+        --card-bg: rgba(255, 255, 255, 0.07);
+        --text-color: #f8fafc;
+        --secondary-text: rgba(248, 250, 252, 0.7);
+        --border-color: rgba(255, 255, 255, 0.15);
+        --accent-blue: #76e5ff;
+        --accent-purple: #d235e8;
+        --glass-blur: blur(16px);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         --header-color: #ffffff;
+        --btn-bg: linear-gradient(135deg, #593bbe 0%, #d235e8 100%);
+        --pill-bg: rgba(255, 255, 255, 0.1);
+        --pill-selected: linear-gradient(135deg, #d235e8 0%, #593bbe 100%);
     }
 
-    /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
+    /* 2. СВЕТЛАЯ ТЕМА - Цвета: e9f0fe, e5cefa, e9d8d9, c7deeb, dbd2e0 */
     @media (prefers-color-scheme: light) {
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.8);
+            --bg-gradient: linear-gradient(135deg, #e9f0fe 0%, #e5cefa 25%, #dbd2e0 50%, #e9d8d9 75%, #c7deeb 100%);
+            --card-bg: rgba(255, 255, 255, 0.3);
             --text-color: #1e293b;
-            --secondary-text: #64748b;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --secondary-text: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
             --header-color: #0f172a;
+            --btn-bg: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+            --pill-bg: rgba(0, 0, 0, 0.05);
+            --pill-selected: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
         }
     }
 
+    /* СТРЕЙМЛИТ СТАНДАРТНЫЕ ЭЛЕМЕНТЫ */
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
     
     .block-container {
-        padding-top: 2rem; 
-        max-width: 100%;
-        padding-left: 2rem;
-        padding-right: 2rem;
+        padding-top: 3rem; 
+        max-width: 1200px;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
     
-    /* ГЛОБАЛЬНЫЕ СТИЛИ */
+    /* ГЛОБАЛЬНЫЙ ФОН */
     [data-testid="stAppViewContainer"] {
-        background-color: var(--bg-color);
+        background: var(--bg-gradient) !important;
+        background-attachment: fixed !important;
         color: var(--text-color);
         transition: all 0.4s ease;
     }
@@ -55,135 +63,124 @@ def load_css():
     /* ХЕДЕР И ВЫРАВНИВАНИЕ */
     [data-testid="stHorizontalBlock"] { align-items: center !important; }
 
-    /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
-    .pricing-card-single {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
-        backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
-        text-align: center; color: white;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
-    }
-    .pricing-card-pro {
-        background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
-        backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
-        text-align: center; color: white;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
-    }
-    .pricing-card-single:hover, .pricing-card-pro:hover {
-        transform: translateY(-5px);
+    /* КАРТОЧКИ (GLASSMORPHISM) */
+    .pricing-card-single, .pricing-card-pro, .report-card {
+        background: var(--card-bg) !important;
+        backdrop-filter: var(--glass-blur) !important;
+        -webkit-backdrop-filter: var(--glass-blur) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 20px !important;
+        box-shadow: var(--card-shadow) !important;
+        padding: 24px !important;
+        transition: transform 0.3s ease, border-color 0.3s ease !important;
     }
     
-    /* КАРТОЧКА ОТЧЕТА */
+    .pricing-card-single:hover, .pricing-card-pro:hover, .report-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    /* СПЕЦИФИКА КАРТОЧКИ ОТЧЕТА */
     .report-card {
-        background-color: var(--card-bg);
-        backdrop-filter: var(--glass-blur);
-        border-left: 6px solid var(--accent-blue);
-        padding: 30px; border-radius: 16px; 
-        margin-top: 25px; color: var(--text-color);
-        border-top: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
-        box-shadow: var(--card-shadow);
+        border-left: 6px solid var(--accent-purple) !important;
+        margin-top: 25px;
         margin-bottom: 35px;
     }
     
     /* ШКАЛА РИСКА */
     .risk-meter-container {
-        background: rgba(0, 0, 0, 0.2); 
-        border-radius: 20px; padding: 10px;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); 
+        background: rgba(0, 0, 0, 0.15); 
+        border-radius: 20px; 
+        padding: 6px;
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.2); 
         border: 1px solid var(--border-color); 
         margin: 20px 0;
     }
     
     /* КНОПКИ */
     .stButton > button {
-        border-radius: 12px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.5px !important;
-        text-transform: uppercase !important;
-        font-size: 14px !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        background: var(--btn-bg) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 14px !important;
         color: white !important;
-        padding: 12px 24px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+        padding: 14px 28px !important;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
     }
 
     .stButton > button:hover {
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        transform: scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(210, 53, 232, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    }
+    
+    /* ST.PILLS - ПЕРЕНАСТРОЙКА ПОД GLASSMORPHISM */
+    [data-testid="stPill"] {
+        background: var(--pill-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 20px !important;
+        color: var(--text-color) !important;
+        backdrop-filter: var(--glass-blur) !important;
+        transition: all 0.3s ease !important;
     }
 
-    .stLinkButton > a {
-        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
-        color: white !important;
-        border-radius: 12px !important;
+    [data-testid="stPill"][aria-pressed="true"] {
+        background: var(--pill-selected) !important;
+        border-color: rgba(255, 255, 255, 0.4) !important;
+        box-shadow: 0 4px 12px rgba(210, 53, 232, 0.2) !important;
     }
 
+    /* ТИПОГРАФИКА */
+    h1, h2, h3, h4 {
+        color: var(--header-color) !important;
+        letter-spacing: -0.5px !important;
+    }
+
+    .secondary-text {
+        color: var(--secondary-text);
+        font-size: 0.95rem;
+    }
+
+    /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР */
+    .disclaimer-glass {
+        background: rgba(239, 68, 68, 0.15) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 2px solid rgba(239, 68, 68, 0.4) !important;
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 25px;
+        color: var(--text-color);
+        box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .disclaimer-glass h4 {
+        color: #ef4444 !important;
+        margin-top: 0;
+    }
+
+    /* АНИМАЦИИ */
+    @keyframes glass-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
     .stDownloadButton > button {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
-        color: white !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(8px) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-color) !important;
         border-radius: 12px !important;
-        padding: 12px 24px !important;
     }
 
     .stDownloadButton > button:hover {
-        border: 1px solid var(--accent-blue) !important;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2) !important;
+        border-color: var(--accent-blue) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
     }
-    
-    /* СТИЛИ ДЛЯ ТАБЛИЦ В ОТЧЕТЕ */
-    .report-card table {
-        margin-top: 25px !important;
-        margin-bottom: 40px !important;
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
-    .secondary-text {
-        color: var(--secondary-text);
-        font-size: 0.9rem;
-    }
-
-    /* СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА АВТОРИЗАЦИИ */
-    [data-testid="stDialog"] {
-        border-radius: 24px !important;
-        background: var(--bg-color) !important;
-        border: 1px solid var(--border-color) !important;
-    }
-    
-    [data-testid="stDialog"] h2 {
-        color: var(--header-color) !important;
-        font-weight: 800 !important;
-    }
-
-    .auth-footer {
-        text-align: center;
-        margin-top: 25px;
-        font-size: 12px;
-        color: var(--secondary-text);
-        opacity: 0.7;
-    }
-
-    /* АНИМАЦИЯ ДЛЯ КНОПОК */
-    @keyframes pulse-blue {
-        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-    }
-    
-    .login-btn-header {
-        animation: pulse-blue 2s infinite;
-    }
+    </style>
     </style>
     """, unsafe_allow_html=True)
 
