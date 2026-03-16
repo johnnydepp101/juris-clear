@@ -1,5 +1,6 @@
 import streamlit as st
 
+@st.cache_data
 def load_css():
     st.markdown("""
     <style>
