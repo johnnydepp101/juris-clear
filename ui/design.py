@@ -5,21 +5,21 @@ def load_css():
     <style>
     /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
     :root {
-        --bg-color: #01010a; /* Почти черный, как на тени картинки */
-        --card-bg: rgba(30, 41, 59, 0.5);
+        --bg-color: #01010a;
+        --card-bg: rgba(255, 255, 255, 0.03); /* Ультра-прозрачный белый для эффекта стекла */
         --text-color: #f0f6fc;
         --secondary-text: #8b949e;
-        --border-color: rgba(255, 255, 255, 0.08);
+        --border-color: rgba(255, 255, 255, 0.12); /* Чуть более заметная граница для блика */
         --accent-blue: #3b82f6;
         --accent-green: #10b981;
-        --glass-blur: blur(15px);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        --glass-blur: blur(25px); /* Усиленное размытие как на картинке */
+        --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         --header-color: #ffffff;
         
         /* Цвета для точного воссоздания картинки */
         --bg-grad-vibrant: #190e20;
-        --bg-grad-deep: #05053a;    /* Глубокий синий */
-        --bg-grad-dark: #01010a;    /* Основной темный */
+        --bg-grad-deep: #05053a;
+        --bg-grad-dark: #01010a;
     }
 
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
@@ -74,39 +74,50 @@ def load_css():
 
     /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
     .pricing-card-single {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
+        background: rgba(255, 255, 255, 0.03);
         backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
+        -webkit-backdrop-filter: var(--glass-blur);
+        padding: 30px; border-radius: 40px; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
         text-align: center; color: white;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
+        box-shadow: var(--card-shadow), inset 0 0 20px rgba(255, 255, 255, 0.02);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .pricing-card-pro {
-        background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
+        background: rgba(157, 0, 255, 0.05); /* Легкий фиолетовый оттенок для Pro */
         backdrop-filter: var(--glass-blur);
-        padding: 25px; border-radius: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.2); 
+        -webkit-backdrop-filter: var(--glass-blur);
+        padding: 30px; border-radius: 40px; 
+        border: 1px solid rgba(157, 0, 255, 0.2); 
         text-align: center; color: white;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
+        box-shadow: 0 20px 40px rgba(157, 0, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .pricing-card-single:hover, .pricing-card-pro:hover {
-        transform: translateY(-5px);
+        transform: translateY(-10px);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     /* КАРТОЧКА ОТЧЕТА */
     .report-card {
-        background-color: var(--card-bg);
+        background: rgba(255, 255, 255, 0.02);
         backdrop-filter: var(--glass-blur);
-        border-left: 6px solid var(--accent-blue);
-        padding: 30px; border-radius: 16px; 
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-color);
+        padding: 35px; border-radius: 35px; 
         margin-top: 25px; color: var(--text-color);
-        border-top: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
         box-shadow: var(--card-shadow);
         margin-bottom: 35px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .report-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
     }
     
     /* ШКАЛА РИСКА */
