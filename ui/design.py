@@ -39,49 +39,45 @@ def load_css():
             --bg-grad-dark: #ffffff;
         }
 
-        /* Улучшаем читаемость инпутов в светлом режиме */
-        .stTextInput input, .stTextArea textarea {
-            background-color: rgba(255, 255, 255, 1) !important;
-            color: #0f172a !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-            border-radius: 12px !important;
-        }
-
-        /* ВОЗВРАТ ДИЗАЙНА КАРТОЧЕК И ТЕМНЫЙ ТЕКСТ */
+        /* ГРАДИЕНТНЫЙ ФОН КАРТОЧЕК КАК НА КАРТИНКЕ */
         .pricing-card-single, .pricing-card-pro, .report-card {
-            background: rgba(255, 255, 255, 0.75) !important; /* Возврат к плотному белому стеклу */
-            backdrop-filter: blur(25px) saturate(150%) !important;
-            -webkit-backdrop-filter: blur(25px) saturate(150%) !important;
-            border: 1px solid rgba(255, 255, 255, 1) !important;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08) !important;
+            background: linear-gradient(135deg, rgba(255, 178, 239, 0.35) 0%, rgba(100, 110, 255, 0.25) 100%), 
+                        rgba(255, 255, 255, 0.5) !important;
+            backdrop-filter: blur(30px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.9) !important;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.05) !important;
             color: #1e293b !important;
         }
 
-        /* Перевод всех белых элементов в темный диапазон */
+        /* Полная замена белого текста на темный во всех элементах */
         .pricing-card-single *, .pricing-card-pro *, .report-card *, 
-        .stMarkdown div p, .stMarkdown div span, .stMarkdown div b {
+        .stMarkdown div p, .stMarkdown div span, .stMarkdown div b,
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
             color: #1e293b !important;
         }
 
         .pricing-card-pro {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(157, 0, 255, 0.05) 100%) !important;
-            border: 1.5px solid rgba(157, 0, 255, 0.2) !important;
+            border: 1.5px solid rgba(157, 0, 255, 0.3) !important;
+            background: linear-gradient(135deg, rgba(255, 150, 240, 0.45) 0%, rgba(100, 110, 255, 0.3) 100%), 
+                        rgba(255, 255, 255, 0.4) !important;
         }
 
-        /* КНОПКИ В СВЕТЛОМ РЕЖИМЕ */
+        /* КНОПКИ - ТЕМНЫЕ ДЛЯ КОНТРАСТА */
         .stButton > button, .login-btn-header button {
             color: #ffffff !important;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
             border: none !important;
-            font-weight: 800 !important;
-
-        /* ПИЛЮЛИ В СВЕТЛОМ РЕЖИМЕ */
-        [data-testid="stPill"] {
-            background: rgba(255, 255, 255, 1) !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-            color: #01010a !important;
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
         }
 
+        /* ИНПУТЫ И ПИЛЮЛИ */
+        .stTextInput input, [data-testid="stPill"], .stTextArea textarea {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: #1e293b !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        }
+    
         [aria-selected="true"] {
             background: #4f46e5 !important;
             color: #ffffff !important;
