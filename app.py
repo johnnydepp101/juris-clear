@@ -21,8 +21,11 @@ st.set_page_config(
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
 
-# Загружаем дизайн
-load_css()
+if 'current_theme' not in st.session_state:
+    st.session_state.current_theme = "Auto"
+
+# Загружаем дизайн с учетом выбранной темы
+load_css(st.session_state.current_theme)
 
 # --- 3. ИНИЦИАЛИЗАЦИЯ AUTH STATE ---
 if 'is_authenticated' not in st.session_state:
@@ -103,26 +106,44 @@ with header_col1:
     """, unsafe_allow_html=True)
 
 with header_col2:
-    if not st.session_state.is_authenticated:
-        st.markdown('<div class="login-btn-header">', unsafe_allow_html=True)
-        if st.button("Войти 👤", use_container_width=True):
-            show_auth_modal()
+    # Контейнер для кнопок в ряд
+    h_col1, h_col2 = st.columns([1, 2])
+    
+    with h_col1:
+        # ПЕРЕКЛЮЧАТЕЛЬ ТЕМ (Авто -> Светлая -> Темная)
+        theme_icons = {"Auto": "🌓", "Light": "☀️", "Dark": "🌙"}
+        st.markdown('<div class="theme-toggle">', unsafe_allow_html=True)
+        if st.button(theme_icons[st.session_state.current_theme], help=f"Тема: {st.session_state.current_theme}"):
+            if st.session_state.current_theme == "Auto":
+                st.session_state.current_theme = "Light"
+            elif st.session_state.current_theme == "Light":
+                st.session_state.current_theme = "Dark"
+            else:
+                st.session_state.current_theme = "Auto"
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        # Имитация профиля пользователя
-        cols = st.columns([1, 1.5])
-        with cols[0]:
-            st.markdown(f"""
-                <div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
-                    <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); border: 1px solid rgba(255,255,255,0.2);">
-                        {st.session_state.user_email[0].upper() if st.session_state.user_email else "U"}
+
+    with h_col2:
+        if not st.session_state.is_authenticated:
+            st.markdown('<div class="login-btn-header">', unsafe_allow_html=True)
+            if st.button("Войти 👤", use_container_width=True):
+                show_auth_modal()
+            st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            # Имитация профиля пользователя
+            cols = st.columns([1, 1.5])
+            with cols[0]:
+                st.markdown(f"""
+                    <div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
+                        <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); border: 1px solid rgba(255,255,255,0.2);">
+                            {st.session_state.user_email[0].upper() if st.session_state.user_email else "U"}
+                        </div>
                     </div>
-                </div>
-            """, unsafe_allow_html=True)
-        with cols[1]:
-            if st.button("Выйти", use_container_width=True):
-                st.session_state.is_authenticated = False
-                st.rerun()
+                """, unsafe_allow_html=True)
+            with cols[1]:
+                if st.button("Выйти", use_container_width=True):
+                    st.session_state.is_authenticated = False
+                    st.rerun()
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
