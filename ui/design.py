@@ -62,6 +62,40 @@ def load_css():
             background: linear-gradient(135deg, rgba(255, 150, 240, 0.45) 0%, rgba(100, 110, 255, 0.3) 100%), 
                         rgba(255, 255, 255, 0.4) !important;
         }
+            /* ВКЛАДКИ (TABS) В СВЕТЛОМ РЕЖИМЕ - ТЕМНЫЙ ТЕКСТ ВЕЗДЕ */
+        .stTabs [data-baseweb="tab"] {
+            color: #475569 !important;
+            font-weight: 600 !important;
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .stTabs [aria-selected="true"], .stTabs [aria-selected="true"] * {
+            color: #01010a !important; /* ТЕМНЫЙ ТЕКСТ ДЛЯ АКТИВНОЙ ВКЛАДКИ */
+            font-weight: 900 !important;
+        }
+        
+        .stTabs [aria-selected="true"] {
+            background: rgba(79, 70, 229, 0.1) !important; /* Светлый фон */
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .stTabs [data-baseweb="tab-highlight"] {
+            background-color: #4f46e5 !important;
+            height: 3px !important;
+        }
+
+        /* ПИЛЮЛИ (PILLS) В СВЕТЛОМ РЕЖИМЕ - ТЕМНЫЙ ТЕКСТ ДЛЯ АКТИВНЫХ */
+        [data-testid="stPill"][aria-selected="true"] {
+            background: rgba(79, 70, 229, 0.15) !important; /* Светлый активный фон */
+            border: 2px solid #4f46e5 !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1) !important;
+        }
+
+        [data-testid="stPill"][aria-selected="true"] *, [data-testid="stPill"][aria-selected="true"] p {
+            color: #01010a !important; /* ТЕМНЫЙ ТЕКСТ */
+            font-weight: 800 !important;
+        }
 
         /* КНОПКИ - ТЕМНЫЕ ДЛЯ КОНТРАСТА */
         .stButton > button, .login-btn-header button {
@@ -71,27 +105,7 @@ def load_css():
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
         }
 
-        /* ВКЛАДКИ (TABS) В СВЕТЛОМ РЕЖИМЕ - ТЕМНЫЙ ТЕКСТ */
-        .stTabs [data-baseweb="tab"] {
-            color: #475569 !important; /* Серый для неактивных */
-            font-weight: 600 !important;
-            background: transparent !important;
-            border: none !important;
-        }
-
-        .stTabs [aria-selected="true"] {
-            color: #01010a !important; /* ТЕМНЫЙ ТЕКСТ ДЛЯ АКТИВНОЙ ВКЛАДКИ */
-            font-weight: 900 !important;
-            background: rgba(0, 0, 0, 0.03) !important;
-            border-radius: 12px 12px 0 0 !important;
-        }
-
-        .stTabs [data-baseweb="tab-highlight"] {
-            background-color: #4f46e5 !important; /* Синяя линия подчеркивания */
-            height: 3px !important;
-        }
-
-        /* ИНПУТЫ И ПИЛЮЛИ */
+        /* ИНПУТЫ И ПИЛЮЛИ (ОБЩЕЕ) */
         .stTextInput input, [data-testid="stPill"], .stTextArea textarea {
             background-color: rgba(255, 255, 255, 0.9) !important;
             color: #1e293b !important;
