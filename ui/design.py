@@ -48,15 +48,18 @@ def load_css():
         }
 
         .pricing-card-single, .pricing-card-pro, .report-card {
-            background: rgba(255, 255, 255, 0.75) !important; /* Более плотное "белое стекло" */
-            border: 1px solid rgba(255, 255, 255, 1) !important;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08) !important;
-            color: #1e293b !important;
+            background: linear-gradient(135deg, rgba(255, 178, 239, 0.25) 0%, rgba(92, 103, 255, 0.15) 100%) !important;
+            backdrop-filter: blur(25px) saturate(150%) !important;
+            -webkit-backdrop-filter: blur(25px) saturate(150%) !important;
+            background-color: rgba(255, 255, 255, 0.45) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05) !important;
+            color: #0f172a !important;
         }
 
         .pricing-card-pro {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(157, 0, 255, 0.05) 100%) !important;
-            border: 1px solid rgba(157, 0, 255, 0.2) !important;
+            background: linear-gradient(135deg, rgba(235, 120, 255, 0.3) 0%, rgba(92, 103, 255, 0.2) 100%) !important;
+            border: 1.5px solid rgba(157, 0, 255, 0.3) !important;
         }
 
         .stButton > button {
