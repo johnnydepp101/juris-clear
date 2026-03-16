@@ -8,6 +8,7 @@ from ui.design import load_css, get_risk_params, sample_text
 from utils.file_processing import extract_text_from_pdf
 from core.intelligence import analyze_long_text, generate_analysis
 from utils.export import create_pdf, create_docx
+from core.auth import sign_up, sign_in, sign_out, get_user_profile
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -29,6 +30,10 @@ if 'is_authenticated' not in st.session_state:
     st.session_state.is_authenticated = False
 if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
+if 'user_id' not in st.session_state:
+    st.session_state.user_id = None
+if 'user_display_name' not in st.session_state:
+    st.session_state.user_display_name = ""
 
 @st.dialog("JurisClear AI")
 def show_auth_modal():
@@ -53,10 +58,27 @@ def show_auth_modal():
         """, unsafe_allow_html=True)
         
         if st.button("Войти", use_container_width=True, type="primary"):
-            # Имитация входа для демонстрации UI
-            st.session_state.is_authenticated = True
-            st.session_state.user_email = email if email else "user@example.com"
-            st.rerun()
+            if not email or not password:
+                st.error("Заполните email и пароль.")
+            elif supabase is None:
+                st.error("Ошибка подключения к базе данных.")
+            else:
+                with st.spinner("Вход в систему..."):
+                    response, error = sign_in(supabase, email, password)
+                if error:
+                    st.error(error)
+                else:
+                    user = response.user
+                    st.session_state.is_authenticated = True
+                    st.session_state.user_email = user.email
+                    st.session_state.user_id = user.id
+                    # Получаем display_name из метаданных или профиля
+                    display_name = (user.user_metadata or {}).get("display_name", "")
+                    if not display_name:
+                        profile = get_user_profile(supabase, user.id)
+                        display_name = profile.get("display_name", "") if profile else ""
+                    st.session_state.user_display_name = display_name
+                    st.rerun()
 
     with tabs[1]:
         st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
@@ -65,7 +87,30 @@ def show_auth_modal():
         reg_password = st.text_input("Пароль", type="password", placeholder="••••••••", key="reg_pass")
         
         if st.button("Создать аккаунт", use_container_width=True, type="primary"):
-            st.toast("Функционал регистрации будет доступен скоро! ✨", icon="⚙️")
+            if not reg_email or not reg_password:
+                st.error("Заполните email и пароль.")
+            elif len(reg_password) < 6:
+                st.error("Пароль должен содержать минимум 6 символов.")
+            elif supabase is None:
+                st.error("Ошибка подключения к базе данных.")
+            else:
+                with st.spinner("Создание аккаунта..."):
+                    response, error = sign_up(supabase, reg_email, reg_password, reg_name)
+                if error:
+                    st.error(error)
+                else:
+                    user = response.user
+                    # Проверяем, нужно ли подтверждение email
+                    if response.session:
+                        # Email confirmation отключён - сразу входим
+                        st.session_state.is_authenticated = True
+                        st.session_state.user_email = user.email
+                        st.session_state.user_id = user.id
+                        st.session_state.user_display_name = reg_name
+                        st.rerun()
+                    else:
+                        # Email confirmation включён
+                        st.success("✅ Аккаунт создан! Проверьте почту для подтверждения email.")
 
     st.markdown("""
         <div class="auth-footer">
@@ -109,19 +154,29 @@ with header_col2:
             show_auth_modal()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
-        # Имитация профиля пользователя
+        # Профиль пользователя
+        avatar_letter = (
+            st.session_state.user_display_name[0].upper() 
+            if st.session_state.user_display_name 
+            else (st.session_state.user_email[0].upper() if st.session_state.user_email else "U")
+        )
         cols = st.columns([1, 1.5])
         with cols[0]:
             st.markdown(f"""
                 <div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
                     <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); border: 1px solid rgba(255,255,255,0.2);">
-                        {st.session_state.user_email[0].upper() if st.session_state.user_email else "U"}
+                        {avatar_letter}
                     </div>
                 </div>
             """, unsafe_allow_html=True)
         with cols[1]:
             if st.button("Выйти", use_container_width=True):
+                if supabase:
+                    sign_out(supabase)
                 st.session_state.is_authenticated = False
+                st.session_state.user_email = ""
+                st.session_state.user_id = None
+                st.session_state.user_display_name = ""
                 st.rerun()
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
