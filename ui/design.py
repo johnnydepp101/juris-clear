@@ -5,22 +5,21 @@ def load_css():
     <style>
     /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
     :root {
-        --bg-color: #02021e;
-        --card-bg: rgba(30, 41, 59, 0.7);
+        --bg-color: #01010a; /* Почти черный, как на тени картинки */
+        --card-bg: rgba(30, 41, 59, 0.5);
         --text-color: #f0f6fc;
         --secondary-text: #8b949e;
-        --border-color: rgba(255, 255, 255, 0.1);
+        --border-color: rgba(255, 255, 255, 0.08);
         --accent-blue: #3b82f6;
         --accent-green: #10b981;
-        --glass-blur: blur(10px);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        --glass-blur: blur(15px);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         --header-color: #ffffff;
         
-        /* Градиентные цвета для темной темы (на основе изображения) */
-        --bg-grad-1: #6b00d7; /* Фиолетовый (нижний левый угол) */
-        --bg-grad-2: #02025f; /* Темно-синий (центр) */
-        --bg-grad-3: #02021e; /* Насыщенный темный (края) */
-        --bg-grad-4: #05053a; /* Глубокий синий */
+        /* Цвета для точного воссоздания картинки */
+        --bg-grad-vibrant: #9d00ff; /* Яркий фиолетовый */
+        --bg-grad-deep: #05053a;    /* Глубокий синий */
+        --bg-grad-dark: #01010a;    /* Основной темный */
     }
 
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
@@ -56,9 +55,10 @@ def load_css():
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
         background-image: 
-            radial-gradient(at 0% 100%, var(--bg-grad-1) 100vw, transparent 100%), /* Фиолетовый снизу слева */
-            radial-gradient(at 50% 50%, var(--bg-grad-2) 100vw, transparent 100%), /* Синий в центре */
-            radial-gradient(at 100% 0%, var(--bg-grad-3) 100vw, transparent 100%); /* Темный сверху справа */
+            radial-gradient(circle at 20% 80%, rgba(157, 0, 255, 0.45) 0%, transparent 50%), 
+            radial-gradient(at 0% 100%, var(--bg-grad-vibrant) 0%, transparent 55%), 
+            radial-gradient(at 45% 45%, var(--bg-grad-deep) 0%, transparent 75%),
+            radial-gradient(at 100% 0%, var(--bg-grad-dark) 0%, transparent 50%);
         background-attachment: fixed;
         color: var(--text-color);
         transition: all 0.4s ease;
