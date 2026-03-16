@@ -133,19 +133,17 @@ card_style = """
     display: flex; 
     flex-direction: column; 
     justify-content: space-between; 
-    padding: 25px; 
-    border-radius: 15px; 
-    height: 420px; 
+    height: 440px; 
     color: white;
 """
 
 with col_tar1:
     st.markdown(f"""
-        <div style="{card_style} background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); border: 1px solid #3b82f6;">
+        <div class="pricing-card-single" style="{card_style}">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">9 $</div>
-                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                <div style="font-size: 13.5px; opacity: 0.85; line-height: 1.6;">
                     • <b>Бесплатное резюме</b> основных рисков<br>
                     • Детальный юридический разбор (Full Report)<br>
                     • Конкретные правки для защиты ваших интересов<br>
@@ -153,10 +151,10 @@ with col_tar1:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
+                <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500; border: 1px solid rgba(255,255,255,0.1);">
                     ℹ️ Оплачивайте только если результат вас устроит
                 </div>
-                <button style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px; border-radius: 10px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
+                <div style="text-align: center; opacity: 0.6; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">Анализ доступен ниже 👇</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -164,11 +162,11 @@ with col_tar1:
 with col_tar2:
     checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
     st.markdown(f"""
-        <div style="{card_style} background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #60a5fa; box-shadow: 0 10px 25px rgba(59,130,246,0.3);">
+        <div class="pricing-card-pro" style="{card_style} border: 1px solid var(--accent-purple); box-shadow: 0 10px 30px rgba(210, 53, 232, 0.2);">
             <div>
                 <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
                 <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">29 $ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
-                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                <div style="font-size: 13.5px; opacity: 0.85; line-height: 1.6;">
                     • <b>Неограниченное</b> количество документов<br>
                     • Полные отчеты <b>мгновенно</b> без доплат<br>
                     • Доступ к результату в истории навсегда<br>
@@ -177,10 +175,10 @@ with col_tar2:
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500;">
-                    🔐 Для оформления подписки нужно зарегистрироваться
+                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500; border: 1px dashed rgba(255,255,255,0.2);">
+                    🔐 Нужно зарегистрироваться
                 </div>
-                <div style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.3); cursor: not-allowed;">
+                <div style="background: var(--pill-selected); color: white; text-align: center; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: not-allowed; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(210, 53, 232, 0.3);">
                     🚀 Оформить подписку
                 </div>
             </div>
@@ -234,12 +232,12 @@ tab_audit, tab_demo = st.tabs(["🚀 ИИ Аудит", "📝 Пример отч
 with tab_audit:
     # --- ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР ---
     st.markdown("""
-        <div style="background-color: #ff4b4b22; border: 2px solid #ff4b4b; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <h4 style="margin-top: 0; color: #ff4b4b;">⚖️ Внимание: Юридический отказ от ответственности</h4>
-            <p style="font-size: 0.9em; line-height: 1.4; margin-bottom: 0;">
+        <div class="disclaimer-glass">
+            <h4>⚖️ Внимание: Юридический отказ от ответственности</h4>
+            <p style="font-size: 0.95em; line-height: 1.5; margin-bottom: 0; opacity: 0.9;">
                 Данный сервис работает на базе искусственного интеллекта и <b>не является юридической консультацией</b>. 
                 ИИ может ошибаться, галлюцинировать или пропускать важные детали. 
-                Результаты анализа носят ознакоительный характер. Перед принятием решений обязательно 
+                Результаты анализа носят ознакомительный характер. Перед принятием решений обязательно 
                 <b>проконсультируйтесь с квалифицированным юристом</b>. 
                 Мы не несем ответственности за последствия использования данного инструмента.
             </p>
