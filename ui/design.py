@@ -156,43 +156,60 @@ def load_css():
         margin: 20px 0;
     }
     
-    /* КНОПКИ */
-    .stButton > button {
-        border-radius: 12px !important;
+    /* КНОПКИ (GLASSMORPHISM + NEON) */
+    .stButton > button, .login-btn-header button {
+        border-radius: 20px !important;
         font-weight: 700 !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 1px !important;
         text-transform: uppercase !important;
-        font-size: 14px !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        font-size: 13px !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(157, 0, 255, 0.4) !important;
+        background: linear-gradient(135deg, rgba(157, 0, 255, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%) !important;
+        backdrop-filter: blur(10px) !important;
         color: white !important;
-        padding: 12px 24px !important;
+        padding: 14px 28px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     }
 
-    .stButton > button:hover {
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    }
-
-    .stLinkButton > a {
-        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
-        color: white !important;
-        border-radius: 12px !important;
+    .stButton > button:hover, .login-btn-header button:hover {
+        box-shadow: 0 0 25px rgba(157, 0, 255, 0.5) !important;
+        border: 1px solid rgba(157, 0, 255, 1) !important;
+        background: linear-gradient(135deg, rgba(157, 0, 255, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%) !important;
+        transform: translateY(-3px) scale(1.02) !important;
     }
 
     .stDownloadButton > button {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
         color: white !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 20px !important;
+        padding: 14px 28px !important;
+        transition: all 0.3s ease !important;
     }
 
     .stDownloadButton > button:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
         border: 1px solid var(--accent-blue) !important;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2) !important;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
+    }
+
+    /* СПЕЦИАЛЬНЫЙ СТИЛЬ ДЛЯ КНОПКИ ВХОДА В ХЕДЕРЕ */
+    .login-btn-header button {
+        background: rgba(157, 0, 255, 0.15) !important;
+        border: 1px solid rgba(157, 0, 255, 0.6) !important;
+        box-shadow: 0 0 15px rgba(157, 0, 255, 0.2) !important;
+    }
+
+    @keyframes pulse-neon {
+        0% { box-shadow: 0 0 5px rgba(157, 0, 255, 0.4); }
+        50% { box-shadow: 0 0 20px rgba(157, 0, 255, 0.2); }
+        100% { box-shadow: 0 0 5px rgba(157, 0, 255, 0.4); }
+    }
+    
+    .login-btn-header {
+        animation: pulse-neon 3s infinite;
     }
     
     /* СТИЛИ ДЛЯ ТАБЛИЦ В ОТЧЕТЕ */
