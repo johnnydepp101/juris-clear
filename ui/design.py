@@ -78,54 +78,50 @@ def load_css():
         flex-direction: column;
         justify-content: space-between;
         min-height: 450px;
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        padding: 35px; border-radius: 40px; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
+        background: rgba(10, 10, 20, 0.4); /* Глубокий темный фон */
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        padding: 40px; border-radius: 50px; 
+        border: 1px solid rgba(157, 0, 255, 0.3); /* Фиолетовая светящаяся граница */
         text-align: center; color: white;
-        box-shadow: var(--card-shadow), inset 0 0 20px rgba(255, 255, 255, 0.05);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 
+                    inset 0 0 15px rgba(157, 0, 255, 0.1);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
     }
+    
     .pricing-card-pro {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         min-height: 450px;
-        background: rgba(157, 0, 255, 0.05);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        padding: 35px; border-radius: 40px; 
-        border: 1px solid rgba(157, 0, 255, 0.2); 
+        background: rgba(30, 10, 50, 0.35); /* Более фиолетовый для Pro */
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        padding: 40px; border-radius: 50px; 
+        border: 1.5px solid rgba(157, 0, 255, 0.6); /* Яркая фиолетовая граница */
         text-align: center; color: white;
-        box-shadow: 0 20px 40px rgba(157, 0, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 30px rgba(157, 0, 255, 0.2), 
+                    inset 0 0 20px rgba(157, 0, 255, 0.1);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    
     .pricing-card-single:hover, .pricing-card-pro:hover {
-        transform: translateY(-10px);
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        transform: translateY(-12px) scale(1.02);
+        border-color: rgba(157, 0, 255, 1);
+        box-shadow: 0 30px 60px rgba(157, 0, 255, 0.25);
     }
     
     /* КАРТОЧКА ОТЧЕТА */
     .report-card {
-        background: rgba(255, 255, 255, 0.02);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-color);
-        padding: 35px; border-radius: 35px; 
+        background: rgba(10, 10, 20, 0.4);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba(157, 0, 255, 0.2);
+        padding: 40px; border-radius: 40px; 
         margin-top: 25px; color: var(--text-color);
         box-shadow: var(--card-shadow);
         margin-bottom: 35px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .report-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
     }
     
     /* ШКАЛА РИСКА */
