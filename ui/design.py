@@ -105,6 +105,25 @@ def load_css():
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
         }
 
+        /* КНОПКА СКАЧИВАНИЯ В СВЕТЛОМ РЕЖИМЕ (В СТИЛЕ КАРТОЧЕК) */
+        .stDownloadButton > button {
+            background: linear-gradient(135deg, rgba(255, 178, 239, 0.4) 0%, rgba(100, 110, 255, 0.3) 100%), 
+                        rgba(255, 255, 255, 0.6) !important;
+            color: #1e293b !important;
+            border: 1px solid rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(15px) !important;
+            border-radius: 20px !important;
+            padding: 14px 28px !important;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+            font-weight: 700 !important;
+        }
+
+        .stDownloadButton > button:hover {
+            transform: translateY(-2px) !important;
+            background: linear-gradient(135deg, rgba(255, 178, 239, 0.5) 0%, rgba(100, 110, 255, 0.4) 100%) !important;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08) !important;
+        }
+
         /* ИНПУТЫ И ПИЛЮЛИ (ОБЩЕЕ) */
         .stTextInput input, [data-testid="stPill"], .stTextArea textarea {
             background-color: rgba(255, 255, 255, 0.9) !important;
@@ -292,19 +311,21 @@ def load_css():
     }
 
     .stDownloadButton > button {
-        background: rgba(255, 255, 255, 0.05) !important;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
         color: white !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(15px) !important;
         border-radius: 20px !important;
         padding: 14px 28px !important;
-        transition: all 0.3s ease !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     }
 
     .stDownloadButton > button:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid var(--accent-blue) !important;
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+        border: 1px solid rgba(157, 0, 255, 0.5) !important;
+        box-shadow: 0 0 25px rgba(157, 0, 255, 0.3) !important;
+        transform: translateY(-2px) !important;
     }
 
     /* СПЕЦИАЛЬНЫЙ СТИЛЬ ДЛЯ КНОПКИ ВХОДА В ХЕДЕРЕ */
