@@ -220,6 +220,48 @@ def load_css():
         width: 100%;
     }
 
+    /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (RED GLASS) */
+    .disclaimer-glass {
+        background: rgba(255, 75, 75, 0.08);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 75, 75, 0.4);
+        padding: 30px; border-radius: 30px; 
+        margin-bottom: 30px;
+        box-shadow: 0 15px 35px rgba(255, 75, 75, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .disclaimer-glass::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 6px; height: 100%;
+        background: #ff4b4b;
+    }
+
+    .disclaimer-glass h4 {
+        color: #ff4b4b !important;
+        margin-top: 0 !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 1.1rem !important;
+    }
+
+    .disclaimer-glass p {
+        color: var(--text-color) !important;
+        font-size: 0.95rem !important;
+        line-height: 1.6 !important;
+        margin-bottom: 0 !important;
+        opacity: 0.9;
+    }
+
+    .disclaimer-glass b {
+        color: #ff4b4b !important;
+        font-weight: 700;
+    }
+
     /* МАЛЕНЬКИЕ УЛУЧШЕНИЯ ТИПОГРАФИКИ */
     .secondary-text {
         color: var(--secondary-text);
