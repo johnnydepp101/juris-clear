@@ -75,15 +75,21 @@ def load_css():
         .stTabs [data-baseweb="tab"] {
             color: #475569 !important; /* Серый для неактивных */
             font-weight: 600 !important;
+            transition: all 0.3s ease !important;
         }
 
         .stTabs [aria-selected="true"] {
-            color: #4f46e5 !important; /* Яркий синий для активной вкладки */
+            color: #ffffff !important; /* БЕЛЫЙ ТЕКСТ ДЛЯ АКТИВНОЙ ВКЛАДКИ */
+            background-color: #4f46e5 !important; /* ТЕМНЫЙ ФОН ДЛЯ КОНТРАСТА */
+            border-radius: 12px 12px 0 0 !important;
             font-weight: 800 !important;
+            padding-left: 15px !important;
+            padding-right: 15px !important;
+            box-shadow: 0 -4px 10px rgba(79, 70, 229, 0.2) !important;
         }
 
         .stTabs [data-baseweb="tab-highlight"] {
-            background-color: #4f46e5 !important;
+            background-color: transparent !important; /* Убираем стандартную линию, так как вся вкладка окрашена */
         }
 
         /* ИНПУТЫ И ПИЛЮЛИ */
