@@ -105,27 +105,31 @@ def load_css():
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
         }
 
-        /* КНОПКА СКАЧИВАНИЯ В СВЕТЛОМ РЕЖИМЕ - ТЕМНЫЙ ТЕКСТ ВСЕГДА */
-        .stDownloadButton > button, .stDownloadButton > button p, .stDownloadButton > button span {
+        /* КНОПКА СКАЧИВАНИЯ В СВЕТЛОМ РЕЖИМЕ - ТОТАЛЬНЫЙ ТЕМНЫЙ ТЕКСТ */
+        [data-testid="stDownloadButton"] button, 
+        [data-testid="stDownloadButton"] button *,
+        .stDownloadButton > button, 
+        .stDownloadButton > button * {
             color: #01010a !important;
-            font-weight: 800 !important;
+            font-weight: 900 !important;
+            text-decoration: none !important;
         }
 
         .stDownloadButton > button {
-            background: linear-gradient(135deg, rgba(255, 178, 239, 0.4) 0%, rgba(100, 110, 255, 0.3) 100%), 
+            background: linear-gradient(135deg, rgba(255, 178, 239, 0.45) 0%, rgba(100, 110, 255, 0.35) 100%), 
                         rgba(255, 255, 255, 0.6) !important;
-            border: 1px solid rgba(255, 255, 255, 0.9) !important;
-            backdrop-filter: blur(15px) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(20px) !important;
             border-radius: 20px !important;
             padding: 14px 28px !important;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.3s ease-in-out !important;
         }
 
         .stDownloadButton > button:hover {
-            transform: translateY(-2px) !important;
-            background: linear-gradient(135deg, rgba(255, 178, 239, 0.5) 0%, rgba(100, 110, 255, 0.4) 100%) !important;
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08) !important;
-            color: #000000 !important;
+            transform: translateY(-3px) !important;
+            background: linear-gradient(135deg, rgba(255, 178, 239, 0.55) 0%, rgba(100, 110, 255, 0.45) 100%) !important;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
         }
 
         /* ИНПУТЫ И ПИЛЮЛИ (ОБЩЕЕ) */
