@@ -2,6 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import re
 from supabase import create_client, Client  # Добавили импорт Supabase
+from streamlit_cookies_controller import CookieController
 
 # Импорты из локальных модулей
 from ui.design import load_css, get_risk_params, sample_text
@@ -19,11 +20,26 @@ st.set_page_config(
 )
 
 # --- ИНИЦИАЛИЗАЦИЯ ---
+cookie_controller = CookieController()
+
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
 
 # Загружаем дизайн
 load_css()
+
+# --- 4. ПОДКЛЮЧЕНИЕ API И БАЗЫ ДАННЫХ ---
+# OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+# Supabase
+try:
+    url: str = st.secrets["SUPABASE_URL"]
+    key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
+    supabase: Client = create_client(url, key)
+except Exception as e:
+    st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
+    supabase = None
 
 # --- 3. ИНИЦИАЛИЗАЦИЯ AUTH STATE ---
 if 'is_authenticated' not in st.session_state:
@@ -34,6 +50,35 @@ if 'user_id' not in st.session_state:
     st.session_state.user_id = None
 if 'user_display_name' not in st.session_state:
     st.session_state.user_display_name = ""
+
+# --- АВТОМАТИЧЕСКИЙ ВХОД ЧЕРЕЗ COOKIES ---
+if supabase and not st.session_state.is_authenticated:
+    access_token = cookie_controller.get("supabase_access_token")
+    refresh_token = cookie_controller.get("supabase_refresh_token")
+    if access_token and refresh_token:
+        try:
+            session_response = supabase.auth.set_session(access_token, refresh_token)
+            if session_response and session_response.user:
+                user = session_response.user
+                st.session_state.is_authenticated = True
+                st.session_state.user_email = user.email
+                st.session_state.user_id = user.id
+                
+                display_name = (user.user_metadata or {}).get("display_name", "")
+                if not display_name:
+                    profile = get_user_profile(supabase, user.id)
+                    display_name = profile.get("display_name", "") if profile else ""
+                st.session_state.user_display_name = display_name
+                
+                # Обновляем токены в куках (так как refresh_token мог примениться)
+                if session_response.session:
+                    cookie_controller.set("supabase_access_token", session_response.session.access_token)
+                    cookie_controller.set("supabase_refresh_token", session_response.session.refresh_token)
+        except Exception as e:
+            # Если токен истек или недействителен - просто очищаем куки
+            cookie_controller.remove("supabase_access_token")
+            cookie_controller.remove("supabase_refresh_token")
+
 
 @st.dialog("JurisClear AI")
 def show_auth_modal():
@@ -78,6 +123,12 @@ def show_auth_modal():
                         profile = get_user_profile(supabase, user.id)
                         display_name = profile.get("display_name", "") if profile else ""
                     st.session_state.user_display_name = display_name
+                    
+                    # Сохраняем токены в куки браузера
+                    if response.session:
+                        cookie_controller.set("supabase_access_token", response.session.access_token)
+                        cookie_controller.set("supabase_refresh_token", response.session.refresh_token)
+                    
                     st.rerun()
 
     with tabs[1]:
@@ -107,6 +158,11 @@ def show_auth_modal():
                         st.session_state.user_email = user.email
                         st.session_state.user_id = user.id
                         st.session_state.user_display_name = reg_name
+                        
+                        # Сохраняем токены в куки браузера
+                        cookie_controller.set("supabase_access_token", response.session.access_token)
+                        cookie_controller.set("supabase_refresh_token", response.session.refresh_token)
+                        
                         st.rerun()
                     else:
                         # Email confirmation включён
@@ -119,18 +175,7 @@ def show_auth_modal():
         </div>
     """, unsafe_allow_html=True)
 
-# --- 4. ПОДКЛЮЧЕНИЕ API И БАЗЫ ДАННЫХ ---
-# OpenAI
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-# Supabase
-try:
-    url: str = st.secrets["SUPABASE_URL"]
-    key: str = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
-    supabase: Client = create_client(url, key)
-except Exception as e:
-    st.error(f"Ошибка подключения к Supabase: {e}. Проверьте secrets.toml")
-    supabase = None
+# Подключение к API и БД было перемещено выше, для корректной работы авто-логина
 
 # --- 5. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ ---
 
@@ -173,6 +218,8 @@ with header_col2:
             if st.button("Выйти", use_container_width=True):
                 if supabase:
                     sign_out(supabase)
+                cookie_controller.remove("supabase_access_token")
+                cookie_controller.remove("supabase_refresh_token")
                 st.session_state.is_authenticated = False
                 st.session_state.user_email = ""
                 st.session_state.user_id = None
