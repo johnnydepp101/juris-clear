@@ -17,7 +17,7 @@ def load_css():
         --header-color: #ffffff;
         
         /* Цвета для точного воссоздания картинки */
-        --bg-grad-vibrant: #9d00ff; /* Яркий фиолетовый */
+        --bg-grad-vibrant: #190e20;
         --bg-grad-deep: #05053a;    /* Глубокий синий */
         --bg-grad-dark: #01010a;    /* Основной темный */
     }
