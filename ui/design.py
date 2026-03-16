@@ -5,7 +5,7 @@ def load_css():
     <style>
     /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
     :root {
-        --bg-color: #151727;
+        --bg-color: #02021e;
         --card-bg: rgba(30, 41, 59, 0.7);
         --text-color: #f0f6fc;
         --secondary-text: #8b949e;
@@ -16,11 +16,11 @@ def load_css():
         --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         --header-color: #ffffff;
         
-        /* Градиентные цвета для темной темы */
-        --bg-grad-1: #4c36af;
-        --bg-grad-2: #3f2d71;
-        --bg-grad-3: #be32dc;
-        --bg-grad-4: #2849a2;
+        /* Градиентные цвета для темной темы (на основе изображения) */
+        --bg-grad-1: #6b00d7; /* Фиолетовый (нижний левый угол) */
+        --bg-grad-2: #02025f; /* Темно-синий (центр) */
+        --bg-grad-3: #02021e; /* Насыщенный темный (края) */
+        --bg-grad-4: #05053a; /* Глубокий синий */
     }
 
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
@@ -56,11 +56,9 @@ def load_css():
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
         background-image: 
-            radial-gradient(at 0% 0%, var(--bg-grad-1) 100vw, transparent 100%),
-            radial-gradient(at 50% 0%, var(--bg-grad-2) 100vw, transparent 100%),
-            radial-gradient(at 100% 0%, var(--bg-grad-3) 100vw, transparent 100%),
-            radial-gradient(at 0% 100%, var(--bg-grad-4) 100vw, transparent 100%),
-            radial-gradient(at 100% 100%, var(--bg-grad-1) 100vw, transparent 100%);
+            radial-gradient(at 0% 100%, var(--bg-grad-1) 100vw, transparent 100%), /* Фиолетовый снизу слева */
+            radial-gradient(at 50% 50%, var(--bg-grad-2) 100vw, transparent 100%), /* Синий в центре */
+            radial-gradient(at 100% 0%, var(--bg-grad-3) 100vw, transparent 100%); /* Темный сверху справа */
         background-attachment: fixed;
         color: var(--text-color);
         transition: all 0.4s ease;
