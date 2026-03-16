@@ -71,25 +71,24 @@ def load_css():
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
         }
 
-        /* ВКЛАДКИ (TABS) В СВЕТЛОМ РЕЖИМЕ */
+        /* ВКЛАДКИ (TABS) В СВЕТЛОМ РЕЖИМЕ - ТЕМНЫЙ ТЕКСТ */
         .stTabs [data-baseweb="tab"] {
             color: #475569 !important; /* Серый для неактивных */
             font-weight: 600 !important;
-            transition: all 0.3s ease !important;
+            background: transparent !important;
+            border: none !important;
         }
 
         .stTabs [aria-selected="true"] {
-            color: #ffffff !important; /* БЕЛЫЙ ТЕКСТ ДЛЯ АКТИВНОЙ ВКЛАДКИ */
-            background-color: #4f46e5 !important; /* ТЕМНЫЙ ФОН ДЛЯ КОНТРАСТА */
+            color: #01010a !important; /* ТЕМНЫЙ ТЕКСТ ДЛЯ АКТИВНОЙ ВКЛАДКИ */
+            font-weight: 900 !important;
+            background: rgba(0, 0, 0, 0.03) !important;
             border-radius: 12px 12px 0 0 !important;
-            font-weight: 800 !important;
-            padding-left: 15px !important;
-            padding-right: 15px !important;
-            box-shadow: 0 -4px 10px rgba(79, 70, 229, 0.2) !important;
         }
 
         .stTabs [data-baseweb="tab-highlight"] {
-            background-color: transparent !important; /* Убираем стандартную линию, так как вся вкладка окрашена */
+            background-color: #4f46e5 !important; /* Синяя линия подчеркивания */
+            height: 3px !important;
         }
 
         /* ИНПУТЫ И ПИЛЮЛИ */
