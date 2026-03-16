@@ -56,11 +56,11 @@ def load_css():
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
         background-image: 
-            radial-gradient(at 0% 0%, var(--bg-grad-1) 0px, transparent 50%),
-            radial-gradient(at 50% 0%, var(--bg-grad-2) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, var(--bg-grad-3) 0px, transparent 50%),
-            radial-gradient(at 0% 100%, var(--bg-grad-4) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, var(--bg-grad-1) 0px, transparent 50%);
+            radial-gradient(at 0% 0%, var(--bg-grad-1) 100vw, transparent 100%),
+            radial-gradient(at 50% 0%, var(--bg-grad-2) 100vw, transparent 100%),
+            radial-gradient(at 100% 0%, var(--bg-grad-3) 100vw, transparent 100%),
+            radial-gradient(at 0% 100%, var(--bg-grad-4) 100vw, transparent 100%),
+            radial-gradient(at 100% 100%, var(--bg-grad-1) 100vw, transparent 100%);
         background-attachment: fixed;
         color: var(--text-color);
         transition: all 0.4s ease;
