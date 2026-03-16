@@ -3,7 +3,11 @@
 Функции для регистрации, входа и выхода пользователей через Supabase Auth.
 """
 
-from gotrue.errors import AuthApiError
+try:
+    from gotrue.errors import AuthApiError
+except ImportError:
+    # Fallback: на некоторых платформах (Streamlit Cloud) gotrue может быть недоступен напрямую
+    AuthApiError = Exception
 
 
 def sign_up(supabase, email: str, password: str, display_name: str = ""):
