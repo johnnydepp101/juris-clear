@@ -71,6 +71,21 @@ def load_css():
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
         }
 
+        /* ВКЛАДКИ (TABS) В СВЕТЛОМ РЕЖИМЕ */
+        .stTabs [data-baseweb="tab"] {
+            color: #475569 !important; /* Серый для неактивных */
+            font-weight: 600 !important;
+        }
+
+        .stTabs [aria-selected="true"] {
+            color: #4f46e5 !important; /* Яркий синий для активной вкладки */
+            font-weight: 800 !important;
+        }
+
+        .stTabs [data-baseweb="tab-highlight"] {
+            background-color: #4f46e5 !important;
+        }
+
         /* ИНПУТЫ И ПИЛЮЛИ */
         .stTextInput input, [data-testid="stPill"], .stTextArea textarea {
             background-color: rgba(255, 255, 255, 0.9) !important;
