@@ -109,19 +109,20 @@ def load_css():
         .stDownloadButton > button {
             background: linear-gradient(135deg, rgba(255, 178, 239, 0.4) 0%, rgba(100, 110, 255, 0.3) 100%), 
                         rgba(255, 255, 255, 0.6) !important;
-            color: #1e293b !important;
+            color: #01010a !important; /* ТЕМНО-ЧЕРНЫЙ ТЕКСТ */
             border: 1px solid rgba(255, 255, 255, 0.9) !important;
             backdrop-filter: blur(15px) !important;
             border-radius: 20px !important;
             padding: 14px 28px !important;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important; /* Более жирный шрифт */
         }
 
         .stDownloadButton > button:hover {
             transform: translateY(-2px) !important;
             background: linear-gradient(135deg, rgba(255, 178, 239, 0.5) 0%, rgba(100, 110, 255, 0.4) 100%) !important;
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08) !important;
+            color: #000000 !important;
         }
 
         /* ИНПУТЫ И ПИЛЮЛИ (ОБЩЕЕ) */
