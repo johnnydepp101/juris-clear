@@ -81,16 +81,41 @@ def load_css():
         padding-right: 2rem;
     }
     
-    /* ГЛОБАЛЬНЫЕ СТИЛИ */
+    /* ГЛОБАЛЬНЫЕ СТИЛИ ФОНА */
     [data-testid="stAppViewContainer"] {
-        background-color: var(--bg-color);
+        background-color: var(--bg-color) !important;
         background-image: 
-            radial-gradient(at 80% 20%, var(--bg-grad-vibrant) 0px, transparent 50%), /* Розовый сверху справа */
-            radial-gradient(at 20% 60%, var(--bg-grad-deep) 0px, transparent 50%),     /* Синий слева */
-            radial-gradient(at 50% 50%, var(--bg-grad-dark) 0px, transparent 100%);
-        background-attachment: fixed;
+            radial-gradient(at 85% 15%, var(--bg-grad-vibrant) 0%, transparent 60%), /* Розовое пятно сверху справа */
+            radial-gradient(at 15% 85%, var(--bg-grad-deep) 0%, transparent 60%),    /* Синее пятно снизу слева */
+            radial-gradient(at 50% 50%, var(--bg-grad-dark) 0%, transparent 100%) !important;
+        background-attachment: fixed !important;
+        background-size: cover !important;
         color: var(--text-color);
         transition: all 0.4s ease;
+    }
+
+    [data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
+    /* УЛУЧШЕНИЕ ЧИТАЕМОСТИ В СВЕТЛОМ РЕЖИМЕ */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --bg-color: #ffffff;
+            --bg-grad-vibrant: rgba(255, 120, 240, 0.4); /* Насыщенный розовый */
+            --bg-grad-deep: rgba(100, 110, 255, 0.4);    /* Насыщенный синий */
+            --bg-grad-dark: #ffffff;
+            --text-color: #01010a;
+            --header-color: #01010a;
+        }
+        
+        /* Гарантия видимости градиентов в светлом режиме */
+        [data-testid="stAppViewContainer"] {
+            background-image: 
+                radial-gradient(at 85% 15%, rgba(255, 120, 240, 0.45) 0%, transparent 50%),
+                radial-gradient(at 15% 85%, rgba(100, 110, 255, 0.45) 0%, transparent 50%),
+                linear-gradient(to bottom, #ffffff, #f0f2f6) !important;
+        }
     }
 
     /* УБИРАЕМ ЯКОРЯ */
