@@ -4,6 +4,7 @@ import pytesseract
 from pdf2image import convert_from_bytes
 from io import BytesIO
 
+@st.cache_data
 def extract_text_from_pdf(file_bytes):
     """
     Гибридная функция: сначала пробует вытащить текст напрямую, 
