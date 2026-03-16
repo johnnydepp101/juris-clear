@@ -226,16 +226,80 @@ def load_css():
         font-size: 0.9rem;
     }
 
+    /* СТИЛИ ДЛЯ ПИЛЮЛЬ (st.pills) - GLASSMORPHISM */
+    [data-testid="stPill"] {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 15px !important;
+        transition: all 0.3s ease !important;
+        backdrop-filter: blur(5px) !important;
+    }
+
+    [data-testid="stPill"]:hover {
+        background: rgba(157, 0, 255, 0.1) !important;
+        border-color: rgba(157, 0, 255, 0.4) !important;
+        transform: translateY(-2px);
+    }
+
+    /* Выбранная пилюля */
+    [data-testid="stPill"][aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(157, 0, 255, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%) !important;
+        border: 1px solid rgba(157, 0, 255, 1) !important;
+        box-shadow: 0 0 15px rgba(157, 0, 255, 0.4) !important;
+        color: white !important;
+    }
+
+    /* Текст внутри пилюль */
+    [data-testid="stPill"] div p {
+        color: var(--text-color) !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+
+    [data-testid="stPill"][aria-selected="true"] div p {
+        color: white !important;
+        font-weight: 700 !important;
+    }
+
+    /* Заголовки пилюль */
+    .stMarkdown p strong {
+        color: var(--header-color);
+        opacity: 0.9;
+        letter-spacing: 0.5px;
+    }
+    
     /* СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА АВТОРИЗАЦИИ */
     [data-testid="stDialog"] {
-        border-radius: 24px !important;
-        background: var(--bg-color) !important;
-        border: 1px solid var(--border-color) !important;
+        border-radius: 40px !important;
+        background: rgba(1, 1, 10, 0.8) !important;
+        backdrop-filter: blur(40px) !important;
+        border: 1px solid rgba(157, 0, 255, 0.3) !important;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
     }
     
     [data-testid="stDialog"] h2 {
         color: var(--header-color) !important;
         font-weight: 800 !important;
+        text-align: center;
+    }
+
+    /* Вкладки в модальном окне */
+    .stTabs [data-baseweb="tab-list"] {
+        background: transparent !important;
+        gap: 10px;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px 12px 0 0 !important;
+        color: var(--secondary-text) !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background: rgba(157, 0, 255, 0.1) !important;
+        border-color: rgba(157, 0, 255, 0.6) !important;
+        color: white !important;
     }
 
     .auth-footer {
@@ -247,14 +311,14 @@ def load_css():
     }
 
     /* АНИМАЦИЯ ДЛЯ КНОПОК */
-    @keyframes pulse-blue {
-        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    @keyframes pulse-neon {
+        0% { box-shadow: 0 0 5px rgba(157, 0, 255, 0.4); }
+        50% { box-shadow: 0 0 20px rgba(157, 0, 255, 0.2); }
+        100% { box-shadow: 0 0 5px rgba(157, 0, 255, 0.4); }
     }
     
     .login-btn-header {
-        animation: pulse-blue 2s infinite;
+        animation: pulse-neon 3s infinite;
     }
     </style>
     """, unsafe_allow_html=True)
