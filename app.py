@@ -52,6 +52,17 @@ if 'user_display_name' not in st.session_state:
     st.session_state.user_display_name = ""
 
 # --- АВТОМАТИЧЕСКИЙ ВХОД ЧЕРЕЗ COOKIES ---
+# Обрабатываем запись и удаление куки ДО использования (чтобы избежать прерывания от st.rerun)
+if "new_tokens" in st.session_state:
+    cookie_controller.set("supabase_access_token", st.session_state.new_tokens["access"])
+    cookie_controller.set("supabase_refresh_token", st.session_state.new_tokens["refresh"])
+    del st.session_state["new_tokens"]
+
+if "clear_tokens" in st.session_state:
+    cookie_controller.remove("supabase_access_token")
+    cookie_controller.remove("supabase_refresh_token")
+    del st.session_state["clear_tokens"]
+
 if supabase and not st.session_state.is_authenticated:
     access_token = cookie_controller.get("supabase_access_token")
     refresh_token = cookie_controller.get("supabase_refresh_token")
@@ -72,12 +83,13 @@ if supabase and not st.session_state.is_authenticated:
                 
                 # Обновляем токены в куках (так как refresh_token мог примениться)
                 if session_response.session:
-                    cookie_controller.set("supabase_access_token", session_response.session.access_token)
-                    cookie_controller.set("supabase_refresh_token", session_response.session.refresh_token)
+                    st.session_state.new_tokens = {
+                        "access": session_response.session.access_token,
+                        "refresh": session_response.session.refresh_token
+                    }
         except Exception as e:
             # Если токен истек или недействителен - просто очищаем куки
-            cookie_controller.remove("supabase_access_token")
-            cookie_controller.remove("supabase_refresh_token")
+            st.session_state.clear_tokens = True
 
 
 @st.dialog("JurisClear AI")
@@ -124,10 +136,12 @@ def show_auth_modal():
                         display_name = profile.get("display_name", "") if profile else ""
                     st.session_state.user_display_name = display_name
                     
-                    # Сохраняем токены в куки браузера
+                    # Сохраняем токены в session_state для записи в куки на следующем рендере
                     if response.session:
-                        cookie_controller.set("supabase_access_token", response.session.access_token)
-                        cookie_controller.set("supabase_refresh_token", response.session.refresh_token)
+                        st.session_state.new_tokens = {
+                            "access": response.session.access_token,
+                            "refresh": response.session.refresh_token
+                        }
                     
                     st.rerun()
 
@@ -159,9 +173,11 @@ def show_auth_modal():
                         st.session_state.user_id = user.id
                         st.session_state.user_display_name = reg_name
                         
-                        # Сохраняем токены в куки браузера
-                        cookie_controller.set("supabase_access_token", response.session.access_token)
-                        cookie_controller.set("supabase_refresh_token", response.session.refresh_token)
+                        # Сохраняем токены в session_state для записи в куки на следующем рендере
+                        st.session_state.new_tokens = {
+                            "access": response.session.access_token,
+                            "refresh": response.session.refresh_token
+                        }
                         
                         st.rerun()
                     else:
@@ -218,8 +234,7 @@ with header_col2:
             if st.button("Выйти", use_container_width=True):
                 if supabase:
                     sign_out(supabase)
-                cookie_controller.remove("supabase_access_token")
-                cookie_controller.remove("supabase_refresh_token")
+                st.session_state.clear_tokens = True
                 st.session_state.is_authenticated = False
                 st.session_state.user_email = ""
                 st.session_state.user_id = None
