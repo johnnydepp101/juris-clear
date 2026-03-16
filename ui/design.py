@@ -5,7 +5,7 @@ def load_css():
     <style>
     /* 1. ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ (DARK THEME) */
     :root {
-        --bg-color: #0d1117;
+        --bg-color: #151727;
         --card-bg: rgba(30, 41, 59, 0.7);
         --text-color: #f0f6fc;
         --secondary-text: #8b949e;
@@ -15,18 +15,30 @@ def load_css():
         --glass-blur: blur(10px);
         --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         --header-color: #ffffff;
+        
+        /* Градиентные цвета для темной темы */
+        --bg-grad-1: #4c36af;
+        --bg-grad-2: #3f2d71;
+        --bg-grad-3: #be32dc;
+        --bg-grad-4: #2849a2;
     }
 
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
     @media (prefers-color-scheme: light) {
         :root {
-            --bg-color: #f8fafc;
+            --bg-color: #dae1f1;
             --card-bg: rgba(255, 255, 255, 0.8);
             --text-color: #1e293b;
             --secondary-text: #64748b;
             --border-color: rgba(0, 0, 0, 0.1);
             --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
             --header-color: #0f172a;
+
+            /* Градиентные цвета для светлой темы */
+            --bg-grad-1: #e2c9d6;
+            --bg-grad-2: #dbb3e7;
+            --bg-grad-3: #cbddee;
+            --bg-grad-4: #cadced;
         }
     }
 
@@ -43,6 +55,13 @@ def load_css():
     /* ГЛОБАЛЬНЫЕ СТИЛИ */
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
+        background-image: 
+            radial-gradient(at 0% 0%, var(--bg-grad-1) 0px, transparent 50%),
+            radial-gradient(at 50% 0%, var(--bg-grad-2) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, var(--bg-grad-3) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, var(--bg-grad-4) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, var(--bg-grad-1) 0px, transparent 50%);
+        background-attachment: fixed;
         color: var(--text-color);
         transition: all 0.4s ease;
     }
