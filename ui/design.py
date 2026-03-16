@@ -73,55 +73,78 @@ def load_css():
     [data-testid="stHorizontalBlock"] { align-items: center !important; }
 
     /* ПРЕМИАЛЬНЫЕ ТАРИФНЫЕ КАРТОЧКИ (GLASSMORPHISM) */
-    .pricing-card-single {
+    .pricing-card-single, .pricing-card-pro {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         min-height: 450px;
-        background: rgba(10, 10, 20, 0.4); /* Глубокий темный фон */
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
+        backdrop-filter: blur(35px) saturate(180%);
+        -webkit-backdrop-filter: blur(35px) saturate(180%);
         padding: 40px; border-radius: 50px; 
-        border: 1px solid rgba(157, 0, 255, 0.3); /* Фиолетовая светящаяся граница */
         text-align: center; color: white;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 
-                    inset 0 0 15px rgba(157, 0, 255, 0.1);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
+        overflow: hidden;
+    }
+    
+    .pricing-card-single {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), 
+                    inset 0 0 30px rgba(255, 255, 255, 0.03);
     }
     
     .pricing-card-pro {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 450px;
-        background: rgba(30, 10, 50, 0.35); /* Более фиолетовый для Pro */
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
-        padding: 40px; border-radius: 50px; 
-        border: 1.5px solid rgba(157, 0, 255, 0.6); /* Яркая фиолетовая граница */
-        text-align: center; color: white;
-        box-shadow: 0 0 30px rgba(157, 0, 255, 0.2), 
-                    inset 0 0 20px rgba(157, 0, 255, 0.1);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(135deg, rgba(157, 0, 255, 0.08) 0%, rgba(157, 0, 255, 0.02) 100%);
+        border: 1px solid rgba(157, 0, 255, 0.4);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), 
+                    0 0 40px rgba(157, 0, 255, 0.15),
+                    inset 0 0 30px rgba(157, 0, 255, 0.05);
+    }
+    
+    /* ЭФФЕКТ СВЕТА ВНУТРИ СТЕКЛА */
+    .pricing-card-single::before, .pricing-card-pro::before {
+        content: "";
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    .pricing-card-pro::after {
+        content: "";
+        position: absolute;
+        bottom: -20%; right: -10%; width: 60%; height: 60%;
+        background: radial-gradient(circle at center, rgba(157, 0, 255, 0.2) 0%, transparent 70%);
+        filter: blur(20px);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Обеспечиваем, чтобы контент был выше слоев света */
+    .pricing-card-single > div, .pricing-card-pro > div {
+        position: relative;
+        z-index: 2;
     }
     
     .pricing-card-single:hover, .pricing-card-pro:hover {
         transform: translateY(-12px) scale(1.02);
         border-color: rgba(157, 0, 255, 1);
-        box-shadow: 0 30px 60px rgba(157, 0, 255, 0.25);
+        background: rgba(157, 0, 255, 0.05);
     }
     
-    /* КАРТОЧКА ОТЧЕТА */
+    /* КАРТОЧКА ОТЧЕТА (FROSTED GLASS) */
     .report-card {
-        background: rgba(10, 10, 20, 0.4);
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
-        border: 1px solid rgba(157, 0, 255, 0.2);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(40px) saturate(150%);
+        -webkit-backdrop-filter: blur(40px) saturate(150%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 40px; border-radius: 40px; 
         margin-top: 25px; color: var(--text-color);
-        box-shadow: var(--card-shadow);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         margin-bottom: 35px;
+        position: relative;
     }
     
     /* ШКАЛА РИСКА */
