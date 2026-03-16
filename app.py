@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 from openai import OpenAI
 import re
@@ -278,7 +279,26 @@ with col_tar2:
     st.markdown(f"""
         <div class="pricing-card-pro">
             <div>
-                <dist.divider()
+                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
+                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">29 $ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
+                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                    • <b>Неограниченное</b> количество документов<br>
+                    • Полные отчеты <b>мгновенно</b> без доплат<br>
+                    • Доступ к результату в истории навсегда<br>
+                    • Персональный архив всех проверок<br>
+                    • Самая мощная модель ИИ (GPT-4o)
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+                <div style="background: rgba(157, 0, 255, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
+                    🔐 Для оформления подписки нужно зарегистрироваться
+                </div>
+                <div style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.2); cursor: not-allowed;">
+                    🚀 Оформить подписку
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # Параметры анализа
 st.markdown("### ⚙️ Параметры анализа")
