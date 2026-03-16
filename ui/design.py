@@ -105,17 +105,20 @@ def load_css():
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
         }
 
-        /* КНОПКА СКАЧИВАНИЯ В СВЕТЛОМ РЕЖИМЕ (В СТИЛЕ КАРТОЧЕК) */
+        /* КНОПКА СКАЧИВАНИЯ В СВЕТЛОМ РЕЖИМЕ - ТЕМНЫЙ ТЕКСТ ВСЕГДА */
+        .stDownloadButton > button, .stDownloadButton > button p, .stDownloadButton > button span {
+            color: #01010a !important;
+            font-weight: 800 !important;
+        }
+
         .stDownloadButton > button {
             background: linear-gradient(135deg, rgba(255, 178, 239, 0.4) 0%, rgba(100, 110, 255, 0.3) 100%), 
                         rgba(255, 255, 255, 0.6) !important;
-            color: #01010a !important; /* ТЕМНО-ЧЕРНЫЙ ТЕКСТ */
             border: 1px solid rgba(255, 255, 255, 0.9) !important;
             backdrop-filter: blur(15px) !important;
             border-radius: 20px !important;
             padding: 14px 28px !important;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
-            font-weight: 800 !important; /* Более жирный шрифт */
         }
 
         .stDownloadButton > button:hover {
