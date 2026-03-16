@@ -25,19 +25,49 @@ def load_css():
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
     @media (prefers-color-scheme: light) {
         :root {
-            --bg-color: #dae1f1;
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --text-color: #1e293b;
-            --secondary-text: #64748b;
+            --bg-color: #f8f9fc;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --text-color: #0f172a;
+            --secondary-text: #475569;
             --border-color: rgba(0, 0, 0, 0.1);
-            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-            --header-color: #0f172a;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --header-color: #01010a;
 
-            /* Градиентные цвета для светлой темы */
-            --bg-grad-1: #e2c9d6;
-            --bg-grad-2: #dbb3e7;
-            --bg-grad-3: #cbddee;
-            --bg-grad-4: #cadced;
+            /* Цвета фона для светлого режима (на основе новой картинки) */
+            --bg-grad-vibrant: #ffb2ef; /* Розовое пятно */
+            --bg-grad-deep: #5c67ff;    /* Синее пятно */
+            --bg-grad-dark: #ffffff;
+        }
+
+        /* Улучшаем читаемость инпутов в светлом режиме */
+        .stTextInput input, .stTextArea textarea {
+            background-color: rgba(255, 255, 255, 1) !important;
+            color: #0f172a !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            border-radius: 12px !important;
+        }
+
+        .pricing-card-single, .pricing-card-pro, .report-card {
+            background: rgba(255, 255, 255, 0.75) !important; /* Более плотное "белое стекло" */
+            border: 1px solid rgba(255, 255, 255, 1) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08) !important;
+            color: #1e293b !important;
+        }
+
+        .pricing-card-pro {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(157, 0, 255, 0.05) 100%) !important;
+            border: 1px solid rgba(157, 0, 255, 0.2) !important;
+        }
+
+        .stButton > button {
+            color: white !important; /* Текст кнопок всегда белый для контраста */
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+            border: none !important;
+        }
+
+        [data-testid="stDialog"] {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #0f172a !important;
         }
     }
 
@@ -55,10 +85,9 @@ def load_css():
     [data-testid="stAppViewContainer"] {
         background-color: var(--bg-color);
         background-image: 
-            radial-gradient(circle at 20% 80%, rgba(157, 0, 255, 0.45) 0%, transparent 50%), 
-            radial-gradient(at 0% 100%, var(--bg-grad-vibrant) 0%, transparent 55%), 
-            radial-gradient(at 45% 45%, var(--bg-grad-deep) 0%, transparent 75%),
-            radial-gradient(at 100% 0%, var(--bg-grad-dark) 0%, transparent 50%);
+            radial-gradient(at 80% 20%, var(--bg-grad-vibrant) 0px, transparent 50%), /* Розовый сверху справа */
+            radial-gradient(at 20% 60%, var(--bg-grad-deep) 0px, transparent 50%),     /* Синий слева */
+            radial-gradient(at 50% 50%, var(--bg-grad-dark) 0px, transparent 100%);
         background-attachment: fixed;
         color: var(--text-color);
         transition: all 0.4s ease;
