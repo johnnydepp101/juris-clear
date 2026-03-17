@@ -388,7 +388,9 @@ with tab_audit:
                 
         if file:
             if "analysis_result" not in st.session_state:
-                if st.button("Начать анализ", use_container_width=True, type="primary"):
+                analyze_btn_placeholder = st.empty()
+                if analyze_btn_placeholder.button("Начать анализ", use_container_width=True, type="primary"):
+                    analyze_btn_placeholder.empty()
                     with st.spinner("ИИ проводит глубокий юридический аудит..."):
                         try:
                             file_bytes = file.read()
