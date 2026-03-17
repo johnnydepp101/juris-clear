@@ -3,7 +3,7 @@ import streamlit as st
 from openai import OpenAI
 import re
 from supabase import create_client, Client  # Добавили импорт Supabase
-from streamlit_cookies_controller import CookieController
+from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
 
 # Импорты из локальных модулей
 from ui.design import load_css, get_risk_params, sample_text
@@ -22,6 +22,7 @@ st.set_page_config(
 
 # --- ИНИЦИАЛИЗАЦИЯ ---
 cookie_controller = CookieController()
+RemoveEmptyElementContainer()
 
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
