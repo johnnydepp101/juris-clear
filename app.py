@@ -428,36 +428,42 @@ with tab_audit:
 
             st.success("✅ Анализ и протокол разногласий успешно сформированы!")
             clean_res = st.session_state.analysis_result
-            st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
+            
+            # --- РАЗДЕЛЕНИЕ ОТЧЕТА ДЛЯ ДЕМО-ВЕРСИИ ---
+            split_marker_1 = "3. РИСКИ РАСТОРЖЕНИЯ И СПОРОВ"
+            split_marker_2 = "## 🛠️ Протокол разногласий"
+            
+            public_part = clean_res
+            if split_marker_1 in clean_res:
+                public_part = clean_res.split(split_marker_1)[0]
+            elif split_marker_2 in clean_res:
+                public_part = clean_res.split(split_marker_2)[0]
+            
+            st.markdown(f"<div class='report-card'>{public_part.strip()}</div>", unsafe_allow_html=True)
+            
+            # Визуальная заглушка для скрытой части
+            st.markdown("""
+                <div style="position: relative; margin-top: -80px; height: 120px; background: linear-gradient(to bottom, transparent 0%, var(--background-color, #0e1117) 80%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; z-index: 10;">
+                    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 8px; backdrop-filter: blur(5px);">
+                        <p style="color: var(--secondary-text); font-weight: 500; font-size: 14px; text-align: center; margin: 0;">
+                            🔒 Полный анализ (риски расторжения и споров) и протокол разногласий скрыты
+                        </p>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
             
             st.write("")
             st.write("")
             
-            col_pdf, col_word = st.columns(2)
-            with col_pdf:
-                pdf_bytes = get_cached_pdf(clean_res)
-                if pdf_bytes:
-                    st.download_button(
-                        label="📥 Скачать PDF",
-                        data=bytes(pdf_bytes),
-                        file_name=f"audit_report.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-            
-            with col_word:
-                try:
-                    word_bytes = get_cached_docx(clean_res)
-                    if word_bytes:
-                        st.download_button(
-                            label="📝 Скачать Word",
-                            data=word_bytes,
-                            file_name=f"audit_report.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True
-                        )
-                except Exception as e:
-                    pass
+            # Кнопка покупки разового аудита вместо кнопок скачивания
+            buy_link = "#" # Замените на реальную ссылку на покупку разового аудита
+            st.markdown(f"""
+                <a href='{buy_link}' target='_blank' style='text-decoration: none;'>
+                    <div style='background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); transition: transform 0.2s;'>
+                        🛍️ Купить разовый аудит за 9$
+                    </div>
+                </a>
+            """, unsafe_allow_html=True)
 
             st.write("")
             if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
