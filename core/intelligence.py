@@ -142,3 +142,45 @@ def generate_analysis(client, full_text, contract_type, user_role, special_reqs)
         temperature=0.2
     )
     return final_res.choices[0].message.content
+
+def compare_documents(client, original_text, revised_text, contract_type, user_role):
+    st.info("⏳ ИИ сравнивает версии документов и ищет юридически значимые изменения...")
+    
+    prompt = f"""
+    Ты — профессиональный корпоративный юрист.
+    Тебе предоставлены две версии одного договора (Тип: {contract_type}). Твоя роль — защитить интересы стороны: {user_role}.
+    Тебе нужно найти и проанализировать все юридически значимые изменения между оригинальной версией и измененной.
+    
+    Оригинальная версия:
+    ---
+    {original_text[:15000]}
+    ---
+    
+    Измененная версия:
+    ---
+    {revised_text[:15000]}
+    ---
+    
+    СТРУКТУРА ОТВЕТА В MARKDOWN (ОБЯЗАТЕЛЬНО):
+    ## 🔍 Обзор изменений
+    [Краткий вывод о характере внесенных изменений, кто от них выигрывает в первую очередь]
+
+    ## ⚖️ Анализ критических правок
+    [Перечисли только те изменения, которые реально влияют на права, обязанности, ответственность, сроки и финансы.
+    Для каждого изменения укажи:
+    - 📄 Было: [суть как было]
+    - 📝 Стало: [суть как стало]
+    - ⚠️ Оценка риска для {user_role}: [Твой комментарий как юриста (используй 🔴, 🟠, 🟢)]]
+    """
+    
+    progress_bar = st.progress(50)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.1
+    )
+    progress_bar.progress(100)
+    progress_bar.empty()
+    
+    return response.choices[0].message.content
+
