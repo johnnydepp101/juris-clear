@@ -255,6 +255,24 @@ with header_col2:
             """, unsafe_allow_html=True)
         with cols[1]:
             if st.button("Выйти", use_container_width=True):
+                # Очистка активного анализа в БД
+                if st.session_state.is_authenticated and st.session_state.user_id and supabase:
+                    try:
+                        supabase.table("profiles").update({
+                            "active_analysis_result": None,
+                            "active_audit_score": None,
+                            "active_role": None,
+                            "active_contract_type": None
+                        }).eq("id", st.session_state.user_id).execute()
+                    except Exception as e:
+                        pass
+                        
+                # Очистка анализа из session_state
+                st.session_state.reset_counter += 1
+                for k in ["analysis_result", "audit_score"]:
+                    if k in st.session_state: 
+                        del st.session_state[k]
+
                 if supabase:
                     sign_out(supabase)
                 st.session_state.clear_tokens = True
