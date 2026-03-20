@@ -527,13 +527,14 @@ with tab_audit:
                 if not guest_sess:
                     guest_sess = st.session_state.get("new_guest_token", "")
                 
-                buy_link = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/0fb5f2af-1335-4dfd-9091-ea9aa9eb6303?checkout[custom][session_id]={guest_sess}"
+                buy_link_base = "https://jurisclearai.lemonsqueezy.com/checkout/buy/0fb5f2af-1335-4dfd-9091-ea9aa9eb6303"
                 st.markdown(f"""
-                    <a href='{buy_link}' target='_blank' style='text-decoration: none;'>
-                        <div style='background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); cursor: pointer; transition: transform 0.2s;'>
+                    <form action="{buy_link_base}" method="GET" target="_parent" style="margin: 0; padding: 0;">
+                        <input type="hidden" name="checkout[custom][session_id]" value="{guest_sess}">
+                        <button type="submit" style='background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); border: none; cursor: pointer; transition: transform 0.2s;'>
                             🛍️ Купить разовый аудит за 9$
-                        </div>
-                    </a>
+                        </button>
+                    </form>
                 """, unsafe_allow_html=True)
                 
                 # --- AUTO-POLLING: проверка оплаты каждые 5 секунд ---
