@@ -70,6 +70,18 @@ if "clear_tokens" in st.session_state:
     cookie_controller.remove("supabase_refresh_token")
     del st.session_state["clear_tokens"]
 
+def load_active_analysis(profile):
+    """Вспомогательная функция для загрузки сохраненного анализа в session_state"""
+    if profile:
+        if profile.get("active_analysis_result"):
+            st.session_state.analysis_result = profile.get("active_analysis_result")
+        if profile.get("active_audit_score") is not None:
+            st.session_state.audit_score = profile.get("active_audit_score")
+        if profile.get("active_role"):
+            st.session_state[f"role_pills_{st.session_state.reset_counter}"] = profile.get("active_role")
+        if profile.get("active_contract_type"):
+            st.session_state[f"type_pills_{st.session_state.reset_counter}"] = profile.get("active_contract_type")
+
 if supabase and not st.session_state.is_authenticated:
     access_token = cookie_controller.get("supabase_access_token")
     refresh_token = cookie_controller.get("supabase_refresh_token")
@@ -82,11 +94,13 @@ if supabase and not st.session_state.is_authenticated:
                 st.session_state.user_email = user.email
                 st.session_state.user_id = user.id
                 
+                profile = get_user_profile(supabase, user.id)
                 display_name = (user.user_metadata or {}).get("display_name", "")
-                if not display_name:
-                    profile = get_user_profile(supabase, user.id)
-                    display_name = profile.get("display_name", "") if profile else ""
+                if not display_name and profile:
+                    display_name = profile.get("display_name", "")
                 st.session_state.user_display_name = display_name
+                
+                load_active_analysis(profile)
                 
                 # Обновляем токены в куках (так как refresh_token мог примениться)
                 if session_response.session:
@@ -137,11 +151,13 @@ def show_auth_modal():
                     st.session_state.user_email = user.email
                     st.session_state.user_id = user.id
                     # Получаем display_name из метаданных или профиля
+                    profile = get_user_profile(supabase, user.id)
                     display_name = (user.user_metadata or {}).get("display_name", "")
-                    if not display_name:
-                        profile = get_user_profile(supabase, user.id)
-                        display_name = profile.get("display_name", "") if profile else ""
+                    if not display_name and profile:
+                        display_name = profile.get("display_name", "")
                     st.session_state.user_display_name = display_name
+                    
+                    load_active_analysis(profile)
                     
                     # Сохраняем токены в session_state для записи в куки на следующем рендере
                     if response.session:
@@ -377,17 +393,79 @@ with tab_audit:
             </div>
         """, unsafe_allow_html=True)
         
-        file = st.file_uploader("Выберите файл договора (PDF)", type=['pdf'], key=f"uploader_{st.session_state.reset_counter}")
-        
-        # --- СБРОС ПАМЯТИ ---
-        if file is None:
-            if "analysis_result" in st.session_state:
-                del st.session_state["analysis_result"]
-            if "audit_score" in st.session_state:
-                del st.session_state["audit_score"]
-                
-        if file:
-            if "analysis_result" not in st.session_state:
+        # Если анализ уже есть в памяти, показываем его без загрузчика
+        if "analysis_result" in st.session_state:
+            score = st.session_state.get("audit_score", 5)
+            bar_color, bar_shadow, risk_text = get_risk_params(score)
+            st.write("### ИИ Оценка Риска:")
+            st.markdown(f"""
+                <div class="risk-meter-container">
+                    <div style="height:35px; width:{score*10}%; background:{bar_color}; 
+                    box-shadow: 0 4px 15px {bar_shadow}; border-radius:10px; 
+                    display:flex; align-items:center; justify-content:center; color:white; font-weight:900;">
+                        {risk_text} ({score}/10)
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            st.success("✅ Анализ и протокол разногласий успешно сформированы!")
+            clean_res = st.session_state.analysis_result
+            st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
+            
+            st.write("")
+            st.write("")
+            
+            col_pdf, col_word = st.columns(2)
+            with col_pdf:
+                pdf_bytes = get_cached_pdf(clean_res)
+                if pdf_bytes:
+                    st.download_button(
+                        label="📥 Скачать PDF",
+                        data=bytes(pdf_bytes),
+                        file_name=f"audit_report.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+            
+            with col_word:
+                try:
+                    word_bytes = get_cached_docx(clean_res)
+                    if word_bytes:
+                        st.download_button(
+                            label="📝 Скачать Word",
+                            data=word_bytes,
+                            file_name=f"audit_report.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True
+                        )
+                except Exception as e:
+                    pass
+
+            st.write("")
+            if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
+                st.session_state.reset_counter += 1
+                keys_to_clear = ["analysis_result", "audit_score"]
+                for k in keys_to_clear:
+                    if k in st.session_state: del st.session_state[k]
+                    
+                # Очистка в БД
+                if st.session_state.is_authenticated and st.session_state.user_id and supabase:
+                    try:
+                        supabase.table("profiles").update({
+                            "active_analysis_result": None,
+                            "active_audit_score": None,
+                            "active_role": None,
+                            "active_contract_type": None
+                        }).eq("id", st.session_state.user_id).execute()
+                    except Exception as e:
+                        pass
+                        
+                st.rerun()
+        else:
+            # Иначе показываем загрузчик
+            file = st.file_uploader("Выберите файл договора (PDF)", type=['pdf'], key=f"uploader_{st.session_state.reset_counter}")
+            
+            if file:
                 analyze_btn_placeholder = st.empty()
                 if analyze_btn_placeholder.button("Начать анализ", use_container_width=True, type="primary"):
                     analyze_btn_placeholder.empty()
@@ -458,62 +536,20 @@ with tab_audit:
                         if clean_res:
                             st.session_state.analysis_result = clean_res
                             st.session_state.audit_score = score
+                            
+                            # Сохранение в БД
+                            if st.session_state.is_authenticated and st.session_state.user_id and supabase:
+                                try:
+                                    supabase.table("profiles").update({
+                                        "active_analysis_result": clean_res,
+                                        "active_audit_score": score,
+                                        "active_role": user_role,
+                                        "active_contract_type": contract_type
+                                    }).eq("id", st.session_state.user_id).execute()
+                                except Exception as e:
+                                    print("Error updating DB analysis:", e)
+                                    
                             st.rerun()
-            else:
-                score = st.session_state.get("audit_score", 5)
-                bar_color, bar_shadow, risk_text = get_risk_params(score)
-                st.write("### ИИ Оценка Риска:")
-                st.markdown(f"""
-                    <div class="risk-meter-container">
-                        <div style="height:35px; width:{score*10}%; background:{bar_color}; 
-                        box-shadow: 0 4px 15px {bar_shadow}; border-radius:10px; 
-                        display:flex; align-items:center; justify-content:center; color:white; font-weight:900;">
-                            {risk_text} ({score}/10)
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
-
-                if "analysis_result" in st.session_state:
-                    st.success("✅ Анализ и протокол разногласий успешно сформированы!")
-                    clean_res = st.session_state.analysis_result
-                    st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
-                    
-                    st.write("")
-                    st.write("")
-                    
-                    col_pdf, col_word = st.columns(2)
-                    with col_pdf:
-                        pdf_bytes = get_cached_pdf(clean_res)
-                        if pdf_bytes:
-                            st.download_button(
-                                label="📥 Скачать PDF",
-                                data=bytes(pdf_bytes),
-                                file_name=f"audit_report.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
-                    
-                    with col_word:
-                        try:
-                            word_bytes = get_cached_docx(clean_res)
-                            if word_bytes:
-                                st.download_button(
-                                    label="📝 Скачать Word",
-                                    data=word_bytes,
-                                    file_name=f"audit_report.docx",
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    use_container_width=True
-                                )
-                        except Exception as e:
-                            pass
-
-                    st.write("")
-                    if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
-                        st.session_state.reset_counter += 1
-                        keys_to_clear = ["analysis_result", "audit_score"]
-                        for k in keys_to_clear:
-                            if k in st.session_state: del st.session_state[k]
-                        st.rerun()
 
     render_audit_content()
 
