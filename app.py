@@ -133,6 +133,9 @@ if not st.session_state.is_authenticated:
                         st.session_state[f"role_pills_{st.session_state.reset_counter}"] = data.get("active_role")
                     if data.get("active_contract_type"):
                         st.session_state[f"type_pills_{st.session_state.reset_counter}"] = data.get("active_contract_type")
+                    # Восстанавливаем статус оплаты
+                    if data.get("payment_status") == "paid":
+                        st.session_state.guest_paid = True
             except Exception as e:
                 pass
         st.session_state.loaded_guest_session_id = current_guest_sess
@@ -456,46 +459,111 @@ with tab_audit:
             st.success("✅ Анализ и протокол разногласий успешно сформированы!")
             clean_res = st.session_state.analysis_result
             
-            # --- РАЗДЕЛЕНИЕ ОТЧЕТА ДЛЯ ДЕМО-ВЕРСИИ ---
-            split_marker_1 = "3. РИСКИ РАСТОРЖЕНИЯ И СПОРОВ"
-            split_marker_2 = "## 🛠️ Протокол разногласий"
+            # Определяем, оплачен ли анализ (для гостей)
+            is_guest = not st.session_state.is_authenticated
+            guest_paid = st.session_state.get("guest_paid", False)
+            show_full = st.session_state.is_authenticated or guest_paid
             
-            public_part = clean_res
-            if split_marker_1 in clean_res:
-                public_part = clean_res.split(split_marker_1)[0]
-            elif split_marker_2 in clean_res:
-                public_part = clean_res.split(split_marker_2)[0]
-            
-            st.markdown(f"<div class='report-card'>{public_part.strip()}</div>", unsafe_allow_html=True)
-            
-            # Визуальная заглушка для скрытой части
-            st.markdown("""
-                <div style="position: relative; margin-top: -80px; height: 120px; background: linear-gradient(to bottom, transparent 0%, var(--background-color, #0e1117) 80%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; z-index: 10;">
-                    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 8px; backdrop-filter: blur(5px);">
-                        <p style="color: var(--secondary-text); font-weight: 500; font-size: 14px; text-align: center; margin: 0;">
-                            🔒 Полный анализ (риски расторжения и споров) и протокол разногласий скрыты
-                        </p>
+            if show_full:
+                # --- ПОЛНЫЙ ОТЧЕТ (после оплаты или для зарегистрированных) ---
+                st.markdown(f"<div class='report-card'>{clean_res.strip()}</div>", unsafe_allow_html=True)
+                
+                st.write("")
+                col_pdf, col_word = st.columns(2)
+                with col_pdf:
+                    pdf_bytes = get_cached_pdf(clean_res)
+                    if pdf_bytes:
+                        st.download_button(
+                            label="📥 Скачать PDF",
+                            data=bytes(pdf_bytes),
+                            file_name="audit_report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="btn_download_pdf_audit"
+                        )
+                with col_word:
+                    try:
+                        word_bytes = get_cached_docx(clean_res)
+                        if word_bytes:
+                            st.download_button(
+                                label="📝 Скачать Word",
+                                data=word_bytes,
+                                file_name="audit_report.docx",
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True,
+                                key="btn_download_docx_audit"
+                            )
+                    except Exception as e:
+                        pass
+            else:
+                # --- ДЕМО-ВЕРСИЯ (разделённый отчет для неоплативших гостей) ---
+                split_marker_1 = "3. РИСКИ РАСТОРЖЕНИЯ И СПОРОВ"
+                split_marker_2 = "## 🛠️ Протокол разногласий"
+                
+                public_part = clean_res
+                if split_marker_1 in clean_res:
+                    public_part = clean_res.split(split_marker_1)[0]
+                elif split_marker_2 in clean_res:
+                    public_part = clean_res.split(split_marker_2)[0]
+                
+                st.markdown(f"<div class='report-card'>{public_part.strip()}</div>", unsafe_allow_html=True)
+                
+                # Визуальная заглушка для скрытой части
+                st.markdown("""
+                    <div style="position: relative; margin-top: -80px; height: 120px; background: linear-gradient(to bottom, transparent 0%, var(--background-color, #0e1117) 80%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; z-index: 10;">
+                        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 8px; backdrop-filter: blur(5px);">
+                            <p style="color: var(--secondary-text); font-weight: 500; font-size: 14px; text-align: center; margin: 0;">
+                                🔒 Полный анализ (риски расторжения и споров) и протокол разногласий скрыты
+                            </p>
+                        </div>
                     </div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            st.write("")
-            st.write("")
-            
-            # Кнопка покупки разового аудита вместо кнопок скачивания
-            buy_link = "#" # Замените на реальную ссылку на покупку разового аудита
-            st.markdown(f"""
-                <a href='{buy_link}' target='_blank' style='text-decoration: none;'>
-                    <div style='background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); transition: transform 0.2s;'>
-                        🛍️ Купить разовый аудит за 9$
-                    </div>
-                </a>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+                
+                st.write("")
+                st.write("")
+                
+                # Кнопка покупки разового аудита с session_id
+                guest_sess = cookie_controller.get("guest_session_id")
+                if not guest_sess:
+                    guest_sess = st.session_state.get("new_guest_token", "")
+                
+                buy_link = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/0fb5f2af-1335-4dfd-9091-ea9aa9eb6303?checkout[custom][session_id]={guest_sess}"
+                st.markdown(f"""
+                    <a href='{buy_link}' target='_blank' style='text-decoration: none;'>
+                        <div style='background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); cursor: pointer; transition: transform 0.2s;'>
+                            🛍️ Купить разовый аудит за 9$
+                        </div>
+                    </a>
+                """, unsafe_allow_html=True)
+                
+                # --- AUTO-POLLING: проверка оплаты каждые 5 секунд ---
+                if guest_sess:
+                    check_url = f"https://zqcucvoeybuudpzxziqq.supabase.co/functions/v1/check-payment-status?session_id={guest_sess}"
+                    st.markdown(f"""
+                        <script>
+                        (function() {{
+                            var pollInterval = setInterval(function() {{
+                                fetch("{check_url}")
+                                    .then(function(resp) {{ return resp.json(); }})
+                                    .then(function(data) {{
+                                        if (data.paid === true) {{
+                                            clearInterval(pollInterval);
+                                            // Отправляем сигнал Streamlit перезагрузить страницу
+                                            window.parent.location.reload();
+                                        }}
+                                    }})
+                                    .catch(function(err) {{ console.log("Poll error:", err); }});
+                            }}, 5000);
+                        }})();
+                        </script>
+                    """, unsafe_allow_html=True)
+                    
+                    st.caption("⏳ После оплаты страница обновится автоматически")
 
             st.write("")
             if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
                 st.session_state.reset_counter += 1
-                keys_to_clear = ["analysis_result", "audit_score"]
+                keys_to_clear = ["analysis_result", "audit_score", "guest_paid"]
                 for k in keys_to_clear:
                     if k in st.session_state: del st.session_state[k]
                     
