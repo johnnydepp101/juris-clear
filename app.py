@@ -644,7 +644,7 @@ with tab_compare:
                 if st.button("📁 Загрузить другие документы", use_container_width=True, key="btn_reset_comp"):
                     del st.session_state["compare_result"]
                     st.session_state.reset_counter += 1
-                    st.rerun()
+                    st.rerun(scope="fragment")
                     
             elif file_orig and file_rev:
                 comp_btn_placeholder = st.empty()
@@ -666,7 +666,7 @@ with tab_compare:
                         res = compare_documents(client, text_orig, text_rev, contract_type_comp, user_role_comp)
                         if res:
                             st.session_state.compare_result = res
-                            st.rerun()
+                            st.rerun(scope="fragment")
 
     render_compare_content()
 
