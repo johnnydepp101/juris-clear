@@ -586,85 +586,89 @@ with tab_demo:
     st.markdown(f"<div class='report-card'>{sample_text}</div>", unsafe_allow_html=True)
 
 with tab_compare:
-    if not st.session_state.is_authenticated:
-        st.markdown(f"""
-            <div style='text-align: center; padding: 40px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; margin-top: 20px;'>
-                <div style='font-size: 40px; margin-bottom: 10px;'>🔒</div>
-                <h3>Инструмент сравнения доступен только для зарегистрированных пользователей</h3>
-                <p style='color: var(--secondary-text);'>Пожалуйста, войдите в систему или зарегистрируйтесь, чтобы использовать функцию ИИ-сравнения документов.</p>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("### ⚖️ ИИ Сравнение документов")
-        st.write("Загрузите оригинальную и измененную версии договора, чтобы найти юридически значимые изменения.")
-        
-        user_role_comp = st.session_state.get(f"role_pills_{st.session_state.reset_counter}", "Заказчик")
-        contract_type_comp = st.session_state.get(f"type_pills_{st.session_state.reset_counter}", "Авто-определение")
-        
-        col_orig, col_rev = st.columns(2)
-        with col_orig:
-            file_orig = st.file_uploader("Оригинальный договор (PDF)", type=['pdf'], key=f"uploader_orig_{st.session_state.reset_counter}")
-        with col_rev:
-            file_rev = st.file_uploader("Измененный договор (PDF)", type=['pdf'], key=f"uploader_rev_{st.session_state.reset_counter}")
+    @st.fragment
+    def render_compare_content():
+        if not st.session_state.is_authenticated:
+            st.markdown(f"""
+                <div style='text-align: center; padding: 40px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; margin-top: 20px;'>
+                    <div style='font-size: 40px; margin-bottom: 10px;'>🔒</div>
+                    <h3>Инструмент сравнения доступен только для зарегистрированных пользователей</h3>
+                    <p style='color: var(--secondary-text);'>Пожалуйста, войдите в систему или зарегистрируйтесь, чтобы использовать функцию ИИ-сравнения документов.</p>
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("### ⚖️ ИИ Сравнение документов")
+            st.write("Загрузите оригинальную и измененную версии договора, чтобы найти юридически значимые изменения.")
             
-        if "compare_result" in st.session_state:
-            st.success("✅ Сравнение успешно завершено!")
-            st.markdown(f"<div class='report-card'>{st.session_state.compare_result.strip()}</div>", unsafe_allow_html=True)
+            user_role_comp = st.session_state.get(f"role_pills_{st.session_state.reset_counter}", "Заказчик")
+            contract_type_comp = st.session_state.get(f"type_pills_{st.session_state.reset_counter}", "Авто-определение")
             
-            st.write("")
-            col_pdf_comp, col_word_comp = st.columns(2)
-            with col_pdf_comp:
-                pdf_bytes_comp = get_cached_pdf(st.session_state.compare_result)
-                if pdf_bytes_comp:
-                    st.download_button(
-                        label="📥 Скачать PDF",
-                        data=bytes(pdf_bytes_comp),
-                        file_name=f"comparison_report.pdf",
-                        mime="application/pdf",
-                        use_container_width=True,
-                        key="btn_download_pdf_comp"
-                    )
-            with col_word_comp:
-                try:
-                    word_bytes_comp = get_cached_docx(st.session_state.compare_result)
-                    if word_bytes_comp:
-                        st.download_button(
-                            label="📝 Скачать Word",
-                            data=word_bytes_comp,
-                            file_name=f"comparison_report.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True,
-                            key="btn_download_docx_comp"
-                        )
-                except Exception as e:
-                    pass
-            st.write("")
-            if st.button("📁 Загрузить другие документы", use_container_width=True, key="btn_reset_comp"):
-                del st.session_state["compare_result"]
-                st.session_state.reset_counter += 1
-                st.rerun()
+            col_orig, col_rev = st.columns(2)
+            with col_orig:
+                file_orig = st.file_uploader("Оригинальный договор (PDF)", type=['pdf'], key=f"uploader_orig_{st.session_state.reset_counter}")
+            with col_rev:
+                file_rev = st.file_uploader("Измененный договор (PDF)", type=['pdf'], key=f"uploader_rev_{st.session_state.reset_counter}")
                 
-        elif file_orig and file_rev:
-            comp_btn_placeholder = st.empty()
-            if comp_btn_placeholder.button("Начать сравнение", use_container_width=True, type="primary"):
-                comp_btn_placeholder.empty()
-                with st.spinner("ИИ анализирует различия..."):
+            if "compare_result" in st.session_state:
+                st.success("✅ Сравнение успешно завершено!")
+                st.markdown(f"<div class='report-card'>{st.session_state.compare_result.strip()}</div>", unsafe_allow_html=True)
+                
+                st.write("")
+                col_pdf_comp, col_word_comp = st.columns(2)
+                with col_pdf_comp:
+                    pdf_bytes_comp = get_cached_pdf(st.session_state.compare_result)
+                    if pdf_bytes_comp:
+                        st.download_button(
+                            label="📥 Скачать PDF",
+                            data=bytes(pdf_bytes_comp),
+                            file_name=f"comparison_report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="btn_download_pdf_comp"
+                        )
+                with col_word_comp:
                     try:
-                        text_orig = extract_text_from_pdf(file_orig.read())
-                        text_rev = extract_text_from_pdf(file_rev.read())
-                        
-                        if not text_orig.strip() or not text_rev.strip():
-                            st.error("Не удалось извлечь текст из одного или обоих документов.")
+                        word_bytes_comp = get_cached_docx(st.session_state.compare_result)
+                        if word_bytes_comp:
+                            st.download_button(
+                                label="📝 Скачать Word",
+                                data=word_bytes_comp,
+                                file_name=f"comparison_report.docx",
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True,
+                                key="btn_download_docx_comp"
+                            )
+                    except Exception as e:
+                        pass
+                st.write("")
+                if st.button("📁 Загрузить другие документы", use_container_width=True, key="btn_reset_comp"):
+                    del st.session_state["compare_result"]
+                    st.session_state.reset_counter += 1
+                    st.rerun()
+                    
+            elif file_orig and file_rev:
+                comp_btn_placeholder = st.empty()
+                if comp_btn_placeholder.button("Начать сравнение", use_container_width=True, type="primary"):
+                    comp_btn_placeholder.empty()
+                    with st.spinner("ИИ анализирует различия..."):
+                        try:
+                            text_orig = extract_text_from_pdf(file_orig.read())
+                            text_rev = extract_text_from_pdf(file_rev.read())
+                            
+                            if not text_orig.strip() or not text_rev.strip():
+                                st.error("Не удалось извлечь текст из одного или обоих документов.")
+                                st.stop()
+                                
+                        except Exception as e:
+                            st.error(f"Ошибка при чтении PDF: {e}")
                             st.stop()
                             
-                    except Exception as e:
-                        st.error(f"Ошибка при чтении PDF: {e}")
-                        st.stop()
-                        
-                    res = compare_documents(client, text_orig, text_rev, contract_type_comp, user_role_comp)
-                    if res:
-                        st.session_state.compare_result = res
-                        st.rerun()
+                        res = compare_documents(client, text_orig, text_rev, contract_type_comp, user_role_comp)
+                        if res:
+                            st.session_state.compare_result = res
+                            st.rerun()
+
+    render_compare_content()
 
 st.divider()
 col_f1, col_f2, col_f3 = st.columns(3)
