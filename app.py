@@ -117,31 +117,25 @@ if supabase and not st.session_state.is_authenticated:
             # Если токен истек или недействителен - просто очищаем куки
             st.session_state.clear_tokens = True
 
-if not st.session_state.is_authenticated and not st.session_state.get("guest_initialized"):
-    guest_sess = cookie_controller.get("guest_session_id")
-    if not guest_sess:
-        guest_sess = str(uuid.uuid4())
-        st.session_state.new_guest_token = guest_sess
-    
-    st.session_state.guest_session_id = guest_sess
-    
-    if supabase and guest_sess:
-        try:
-            res = supabase.table("guest_analyses").select("*").eq("session_id", guest_sess).execute()
-            if res.data and len(res.data) > 0:
-                data = res.data[0]
-                if data.get("active_analysis_result"):
-                    st.session_state.analysis_result = data.get("active_analysis_result")
-                if data.get("active_audit_score") is not None:
-                    st.session_state.audit_score = data.get("active_audit_score")
-                if data.get("active_role"):
-                    st.session_state[f"role_pills_{st.session_state.reset_counter}"] = data.get("active_role")
-                if data.get("active_contract_type"):
-                    st.session_state[f"type_pills_{st.session_state.reset_counter}"] = data.get("active_contract_type")
-        except Exception as e:
-            pass
-            
-    st.session_state.guest_initialized = True
+if not st.session_state.is_authenticated:
+    current_guest_sess = cookie_controller.get("guest_session_id")
+    if current_guest_sess and st.session_state.get("loaded_guest_session_id") != current_guest_sess:
+        if supabase:
+            try:
+                res = supabase.table("guest_analyses").select("*").eq("session_id", current_guest_sess).execute()
+                if res.data and len(res.data) > 0:
+                    data = res.data[0]
+                    if data.get("active_analysis_result"):
+                        st.session_state.analysis_result = data.get("active_analysis_result")
+                    if data.get("active_audit_score") is not None:
+                        st.session_state.audit_score = data.get("active_audit_score")
+                    if data.get("active_role"):
+                        st.session_state[f"role_pills_{st.session_state.reset_counter}"] = data.get("active_role")
+                    if data.get("active_contract_type"):
+                        st.session_state[f"type_pills_{st.session_state.reset_counter}"] = data.get("active_contract_type")
+            except Exception as e:
+                pass
+        st.session_state.loaded_guest_session_id = current_guest_sess
 
 
 @st.dialog("JurisClear AI")
@@ -307,8 +301,8 @@ with header_col2:
                 if supabase:
                     sign_out(supabase)
                 st.session_state.clear_tokens = True
-                if "guest_initialized" in st.session_state:
-                    del st.session_state["guest_initialized"]
+                if "loaded_guest_session_id" in st.session_state:
+                    del st.session_state["loaded_guest_session_id"]
                 st.session_state.is_authenticated = False
                 st.session_state.user_email = ""
                 st.session_state.user_id = None
@@ -516,11 +510,13 @@ with tab_audit:
                         }).eq("id", st.session_state.user_id).execute()
                     except Exception as e:
                         pass
-                elif not st.session_state.is_authenticated and st.session_state.get("guest_session_id") and supabase:
-                    try:
-                        supabase.table("guest_analyses").delete().eq("session_id", st.session_state.guest_session_id).execute()
-                    except Exception as e:
-                        pass
+                elif not st.session_state.is_authenticated:
+                    guest_sess = cookie_controller.get("guest_session_id")
+                    if guest_sess and supabase:
+                        try:
+                            supabase.table("guest_analyses").delete().eq("session_id", guest_sess).execute()
+                        except Exception as e:
+                            pass
                         
                 st.rerun()
         else:
@@ -610,22 +606,30 @@ with tab_audit:
                                     }).eq("id", st.session_state.user_id).execute()
                                 except Exception as e:
                                     pass
-                            elif not st.session_state.is_authenticated and st.session_state.get("guest_session_id") and supabase:
-                                try:
-                                    guest_data = {
-                                        "session_id": st.session_state.guest_session_id,
-                                        "active_analysis_result": clean_res,
-                                        "active_audit_score": score,
-                                        "active_role": user_role,
-                                        "active_contract_type": contract_type
-                                    }
-                                    res = supabase.table("guest_analyses").select("id").eq("session_id", st.session_state.guest_session_id).execute()
-                                    if res.data and len(res.data) > 0:
-                                        supabase.table("guest_analyses").update(guest_data).eq("session_id", st.session_state.guest_session_id).execute()
-                                    else:
-                                        supabase.table("guest_analyses").insert(guest_data).execute()
-                                except Exception as e:
-                                    pass
+                            elif not st.session_state.is_authenticated:
+                                guest_sess = cookie_controller.get("guest_session_id")
+                                if not guest_sess:
+                                    guest_sess = str(uuid.uuid4())
+                                    st.session_state.new_guest_token = guest_sess
+                                
+                                st.session_state.loaded_guest_session_id = guest_sess
+                                
+                                if supabase and guest_sess:
+                                    try:
+                                        guest_data = {
+                                            "session_id": guest_sess,
+                                            "active_analysis_result": clean_res,
+                                            "active_audit_score": score,
+                                            "active_role": user_role,
+                                            "active_contract_type": contract_type
+                                        }
+                                        res = supabase.table("guest_analyses").select("id").eq("session_id", guest_sess).execute()
+                                        if res.data and len(res.data) > 0:
+                                            supabase.table("guest_analyses").update(guest_data).eq("session_id", guest_sess).execute()
+                                        else:
+                                            supabase.table("guest_analyses").insert(guest_data).execute()
+                                    except Exception as e:
+                                        pass
                                     
                             st.rerun()
 
