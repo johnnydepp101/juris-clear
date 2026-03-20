@@ -529,7 +529,7 @@ with tab_audit:
                 
                 buy_link = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/0fb5f2af-1335-4dfd-9091-ea9aa9eb6303?checkout[custom][session_id]={guest_sess}"
                 st.markdown(f"""
-                    <a href='{buy_link}' target='_self' style='text-decoration: none;'>
+                    <a href='{buy_link}' target='_top' style='text-decoration: none;'>
                         <div style='background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); cursor: pointer; transition: transform 0.2s;'>
                             🛍️ Купить разовый аудит за 9$
                         </div>
