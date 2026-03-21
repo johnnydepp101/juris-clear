@@ -86,6 +86,8 @@ def load_active_analysis(profile):
             st.session_state[f"role_pills_{st.session_state.reset_counter}"] = profile.get("active_role")
         if profile.get("active_contract_type"):
             st.session_state[f"type_pills_{st.session_state.reset_counter}"] = profile.get("active_contract_type")
+        if profile.get("payment_status") == "paid":
+            st.session_state.user_paid = True
 
 if supabase and not st.session_state.is_authenticated:
     access_token = cookie_controller.get("supabase_access_token")
@@ -290,14 +292,17 @@ with header_col2:
                             "active_analysis_result": None,
                             "active_audit_score": None,
                             "active_role": None,
-                            "active_contract_type": None
+                            "active_contract_type": None,
+                            "payment_status": "unpaid",
+                            "ls_order_id": None,
+                            "paid_at": None
                         }).eq("id", st.session_state.user_id).execute()
                     except Exception as e:
                         pass
                         
                 # Очистка анализа из session_state
                 st.session_state.reset_counter += 1
-                for k in ["analysis_result", "audit_score", "compare_result"]:
+                for k in ["analysis_result", "audit_score", "compare_result", "user_paid"]:
                     if k in st.session_state: 
                         del st.session_state[k]
 
@@ -459,10 +464,12 @@ with tab_audit:
             st.success("✅ Анализ и протокол разногласий успешно сформированы!")
             clean_res = st.session_state.analysis_result
             
-            # Определяем, оплачен ли анализ (для гостей)
+            # Определяем, оплачен ли анализ
             is_guest = not st.session_state.is_authenticated
             guest_paid = st.session_state.get("guest_paid", False)
-            show_full = st.session_state.is_authenticated or guest_paid
+            user_paid = st.session_state.get("user_paid", False)
+            
+            show_full = user_paid if not is_guest else guest_paid
             
             if show_full:
                 # --- ПОЛНЫЙ ОТЧЕТ (после оплаты или для зарегистрированных) ---
@@ -522,12 +529,16 @@ with tab_audit:
                 st.write("")
                 st.write("")
                 
-                # Кнопка покупки разового аудита с session_id
-                guest_sess = cookie_controller.get("guest_session_id")
-                if not guest_sess:
-                    guest_sess = st.session_state.get("new_guest_token", "")
+                # Кнопка покупки разового аудита
+                if is_guest:
+                    guest_sess = cookie_controller.get("guest_session_id")
+                    if not guest_sess:
+                        guest_sess = st.session_state.get("new_guest_token", "")
+                    pay_param = f"checkout[custom][session_id]={guest_sess}"
+                else:
+                    pay_param = f"checkout[custom][user_id]={st.session_state.user_id}"
                 
-                buy_link = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/0fb5f2af-1335-4dfd-9091-ea9aa9eb6303?checkout[custom][session_id]={guest_sess}"
+                buy_link = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/0fb5f2af-1335-4dfd-9091-ea9aa9eb6303?{pay_param}"
                 st.markdown(f"""
                     <a href='{buy_link}' target='_blank' style='text-decoration: none;'>
                         <div style='background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); cursor: pointer; transition: transform 0.2s;'>
@@ -537,8 +548,17 @@ with tab_audit:
                 """, unsafe_allow_html=True)
                 
                 # --- AUTO-POLLING: проверка оплаты каждые 5 секунд ---
-                if guest_sess:
-                    check_url = f"https://zqcucvoeybuudpzxziqq.supabase.co/functions/v1/check-payment-status?session_id={guest_sess}"
+                check_url = None
+                if is_guest:
+                    guest_sess = cookie_controller.get("guest_session_id")
+                    if not guest_sess: guest_sess = st.session_state.get("new_guest_token", "")
+                    if guest_sess:
+                        check_url = f"https://zqcucvoeybuudpzxziqq.supabase.co/functions/v1/check-payment-status?session_id={guest_sess}"
+                else:
+                    if st.session_state.user_id:
+                        check_url = f"https://zqcucvoeybuudpzxziqq.supabase.co/functions/v1/check-payment-status?user_id={st.session_state.user_id}"
+
+                if check_url:
                     st.markdown(f"""
                         <script>
                         (function() {{
@@ -563,7 +583,7 @@ with tab_audit:
             st.write("")
             if st.button("📁 Загрузить новый договор", use_container_width=True, key="btn_paid_reset"):
                 st.session_state.reset_counter += 1
-                keys_to_clear = ["analysis_result", "audit_score", "guest_paid"]
+                keys_to_clear = ["analysis_result", "audit_score", "guest_paid", "user_paid"]
                 for k in keys_to_clear:
                     if k in st.session_state: del st.session_state[k]
                     
@@ -574,7 +594,10 @@ with tab_audit:
                             "active_analysis_result": None,
                             "active_audit_score": None,
                             "active_role": None,
-                            "active_contract_type": None
+                            "active_contract_type": None,
+                            "payment_status": "unpaid",
+                            "ls_order_id": None,
+                            "paid_at": None
                         }).eq("id", st.session_state.user_id).execute()
                     except Exception as e:
                         pass
