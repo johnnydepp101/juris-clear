@@ -307,31 +307,12 @@ if st.session_state.is_authenticated:
         avatar_border = "1px solid rgba(255,255,255,0.2)"
         pro_badge = ""
         
-    mobile_avatar_html = f"""
-    <div class="mobile-avatar" style="display: none; margin-left: auto;">
-        <div style="position: relative; width: 36px; height: 36px;">
-            <div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
-            {avatar_letter}
-            </div>
-            {pro_badge}
-        </div>
-    </div>
-    """
+    mobile_avatar_html = f"""<div class="mobile-avatar" style="display: none; margin-left: auto;"><div style="position: relative; width: 36px; height: 36px;"><div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">{avatar_letter}</div>{pro_badge}</div></div>"""
 
 header_col1, header_col2 = st.columns([2.5, 1.5])
 
 with header_col1:
-    st.markdown(f"""
-        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <span class="app-header-icon" style="font-size: 40px; line-height: 1;">⚖️</span>
-                <div style="display: flex; flex-direction: column;">
-                    <h1 class="app-header-title" style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
-                </div>
-            </div>
-            {mobile_avatar_html}
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"""<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><div style="display: flex; align-items: center; gap: 15px;"><span class="app-header-icon" style="font-size: 40px; line-height: 1;">⚖️</span><div style="display: flex; flex-direction: column;"><h1 class="app-header-title" style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1></div></div>{mobile_avatar_html}</div>""", unsafe_allow_html=True)
 
 with header_col2:
     if not st.session_state.is_authenticated:
@@ -347,14 +328,7 @@ with header_col2:
         
         with cols[0]:
             # Десктопный аватар (скрывается на мобилке)
-            st.markdown(f"""<div class="desktop-avatar" style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
-<div style="position: relative; width: 36px; height: 36px;">
-<div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
-{avatar_letter}
-</div>
-{pro_badge}
-</div>
-</div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="desktop-avatar" style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;"><div style="position: relative; width: 36px; height: 36px;"><div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">{avatar_letter}</div>{pro_badge}</div></div>""", unsafe_allow_html=True)
         
         with cols[1]:
             if st.button("👤 Кабинет", use_container_width=True, key="btn_open_cabinet"):
