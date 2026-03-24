@@ -327,16 +327,14 @@ with header_col2:
             cols = st.columns([1, 1.5])
         
         with cols[0]:
-            st.markdown(f"""
-                <div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
-                    <div style="position: relative; width: 36px; height: 36px;">
-                        <div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
-                            {avatar_letter}
-                        </div>
-                        {pro_badge}
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
+<div style="position: relative; width: 36px; height: 36px;">
+<div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
+{avatar_letter}
+</div>
+{pro_badge}
+</div>
+</div>""", unsafe_allow_html=True)
         
         if is_pro:
             with cols[1]:
