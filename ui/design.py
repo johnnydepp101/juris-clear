@@ -1470,6 +1470,20 @@ def load_css():
         }
     }
 
+    /* === TABLET/MEDIUM: ХЕДЕР — КНОПКИ ОДНОСТРОЧНЫЕ (769–1564px) === */
+    @media (min-width: 769px) and (max-width: 1564px) {
+        /* Общие исправления для кнопок хедера */
+        .stButton > button, .login-btn-header button {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            padding: 10px 14px !important;
+            font-size: 11px !important;
+            min-height: 40px !important;
+            letter-spacing: 0.5px !important;
+        }
+    }
+
     /* === SAFE AREA INSETS (iPhone с «notch») === */
     @supports (padding: env(safe-area-inset-top)) {
         .block-container {
