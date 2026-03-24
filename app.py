@@ -287,15 +287,49 @@ def show_auth_modal():
 # --- 5. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ ---
 
 # --- ХЕДЕР ПРИЛОЖЕНИЯ ---
+mobile_avatar_html = ""
+if st.session_state.is_authenticated:
+    avatar_letter = (
+        st.session_state.user_display_name[0].upper() 
+        if st.session_state.user_display_name 
+        else (st.session_state.user_email[0].upper() if st.session_state.user_email else "U")
+    )
+    is_pro = st.session_state.get("has_subscription", False)
+    if is_pro:
+        # Pro-аватар: зелёная рамка + PRO бейдж
+        avatar_bg = "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+        avatar_shadow = "0 4px 10px rgba(16, 185, 129, 0.4)"
+        avatar_border = "2px solid #10b981"
+        pro_badge = '<div style="position: absolute; bottom: -6px; right: -6px; background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(16,185,129,0.5);">PRO</div>'
+    else:
+        avatar_bg = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
+        avatar_shadow = "0 4px 10px rgba(59, 130, 246, 0.3)"
+        avatar_border = "1px solid rgba(255,255,255,0.2)"
+        pro_badge = ""
+        
+    mobile_avatar_html = f"""
+    <div class="mobile-avatar" style="display: none; margin-left: auto;">
+        <div style="position: relative; width: 36px; height: 36px;">
+            <div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
+            {avatar_letter}
+            </div>
+            {pro_badge}
+        </div>
+    </div>
+    """
+
 header_col1, header_col2 = st.columns([2.5, 1.5])
 
 with header_col1:
     st.markdown(f"""
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <span class="app-header-icon" style="font-size: 40px; line-height: 1;">⚖️</span>
-            <div style="display: flex; flex-direction: column;">
-                <h1 class="app-header-title" style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span class="app-header-icon" style="font-size: 40px; line-height: 1;">⚖️</span>
+                <div style="display: flex; flex-direction: column;">
+                    <h1 class="app-header-title" style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
+                </div>
             </div>
+            {mobile_avatar_html}
         </div>
     """, unsafe_allow_html=True)
 
@@ -306,34 +340,7 @@ with header_col2:
             show_auth_modal()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
-        # Профиль пользователя
-        avatar_letter = (
-            st.session_state.user_display_name[0].upper() 
-            if st.session_state.user_display_name 
-            else (st.session_state.user_email[0].upper() if st.session_state.user_email else "U")
-        )
-        is_pro = st.session_state.get("has_subscription", False)
-        if is_pro:
-            # Pro-аватар: зелёная рамка + PRO бейдж
-            avatar_bg = "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-            avatar_shadow = "0 4px 10px rgba(16, 185, 129, 0.4)"
-            avatar_border = "2px solid #10b981"
-            pro_badge = '<div style="position: absolute; bottom: -6px; right: -6px; background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(16,185,129,0.5);">PRO</div>'
-        else:
-            avatar_bg = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
-            avatar_shadow = "0 4px 10px rgba(59, 130, 246, 0.3)"
-            avatar_border = "1px solid rgba(255,255,255,0.2)"
-            pro_badge = ""
-        
-        # Мобильный аватар (показывается ТОЛЬКО на мобилке — над кнопками)
-        st.markdown(f"""<div class="mobile-avatar" style="display: none; justify-content: center; margin-bottom: 8px;">
-<div style="position: relative; width: 36px; height: 36px;">
-<div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
-{avatar_letter}
-</div>
-{pro_badge}
-</div>
-</div>""", unsafe_allow_html=True)
+        # Профиль пользователя (определен выше для шапки приложения)
         
         # Колонки: аватар | кнопка кабинета | кнопка выхода
         cols = st.columns([0.6, 1.4, 1])
