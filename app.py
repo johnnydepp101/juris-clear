@@ -435,14 +435,11 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
                 badge_html = ""
             
             st.markdown(f"""
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <div class="profile-avatar-large" style="{avatar_bg_lg}">
-                        {avatar_letter}
-                        {badge_html}
-                    </div>
-                    <div style="font-size: 22px; font-weight: 700; margin-bottom: 4px;">{st.session_state.user_display_name or 'Пользователь'}</div>
-                    <div style="font-size: 14px; color: var(--secondary-text);">{st.session_state.user_email}</div>
-                </div>
+<div style="text-align: center; margin-bottom: 30px;">
+<div class="profile-avatar-large" style="{avatar_bg_lg}">{avatar_letter}{badge_html}</div>
+<div style="font-size: 22px; font-weight: 700; margin-bottom: 4px;">{st.session_state.user_display_name or 'Пользователь'}</div>
+<div style="font-size: 14px; color: var(--secondary-text);">{st.session_state.user_email}</div>
+</div>
             """, unsafe_allow_html=True)
             
             # Карточка: Личные данные
