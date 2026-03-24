@@ -439,46 +439,40 @@ with col_tar2:
         else:
             status_label = '<div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #10b981;">✅ Подписка активна</div>'
         
-        pro_bottom_html = f"""
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
-                {status_label}
-                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">📅 Дата приобретения</div>
-                    <div style="font-size: 16px; font-weight: 700;">{purchased_str}</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">⏳ Действует до</div>
-                    <div style="font-size: 16px; font-weight: 700;">{expires_str}</div>
-                </div>
-            </div>
-        """
+        pro_bottom_html = f"""<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+{status_label}
+<div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center;">
+<div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">📅 Дата приобретения</div>
+<div style="font-size: 16px; font-weight: 700;">{purchased_str}</div>
+</div>
+<div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center;">
+<div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">⏳ Действует до</div>
+<div style="font-size: 16px; font-weight: 700;">{expires_str}</div>
+</div>
+</div>"""
     elif is_logged_in:
         # Зарегистрированный без подписки — активная кнопка
         sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/8bc12198-0e4d-4774-b486-78ddcb5a200c?checkout[custom][user_id]={st.session_state.user_id}"
-        pro_bottom_html = f"""
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
-                <div style="background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
-                    ✨ Оформите подписку и получите полный доступ
-                </div>
-                <a href='{sub_checkout_url}' target='_blank' style='text-decoration: none;'>
-                    <div style='background: linear-gradient(135deg, #9d00ff 0%, #6366f1 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4); border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s;'>
-                        🚀 Оформить подписку
-                    </div>
-                </a>
-            </div>
-        """
+        pro_bottom_html = f"""<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+<div style="background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
+✨ Оформите подписку и получите полный доступ
+</div>
+<a href='{sub_checkout_url}' target='_blank' style='text-decoration: none;'>
+<div style='background: linear-gradient(135deg, #9d00ff 0%, #6366f1 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4); border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s;'>
+🚀 Оформить подписку
+</div>
+</a>
+</div>"""
     else:
         # Не залогинен — заглушка
-        pro_bottom_html = """
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
-                <div style="background: rgba(157, 0, 255, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
-                    🔐 Для оформления подписки нужно зарегистрироваться
-                </div>
-                <div style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.2); cursor: not-allowed;">
-                    🚀 Оформить подписку
-                </div>
-            </div>
-        """
+        pro_bottom_html = """<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+<div style="background: rgba(157, 0, 255, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
+🔐 Для оформления подписки нужно зарегистрироваться
+</div>
+<div style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.2); cursor: not-allowed;">
+🚀 Оформить подписку
+</div>
+</div>"""
     
     st.markdown(f"""
         <div class="pricing-card-pro">
@@ -493,7 +487,7 @@ with col_tar2:
                     • Самая мощная модель ИИ (GPT-4o)
                 </div>
             </div>
-            {pro_bottom_html}
+{pro_bottom_html}
         </div>
     """, unsafe_allow_html=True)
 
