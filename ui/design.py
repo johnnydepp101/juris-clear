@@ -23,6 +23,23 @@ def load_css():
         --bg-grad-dark: #01010a;
     }
 
+    /* ГЛОБАЛЬНАЯ TOUCH-ОПТИМИЗАЦИЯ */
+    * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    html {
+        scroll-behavior: smooth;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+    }
+
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
     /* 2. АВТОМАТИЧЕСКАЯ СВЕТЛАЯ ТЕМА (ПО НАСТРОЙКАМ СИСТЕМЫ) */
     @media (prefers-color-scheme: light) {
         :root {
@@ -161,10 +178,10 @@ def load_css():
     [data-testid="stHeader"] {display: none;}
     
     .block-container {
-        padding-top: 2rem; 
+        padding-top: 1rem; 
         max-width: 100%;
-        padding-left: 2rem;
-        padding-right: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
     
     /* ГЛОБАЛЬНЫЕ СТИЛИ ФОНА */
@@ -360,6 +377,29 @@ def load_css():
         margin-bottom: 40px !important;
         border-collapse: collapse;
         width: 100%;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+    }
+
+    /* OVERFLOW ДЛЯ ВСЕХ DATAFRAME И TABLE КОМПОНЕНТОВ */
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-width: 100% !important;
+    }
+
+    [data-testid="stDataFrame"] > div {
+        overflow-x: auto !important;
+    }
+
+    /* ПРЕДОТВРАЩЕНИЕ AUTO-ZOOM НА iOS ПРИ ФОКУСЕ НА INPUT */
+    .stTextInput input,
+    .stTextArea textarea,
+    .stSelectbox select {
+        font-size: 16px !important;
     }
 
     /* ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР (RED GLASS) */
@@ -1110,6 +1150,362 @@ def load_css():
             color: #64748b !important;
         }
     }
+
+    /* ============================================================ */
+    /* ========== АДАПТИВНЫЕ МЕДИА-ЗАПРОСЫ (MOBILE-FIRST) ========== */
+    /* ============================================================ */
+
+    /* === АДАПТИВНЫЙ .block-container ПО БРЕЙКПОИНТАМ === */
+    @media (min-width: 768px) {
+        .block-container {
+            padding-top: 2rem;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    }
+
+    @media (min-width: 1440px) {
+        .block-container {
+            padding-left: 3rem;
+            padding-right: 3rem;
+        }
+    }
+
+    /* === MOBILE: ВЕРТИКАЛЬНЫЙ СТЕК КОЛОНОК НА ЭКРАНАХ < 768px === */
+    @media (max-width: 768px) {
+        [data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+            gap: 8px !important;
+        }
+
+        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+        }
+    }
+
+    /* === MOBILE: ТАРИФНЫЕ КАРТОЧКИ === */
+    @media (max-width: 768px) {
+        .pricing-card-single, .pricing-card-pro {
+            min-height: auto !important;
+            padding: 24px 20px !important;
+            border-radius: 24px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .pricing-card-single:hover, .pricing-card-pro:hover {
+            transform: none !important;
+        }
+
+        /* Адаптивные шрифты внутри карточек */
+        .pricing-card-single div[style*="font-size: 32px"],
+        .pricing-card-pro div[style*="font-size: 32px"] {
+            font-size: 26px !important;
+        }
+
+        .pricing-card-single div[style*="font-size: 20px"],
+        .pricing-card-pro div[style*="font-size: 20px"] {
+            font-size: 17px !important;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .pricing-card-single, .pricing-card-pro {
+            padding: 30px !important;
+            border-radius: 35px !important;
+            min-height: 380px !important;
+        }
+    }
+
+    /* === MOBILE: REPORT-CARD === */
+    @media (max-width: 768px) {
+        .report-card {
+            padding: 20px 16px !important;
+            border-radius: 20px !important;
+            margin-top: 16px !important;
+            margin-bottom: 20px !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+    }
+
+    /* === MOBILE: КНОПКИ (TOUCH-FRIENDLY: MIN 44-48px) === */
+    @media (max-width: 768px) {
+        .stButton > button, .login-btn-header button {
+            padding: 16px 20px !important;
+            font-size: 14px !important;
+            min-height: 48px !important;
+            border-radius: 16px !important;
+        }
+
+        .stDownloadButton > button {
+            padding: 16px 20px !important;
+            min-height: 48px !important;
+            border-radius: 16px !important;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover {
+            transform: none !important;
+        }
+    }
+
+    /* === MOBILE: ХЕДЕР ПРИЛОЖЕНИЯ === */
+    @media (max-width: 480px) {
+        .app-header-title {
+            font-size: 22px !important;
+        }
+
+        .app-header-icon {
+            font-size: 28px !important;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+        .app-header-title {
+            font-size: 26px !important;
+        }
+    }
+
+    /* === MOBILE: ЛИЧНЫЙ КАБИНЕТ === */
+    @media (max-width: 768px) {
+        .cabinet-container {
+            padding: 0 !important;
+        }
+
+        .cabinet-card {
+            padding: 20px 16px !important;
+            border-radius: 18px !important;
+        }
+
+        .cabinet-header h2 {
+            font-size: 22px !important;
+        }
+
+        .profile-avatar-large {
+            width: 80px !important;
+            height: 80px !important;
+            font-size: 32px !important;
+        }
+
+        .profile-field {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            padding: 14px 16px !important;
+        }
+
+        .profile-field-action {
+            width: 100% !important;
+            text-align: center !important;
+            padding: 12px !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* История */
+        .history-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+            padding: 16px !important;
+        }
+
+        .history-row > div[style*="display: flex"] {
+            width: 100% !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .history-row-actions {
+            width: 100% !important;
+            justify-content: space-between !important;
+        }
+
+        .history-action-btn {
+            padding: 10px 14px !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 1 !important;
+        }
+
+        /* Биллинг */
+        .billing-info-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .billing-status-card {
+            padding: 20px !important;
+        }
+
+        .billing-status-card div[style*="font-size: 28px"] {
+            font-size: 22px !important;
+        }
+
+        /* Уведомления */
+        .notification-card {
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .notification-time {
+            align-self: flex-start !important;
+        }
+    }
+
+    /* === MOBILE: МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ === */
+    @media (max-width: 768px) {
+        [data-testid="stDialog"] {
+            border-radius: 20px !important;
+            margin: 10px !important;
+        }
+
+        [data-testid="stDialog"] [data-testid="stVerticalBlock"] {
+            padding: 16px !important;
+        }
+    }
+
+    /* === MOBILE: ЮРИДИЧЕСКИЙ ДИСКЛЕЙМЕР === */
+    @media (max-width: 768px) {
+        .disclaimer-glass {
+            padding: 20px 16px 20px 22px !important;
+            border-radius: 18px !important;
+        }
+
+        .disclaimer-glass h4 {
+            font-size: 0.95rem !important;
+        }
+
+        .disclaimer-glass p {
+            font-size: 0.85rem !important;
+        }
+    }
+
+    /* === MOBILE: ШКАЛА РИСКА === */
+    @media (max-width: 768px) {
+        .risk-meter-container {
+            padding: 6px !important;
+            border-radius: 14px !important;
+        }
+
+        .risk-meter-container > div {
+            font-size: 12px !important;
+            height: 28px !important;
+        }
+    }
+
+    /* === MOBILE: PILLS (ПИЛЮЛИ) === */
+    @media (max-width: 768px) {
+        [data-testid="stPill"] {
+            min-height: 44px !important;
+            padding: 8px 14px !important;
+        }
+
+        [data-testid="stPill"] div p {
+            font-size: 0.8rem !important;
+        }
+    }
+
+    /* === MOBILE: LOCKED SECTION === */
+    @media (max-width: 768px) {
+        .locked-section {
+            padding: 40px 20px !important;
+        }
+
+        .locked-section-icon {
+            font-size: 36px !important;
+        }
+
+        .locked-section-title {
+            font-size: 16px !important;
+        }
+
+        .locked-section-text {
+            font-size: 13px !important;
+        }
+
+        .locked-section-btn {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 14px 20px !important;
+        }
+    }
+
+    /* === TOUCH DEVICES: :active ВМЕСТО :hover === */
+    @media (hover: none) and (pointer: coarse) {
+        .stButton > button:active,
+        .login-btn-header button:active {
+            transform: scale(0.97) !important;
+            opacity: 0.9 !important;
+        }
+
+        .pricing-card-single:active, .pricing-card-pro:active {
+            transform: scale(0.98) !important;
+        }
+
+        .profile-field-action:active {
+            transform: scale(0.97) !important;
+            opacity: 0.85 !important;
+        }
+
+        .history-action-btn:active {
+            transform: scale(0.95) !important;
+            opacity: 0.85 !important;
+        }
+
+        /* Убираем hover-эффекты на тач-устройствах */
+        .stButton > button:hover,
+        .pricing-card-single:hover,
+        .pricing-card-pro:hover,
+        .stDownloadButton > button:hover,
+        .profile-field:hover,
+        .history-row:hover,
+        .cabinet-card:hover {
+            transform: none !important;
+        }
+    }
+
+    /* === SAFE AREA INSETS (iPhone с «notch») === */
+    @supports (padding: env(safe-area-inset-top)) {
+        .block-container {
+            padding-left: max(1rem, env(safe-area-inset-left)) !important;
+            padding-right: max(1rem, env(safe-area-inset-right)) !important;
+            padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+        }
+    }
+
+    /* === 4K / ULTRA-WIDE ОПТИМИЗАЦИЯ === */
+    @media (min-width: 2560px) {
+        .block-container {
+            max-width: 1800px !important;
+            margin: 0 auto !important;
+            padding-left: 4rem !important;
+            padding-right: 4rem !important;
+        }
+
+        .pricing-card-single, .pricing-card-pro {
+            padding: 50px !important;
+            min-height: 500px !important;
+        }
+
+        .report-card {
+            padding: 50px !important;
+        }
+
+        .cabinet-container {
+            max-width: 1400px !important;
+        }
+
+        .disclaimer-glass {
+            padding: 40px !important;
+        }
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
