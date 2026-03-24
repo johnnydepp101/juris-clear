@@ -287,7 +287,7 @@ def show_auth_modal():
 # --- 5. ИНТЕРФЕЙС ПРИЛОЖЕНИЯ ---
 
 # --- ХЕДЕР ПРИЛОЖЕНИЯ ---
-header_col1, header_col2 = st.columns([3, 1])
+header_col1, header_col2 = st.columns([2.5, 1.5])
 
 with header_col1:
     st.markdown(f"""
