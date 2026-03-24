@@ -1184,13 +1184,7 @@ def load_css():
             min-width: 100% !important;
         }
 
-        /* Аватар (первая колонка во вложенном блоке хедера) — всегда сверху */
-        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
-            order: -1 !important;
-            display: flex !important;
-            justify-content: center !important;
-        }
-
+    /* Аватар выводится в основном блоке, поэтому order: -1 больше не требуется */
         /* Мобильный аватар — показываем */
         .mobile-avatar {
             display: flex !important;
