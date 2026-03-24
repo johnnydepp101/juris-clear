@@ -390,54 +390,29 @@ with header_col2:
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
 
 # --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
-col_tar1, col_tar2 = st.columns(2)
+# --- Динамическая карточка Безлимит Pro ---
+has_sub = st.session_state.get("has_subscription", False)
+is_logged_in = st.session_state.is_authenticated
 
-with col_tar1:
-    st.markdown(f"""
-        <div class="pricing-card-single">
-            <div>
-                <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
-                <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">9 $</div>
-                <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
-                    • <b>Бесплатное резюме</b> основных рисков<br>
-                    • Детальный юридический разбор (Full Report)<br>
-                    • Конкретные правки для защиты ваших интересов<br>
-                    • Экспорт отчета в PDF и Word<br>
-                </div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
-                <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
-                    ℹ️ Оплачивайте только если результат вас устроит
-                </div>
-                <button style="width: 100%; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with col_tar2:
-    # --- Динамическая карточка Безлимит Pro ---
-    has_sub = st.session_state.get("has_subscription", False)
-    is_logged_in = st.session_state.is_authenticated
+# Формируем нижнюю часть карточки в зависимости от статуса
+if has_sub:
+    # Пользователь с активной подпиской — показываем даты
+    try:
+        p_at = datetime.fromisoformat(st.session_state.subscription_purchased_at.replace("Z", "+00:00"))
+        e_at = datetime.fromisoformat(st.session_state.subscription_expires_at.replace("Z", "+00:00"))
+        purchased_str = p_at.strftime("%d.%m.%Y")
+        expires_str = e_at.strftime("%d.%m.%Y")
+    except Exception:
+        purchased_str = "—"
+        expires_str = "—"
     
-    # Формируем нижнюю часть карточки в зависимости от статуса
-    if has_sub:
-        # Пользователь с активной подпиской — показываем даты
-        try:
-            p_at = datetime.fromisoformat(st.session_state.subscription_purchased_at.replace("Z", "+00:00"))
-            e_at = datetime.fromisoformat(st.session_state.subscription_expires_at.replace("Z", "+00:00"))
-            purchased_str = p_at.strftime("%d.%m.%Y")
-            expires_str = e_at.strftime("%d.%m.%Y")
-        except Exception:
-            purchased_str = "—"
-            expires_str = "—"
-        
-        sub_status_text = st.session_state.get("subscription_status", "active")
-        if sub_status_text == "cancelled":
-            status_label = '<div style="background: rgba(255, 75, 75, 0.15); padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #ff6b6b;">⚠️ Подписка отменена, действует до окончания</div>'
-        else:
-            status_label = '<div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #10b981;">✅ Подписка активна</div>'
-        
-        pro_bottom_html = f"""<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+    sub_status_text = st.session_state.get("subscription_status", "active")
+    if sub_status_text == "cancelled":
+        status_label = '<div style="background: rgba(255, 75, 75, 0.15); padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #ff6b6b;">⚠️ Подписка отменена, действует до окончания</div>'
+    else:
+        status_label = '<div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #10b981;">✅ Подписка активна</div>'
+    
+    pro_bottom_html = f"""<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
 {status_label}
 <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center;">
 <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">📅 Дата приобретения</div>
@@ -448,10 +423,10 @@ with col_tar2:
 <div style="font-size: 16px; font-weight: 700;">{expires_str}</div>
 </div>
 </div>"""
-    elif is_logged_in:
-        # Зарегистрированный без подписки — активная кнопка
-        sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/8bc12198-0e4d-4774-b486-78ddcb5a200c?checkout[custom][user_id]={st.session_state.user_id}"
-        pro_bottom_html = f"""<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+elif is_logged_in:
+    # Зарегистрированный без подписки — активная кнопка
+    sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/8bc12198-0e4d-4774-b486-78ddcb5a200c?checkout[custom][user_id]={st.session_state.user_id}"
+    pro_bottom_html = f"""<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
 <div style="background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
 ✨ Оформите подписку и получите полный доступ
 </div>
@@ -461,9 +436,9 @@ with col_tar2:
 </div>
 </a>
 </div>"""
-    else:
-        # Не залогинен — заглушка
-        pro_bottom_html = """<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+else:
+    # Не залогинен — заглушка
+    pro_bottom_html = """<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
 <div style="background: rgba(157, 0, 255, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
 🔐 Для оформления подписки нужно зарегистрироваться
 </div>
@@ -471,7 +446,9 @@ with col_tar2:
 🚀 Оформить подписку
 </div>
 </div>"""
-    
+
+# Если есть активная подписка — показываем только Pro-карточку на всю ширину
+if has_sub:
     st.markdown(f"""
         <div class="pricing-card-pro">
             <div>
@@ -488,6 +465,49 @@ with col_tar2:
 {pro_bottom_html}
         </div>
     """, unsafe_allow_html=True)
+else:
+    # Без подписки — две карточки: Разовый аудит + Безлимит Pro
+    col_tar1, col_tar2 = st.columns(2)
+
+    with col_tar1:
+        st.markdown(f"""
+            <div class="pricing-card-single">
+                <div>
+                    <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Разовый аудит</div>
+                    <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">9 $</div>
+                    <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                        • <b>Бесплатное резюме</b> основных рисков<br>
+                        • Детальный юридический разбор (Full Report)<br>
+                        • Конкретные правки для защиты ваших интересов<br>
+                        • Экспорт отчета в PDF и Word<br>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
+                        ℹ️ Оплачивайте только если результат вас устроит
+                    </div>
+                    <button style="width: 100%; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; font-weight: 600; cursor: default;">Анализ доступен ниже 👇</button>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col_tar2:
+        st.markdown(f"""
+            <div class="pricing-card-pro">
+                <div>
+                    <div style="font-size: 20px; font-weight: 600; opacity: 0.9;">Безлимит Pro</div>
+                    <div style="font-size: 32px; font-weight: 800; margin: 10px 0;">29 $ <span style="font-size: 14px; opacity: 0.7;">/мес</span></div>
+                    <div style="font-size: 13px; opacity: 0.8; line-height: 1.6;">
+                        • <b>Неограниченное</b> количество документов<br>
+                        • Полные отчеты <b>мгновенно</b> без доплат<br>
+                        • Доступ к результату в истории навсегда<br>
+                        • Персональный архив всех проверок<br>
+                        • Самая мощная модель ИИ (GPT-4o)
+                    </div>
+                </div>
+{pro_bottom_html}
+            </div>
+        """, unsafe_allow_html=True)
 
 # Параметры анализа
 st.markdown("### ⚙️ Параметры анализа")
