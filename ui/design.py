@@ -1183,6 +1183,13 @@ def load_css():
             flex: 1 1 100% !important;
             min-width: 100% !important;
         }
+
+        /* Аватар (первая колонка во вложенном блоке хедера) — всегда сверху */
+        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
+            order: -1 !important;
+            display: flex !important;
+            justify-content: center !important;
+        }
     }
 
     /* === MOBILE: ТАРИФНЫЕ КАРТОЧКИ === */
