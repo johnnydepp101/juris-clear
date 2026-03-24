@@ -292,9 +292,9 @@ header_col1, header_col2 = st.columns([3, 1])
 with header_col1:
     st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 15px;">
-            <span style="font-size: 40px; line-height: 1;">⚖️</span>
+            <span class="app-header-icon" style="font-size: 40px; line-height: 1;">⚖️</span>
             <div style="display: flex; flex-direction: column;">
-                <h1 style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
+                <h1 class="app-header-title" style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1>
             </div>
         </div>
     """, unsafe_allow_html=True)
