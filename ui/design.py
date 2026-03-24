@@ -1190,6 +1190,16 @@ def load_css():
             display: flex !important;
             justify-content: center !important;
         }
+
+        /* Мобильный аватар — показываем */
+        .mobile-avatar {
+            display: flex !important;
+        }
+
+        /* Десктопный аватар — скрываем */
+        .desktop-avatar {
+            display: none !important;
+        }
     }
 
     /* === MOBILE: ТАРИФНЫЕ КАРТОЧКИ === */
