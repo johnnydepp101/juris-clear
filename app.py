@@ -325,11 +325,22 @@ with header_col2:
             avatar_border = "1px solid rgba(255,255,255,0.2)"
             pro_badge = ""
         
+        # Мобильный аватар (показывается ТОЛЬКО на мобилке — над кнопками)
+        st.markdown(f"""<div class="mobile-avatar" style="display: none; justify-content: center; margin-bottom: 8px;">
+<div style="position: relative; width: 36px; height: 36px;">
+<div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
+{avatar_letter}
+</div>
+{pro_badge}
+</div>
+</div>""", unsafe_allow_html=True)
+        
         # Колонки: аватар | кнопка кабинета | кнопка выхода
         cols = st.columns([0.6, 1.4, 1])
         
         with cols[0]:
-            st.markdown(f"""<div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
+            # Десктопный аватар (скрывается на мобилке)
+            st.markdown(f"""<div class="desktop-avatar" style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
 <div style="position: relative; width: 36px; height: 36px;">
 <div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
 {avatar_letter}
