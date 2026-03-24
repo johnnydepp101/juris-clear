@@ -3,6 +3,7 @@ import streamlit as st
 from openai import OpenAI
 import re
 import uuid
+from datetime import datetime, timezone, timedelta
 from supabase import create_client, Client  # Добавили импорт Supabase
 from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
 
@@ -58,6 +59,15 @@ if 'user_id' not in st.session_state:
     st.session_state.user_id = None
 if 'user_display_name' not in st.session_state:
     st.session_state.user_display_name = ""
+# Подписка
+if 'has_subscription' not in st.session_state:
+    st.session_state.has_subscription = False
+if 'subscription_purchased_at' not in st.session_state:
+    st.session_state.subscription_purchased_at = None
+if 'subscription_expires_at' not in st.session_state:
+    st.session_state.subscription_expires_at = None
+if 'subscription_status' not in st.session_state:
+    st.session_state.subscription_status = None
 
 # --- АВТОМАТИЧЕСКИЙ ВХОД ЧЕРЕЗ COOKIES ---
 # Обрабатываем запись и удаление куки ДО использования (чтобы избежать прерывания от st.rerun)
@@ -89,6 +99,27 @@ def load_active_analysis(profile):
         if profile.get("payment_status") == "paid":
             st.session_state.user_paid = True
 
+def load_subscription_status(user_id):
+    """Загрузка статуса подписки из таблицы subscriptions"""
+    if not supabase or not user_id:
+        return
+    try:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        res = supabase.table("subscriptions").select("status, purchased_at, expires_at").eq("user_id", user_id).in_("status", ["active", "cancelled"]).gt("expires_at", now_iso).order("purchased_at", desc=True).limit(1).execute()
+        if res.data and len(res.data) > 0:
+            sub = res.data[0]
+            st.session_state.has_subscription = True
+            st.session_state.subscription_purchased_at = sub.get("purchased_at")
+            st.session_state.subscription_expires_at = sub.get("expires_at")
+            st.session_state.subscription_status = sub.get("status")
+        else:
+            st.session_state.has_subscription = False
+            st.session_state.subscription_purchased_at = None
+            st.session_state.subscription_expires_at = None
+            st.session_state.subscription_status = None
+    except Exception as e:
+        pass
+
 if supabase and not st.session_state.is_authenticated:
     access_token = cookie_controller.get("supabase_access_token")
     refresh_token = cookie_controller.get("supabase_refresh_token")
@@ -108,6 +139,7 @@ if supabase and not st.session_state.is_authenticated:
                 st.session_state.user_display_name = display_name
                 
                 load_active_analysis(profile)
+                load_subscription_status(user.id)
                 
                 # Обновляем токены в куках (так как refresh_token мог примениться)
                 if session_response.session:
@@ -188,6 +220,7 @@ def show_auth_modal():
                     st.session_state.user_display_name = display_name
                     
                     load_active_analysis(profile)
+                    load_subscription_status(user.id)
                     
                     # Сохраняем токены в session_state для записи в куки на следующем рендере
                     if response.session:
@@ -274,16 +307,55 @@ with header_col2:
             if st.session_state.user_display_name 
             else (st.session_state.user_email[0].upper() if st.session_state.user_email else "U")
         )
-        cols = st.columns([1, 1.5])
+        is_pro = st.session_state.get("has_subscription", False)
+        if is_pro:
+            # Pro-аватар: зелёная рамка + PRO бейдж
+            avatar_bg = "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+            avatar_shadow = "0 4px 10px rgba(16, 185, 129, 0.4)"
+            avatar_border = "2px solid #10b981"
+            pro_badge = '<div style="position: absolute; bottom: -6px; right: -6px; background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(16,185,129,0.5);">PRO</div>'
+        else:
+            avatar_bg = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
+            avatar_shadow = "0 4px 10px rgba(59, 130, 246, 0.3)"
+            avatar_border = "1px solid rgba(255,255,255,0.2)"
+            pro_badge = ""
+        
+        # Определяем колонки: аватар | кнопка отмены (если Pro) | кнопка выхода
+        if is_pro:
+            cols = st.columns([0.8, 1.2, 1.5])
+        else:
+            cols = st.columns([1, 1.5])
+        
         with cols[0]:
             st.markdown(f"""
                 <div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
-                    <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); border: 1px solid rgba(255,255,255,0.2);">
-                        {avatar_letter}
+                    <div style="position: relative; width: 36px; height: 36px;">
+                        <div style="width: 36px; height: 36px; background: {avatar_bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; box-shadow: {avatar_shadow}; border: {avatar_border};">
+                            {avatar_letter}
+                        </div>
+                        {pro_badge}
                     </div>
                 </div>
             """, unsafe_allow_html=True)
-        with cols[1]:
+        
+        if is_pro:
+            with cols[1]:
+                if st.button("❌ Отменить", use_container_width=True, key="btn_cancel_sub"):
+                    # Отмена подписки через Edge Function → LS API
+                    try:
+                        import requests
+                        cancel_url = "https://zqcucvoeybuudpzxziqq.supabase.co/functions/v1/cancel-subscription"
+                        resp = requests.post(cancel_url, json={"user_id": st.session_state.user_id}, timeout=15)
+                        if resp.status_code == 200:
+                            st.session_state.subscription_status = "cancelled"
+                            st.rerun()
+                    except Exception as e:
+                        pass
+            logout_col = cols[2]
+        else:
+            logout_col = cols[1]
+        
+        with logout_col:
             if st.button("Выйти", use_container_width=True):
                 # Очистка активного анализа в БД
                 if st.session_state.is_authenticated and st.session_state.user_id and supabase:
@@ -302,7 +374,7 @@ with header_col2:
                         
                 # Очистка анализа из session_state
                 st.session_state.reset_counter += 1
-                for k in ["analysis_result", "audit_score", "compare_result", "user_paid"]:
+                for k in ["analysis_result", "audit_score", "compare_result", "user_paid", "has_subscription", "subscription_purchased_at", "subscription_expires_at", "subscription_status"]:
                     if k in st.session_state: 
                         del st.session_state[k]
 
@@ -345,7 +417,69 @@ with col_tar1:
     """, unsafe_allow_html=True)
 
 with col_tar2:
-    checkout_url = "https://jurisclearai.lemonsqueezy.com/checkout/buy/69a180c9-d5f5-4018-9dbe-b8ac64e4ced8"
+    # --- Динамическая карточка Безлимит Pro ---
+    has_sub = st.session_state.get("has_subscription", False)
+    is_logged_in = st.session_state.is_authenticated
+    
+    # Формируем нижнюю часть карточки в зависимости от статуса
+    if has_sub:
+        # Пользователь с активной подпиской — показываем даты
+        try:
+            p_at = datetime.fromisoformat(st.session_state.subscription_purchased_at.replace("Z", "+00:00"))
+            e_at = datetime.fromisoformat(st.session_state.subscription_expires_at.replace("Z", "+00:00"))
+            purchased_str = p_at.strftime("%d.%m.%Y")
+            expires_str = e_at.strftime("%d.%m.%Y")
+        except Exception:
+            purchased_str = "—"
+            expires_str = "—"
+        
+        sub_status_text = st.session_state.get("subscription_status", "active")
+        if sub_status_text == "cancelled":
+            status_label = '<div style="background: rgba(255, 75, 75, 0.15); padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #ff6b6b;">⚠️ Подписка отменена, действует до окончания</div>'
+        else:
+            status_label = '<div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #10b981;">✅ Подписка активна</div>'
+        
+        pro_bottom_html = f"""
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+                {status_label}
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">📅 Дата приобретения</div>
+                    <div style="font-size: 16px; font-weight: 700;">{purchased_str}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">⏳ Действует до</div>
+                    <div style="font-size: 16px; font-weight: 700;">{expires_str}</div>
+                </div>
+            </div>
+        """
+    elif is_logged_in:
+        # Зарегистрированный без подписки — активная кнопка
+        sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/8bc12198-0e4d-4774-b486-78ddcb5a200c?checkout[custom][user_id]={st.session_state.user_id}"
+        pro_bottom_html = f"""
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
+                    ✨ Оформите подписку и получите полный доступ
+                </div>
+                <a href='{sub_checkout_url}' target='_blank' style='text-decoration: none;'>
+                    <div style='background: linear-gradient(135deg, #9d00ff 0%, #6366f1 100%); color: white; padding: 14px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4); border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s;'>
+                        🚀 Оформить подписку
+                    </div>
+                </a>
+            </div>
+        """
+    else:
+        # Не залогинен — заглушка
+        pro_bottom_html = """
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+                <div style="background: rgba(157, 0, 255, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
+                    🔐 Для оформления подписки нужно зарегистрироваться
+                </div>
+                <div style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.2); cursor: not-allowed;">
+                    🚀 Оформить подписку
+                </div>
+            </div>
+        """
+    
     st.markdown(f"""
         <div class="pricing-card-pro">
             <div>
@@ -359,14 +493,7 @@ with col_tar2:
                     • Самая мощная модель ИИ (GPT-4o)
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
-                <div style="background: rgba(157, 0, 255, 0.1); padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 500;">
-                    🔐 Для оформления подписки нужно зарегистрироваться
-                </div>
-                <div style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); text-align: center; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 15px; border: 1px dashed rgba(255,255,255,0.2); cursor: not-allowed;">
-                    🚀 Оформить подписку
-                </div>
-            </div>
+            {pro_bottom_html}
         </div>
     """, unsafe_allow_html=True)
 
@@ -468,8 +595,9 @@ with tab_audit:
             is_guest = not st.session_state.is_authenticated
             guest_paid = st.session_state.get("guest_paid", False)
             user_paid = st.session_state.get("user_paid", False)
+            has_sub = st.session_state.get("has_subscription", False)
             
-            show_full = user_paid if not is_guest else guest_paid
+            show_full = (user_paid or has_sub) if not is_guest else guest_paid
             
             if show_full:
                 # --- ПОЛНЫЙ ОТЧЕТ (после оплаты или для зарегистрированных) ---
