@@ -68,6 +68,11 @@ if 'subscription_expires_at' not in st.session_state:
     st.session_state.subscription_expires_at = None
 if 'subscription_status' not in st.session_state:
     st.session_state.subscription_status = None
+# Личный кабинет
+if 'show_cabinet' not in st.session_state:
+    st.session_state.show_cabinet = False
+if 'cabinet_section' not in st.session_state:
+    st.session_state.cabinet_section = "👤 Профиль"
 
 # --- АВТОМАТИЧЕСКИЙ ВХОД ЧЕРЕЗ COOKIES ---
 # Обрабатываем запись и удаление куки ДО использования (чтобы избежать прерывания от st.rerun)
@@ -320,11 +325,8 @@ with header_col2:
             avatar_border = "1px solid rgba(255,255,255,0.2)"
             pro_badge = ""
         
-        # Определяем колонки: аватар | кнопка отмены (если Pro) | кнопка выхода
-        if is_pro:
-            cols = st.columns([0.8, 1.2, 1.5])
-        else:
-            cols = st.columns([1, 1.5])
+        # Колонки: аватар | кнопка кабинета | кнопка выхода
+        cols = st.columns([0.6, 1.4, 1])
         
         with cols[0]:
             st.markdown(f"""<div style="display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-top: 5px;">
@@ -336,24 +338,12 @@ with header_col2:
 </div>
 </div>""", unsafe_allow_html=True)
         
-        if is_pro:
-            with cols[1]:
-                if st.button("❌ Отменить", use_container_width=True, key="btn_cancel_sub"):
-                    # Отмена подписки через Edge Function → LS API
-                    try:
-                        import requests
-                        cancel_url = "https://zqcucvoeybuudpzxziqq.supabase.co/functions/v1/cancel-subscription"
-                        resp = requests.post(cancel_url, json={"user_id": st.session_state.user_id}, timeout=15)
-                        if resp.status_code == 200:
-                            st.session_state.subscription_status = "cancelled"
-                            st.rerun()
-                    except Exception as e:
-                        pass
-            logout_col = cols[2]
-        else:
-            logout_col = cols[1]
+        with cols[1]:
+            if st.button("👤 Кабинет", use_container_width=True, key="btn_open_cabinet"):
+                st.session_state.show_cabinet = not st.session_state.show_cabinet
+                st.rerun()
         
-        with logout_col:
+        with cols[2]:
             if st.button("Выйти", use_container_width=True):
                 # Очистка активного анализа в БД
                 if st.session_state.is_authenticated and st.session_state.user_id and supabase:
@@ -385,9 +375,407 @@ with header_col2:
                 st.session_state.user_email = ""
                 st.session_state.user_id = None
                 st.session_state.user_display_name = ""
+                st.session_state.show_cabinet = False
                 st.rerun()
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
+
+# ========== ЛИЧНЫЙ КАБИНЕТ (отдельная «страница») ==========
+if st.session_state.is_authenticated and st.session_state.show_cabinet:
+    
+    def render_cabinet():
+        is_pro = st.session_state.get("has_subscription", False)
+        avatar_letter = (
+            st.session_state.user_display_name[0].upper() 
+            if st.session_state.user_display_name 
+            else (st.session_state.user_email[0].upper() if st.session_state.user_email else "U")
+        )
+        
+        st.markdown('<div class="cabinet-container">', unsafe_allow_html=True)
+        
+        # Хедер кабинета
+        st.markdown('<div class="cabinet-header">', unsafe_allow_html=True)
+        cab_h1, cab_h2 = st.columns([5, 1])
+        with cab_h1:
+            st.markdown('<h2>👤 Личный кабинет</h2>', unsafe_allow_html=True)
+        with cab_h2:
+            if st.button("← Назад", use_container_width=True, key="btn_cabinet_back"):
+                st.session_state.show_cabinet = False
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Навигация по секциям
+        if is_pro:
+            available_sections = ["👤 Профиль", "📋 История", "💳 Биллинг", "🔔 Уведомления"]
+        else:
+            available_sections = ["👤 Профиль", "📋 История", "💳 Биллинг", "🔔 Уведомления"]
+        
+        selected_section = st.pills(
+            "Раздел кабинета",
+            available_sections,
+            selection_mode="single",
+            default="👤 Профиль",
+            label_visibility="collapsed",
+            key="cabinet_nav_pills"
+        )
+        
+        if not selected_section:
+            selected_section = "👤 Профиль"
+        
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        
+        # ===== СЕКЦИЯ: ПРОФИЛЬ =====
+        if selected_section == "👤 Профиль":
+            # Аватар
+            if is_pro:
+                avatar_bg_lg = "background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 3px solid #10b981;"
+                badge_html = '<div class="profile-avatar-badge">PRO</div>'
+            else:
+                avatar_bg_lg = "background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 2px solid rgba(255,255,255,0.2);"
+                badge_html = ""
+            
+            st.markdown(f"""
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div class="profile-avatar-large" style="{avatar_bg_lg}">
+                        {avatar_letter}
+                        {badge_html}
+                    </div>
+                    <div style="font-size: 22px; font-weight: 700; margin-bottom: 4px;">{st.session_state.user_display_name or 'Пользователь'}</div>
+                    <div style="font-size: 14px; color: var(--secondary-text);">{st.session_state.user_email}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Карточка: Личные данные
+            st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
+            st.markdown('<div class="cabinet-card-title">📝 Личные данные</div>', unsafe_allow_html=True)
+            
+            # Имя
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Имя</div>
+                        <div class="profile-field-value">{st.session_state.user_display_name or '—'}</div>
+                    </div>
+                    <div class="profile-field-action">✏️ Изменить</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Email
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Электронная почта</div>
+                        <div class="profile-field-value">{st.session_state.user_email}</div>
+                    </div>
+                    <div class="profile-field-action">✉️ Сменить</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Пароль
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Пароль</div>
+                        <div class="profile-field-value">••••••••</div>
+                    </div>
+                    <div class="profile-field-action">🔑 Сменить</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Карточка: Настройки
+            st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
+            st.markdown('<div class="cabinet-card-title">⚙️ Настройки</div>', unsafe_allow_html=True)
+            
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Язык интерфейса</div>
+                        <div class="profile-field-value">🇷🇺 Русский</div>
+                    </div>
+                    <div class="profile-field-action">🌐 Изменить</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Часовой пояс</div>
+                        <div class="profile-field-value">UTC+4 (Ереван)</div>
+                    </div>
+                    <div class="profile-field-action">🕐 Изменить</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Дата регистрации</div>
+                        <div class="profile-field-value">—</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Зона опасности
+            st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
+            st.markdown('<div class="cabinet-card-title">⚠️ Зона опасности</div>', unsafe_allow_html=True)
+            st.markdown("""
+                <p style="font-size: 13px; color: var(--secondary-text); margin-bottom: 16px;">
+                    Удаление аккаунта — необратимое действие. Все данные, включая историю анализов и подписку, будут безвозвратно удалены.
+                </p>
+            """, unsafe_allow_html=True)
+            st.markdown('<div class="danger-btn">🗑️ Удалить аккаунт</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ===== СЕКЦИЯ: ИСТОРИЯ =====
+        elif selected_section == "📋 История":
+            if not is_pro:
+                st.markdown("""
+                    <div class="locked-section">
+                        <div class="locked-section-icon">🔒</div>
+                        <div class="locked-section-title">История действий доступна по подписке</div>
+                        <div class="locked-section-text">
+                            Оформите подписку Pro, чтобы сохранять историю всех анализов и иметь постоянный доступ к результатам.
+                        </div>
+                        <div class="locked-section-btn">🚀 Оформить подписку</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
+                st.markdown('<div class="cabinet-card-title">📋 История анализов</div>', unsafe_allow_html=True)
+                
+                # Фильтры
+                filt_col1, filt_col2, filt_col3 = st.columns([2, 2, 1])
+                with filt_col1:
+                    st.text_input("🔍 Поиск", placeholder="Поиск по названию...", key="history_search", label_visibility="collapsed")
+                with filt_col2:
+                    st.selectbox("Тип документа", ["Все типы", "Услуги", "NDA", "Аренда", "Трудовой", "ИТ-разработка"], key="history_filter_type", label_visibility="collapsed")
+                with filt_col3:
+                    st.selectbox("Период", ["Все", "7 дней", "30 дней", "90 дней"], key="history_filter_period", label_visibility="collapsed")
+                
+                st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+                
+                # Демо-записи (поскольку это только дизайн)
+                demo_history = [
+                    {"title": "Договор оказания услуг — ООО «Альфа»", "date": "22.03.2026", "type": "Услуги", "role": "Заказчик", "score": 8},
+                    {"title": "NDA — Проект «Фрегат»", "date": "20.03.2026", "type": "NDA", "role": "Заказчик", "score": 4},
+                    {"title": "Договор аренды офиса — БЦ Центральный", "date": "18.03.2026", "type": "Аренда", "role": "Арендатор", "score": 6},
+                    {"title": "Лицензионный договор — SoftPro", "date": "15.03.2026", "type": "Лицензионный", "role": "Лицензиат", "score": 3},
+                    {"title": "Трудовой договор — Иванов А.С.", "date": "10.03.2026", "type": "Трудовой", "role": "Работодатель", "score": 9},
+                ]
+                
+                for item in demo_history:
+                    if item["score"] <= 3:
+                        score_class = "score-low"
+                        score_label = "Низкий"
+                    elif item["score"] <= 6:
+                        score_class = "score-medium"
+                        score_label = "Средний"
+                    else:
+                        score_class = "score-high"
+                        score_label = "Критический"
+                    
+                    st.markdown(f"""
+                        <div class="history-row">
+                            <div class="history-row-info">
+                                <div class="history-row-title">{item["title"]}</div>
+                                <div class="history-row-meta">{item["date"]} · {item["type"]} · {item["role"]}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="history-row-score {score_class}">{score_label} ({item["score"]}/10)</div>
+                                <div class="history-row-actions">
+                                    <div class="history-action-btn">👁️</div>
+                                    <div class="history-action-btn">📥 PDF</div>
+                                    <div class="history-action-btn">📝 Word</div>
+                                    <div class="history-action-btn">🗑️</div>
+                                </div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                # Пагинация
+                st.markdown("""
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px;">
+                        <div class="history-action-btn" style="padding: 8px 14px;">← Назад</div>
+                        <div class="history-action-btn" style="padding: 8px 14px; background: rgba(157, 0, 255, 0.15); border-color: rgba(157, 0, 255, 0.4); color: #a78bfa;">1</div>
+                        <div class="history-action-btn" style="padding: 8px 14px;">2</div>
+                        <div class="history-action-btn" style="padding: 8px 14px;">3</div>
+                        <div class="history-action-btn" style="padding: 8px 14px;">Далее →</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ===== СЕКЦИЯ: БИЛЛИНГ =====
+        elif selected_section == "💳 Биллинг":
+            if not is_pro:
+                st.markdown("""
+                    <div class="locked-section">
+                        <div class="locked-section-icon">🔒</div>
+                        <div class="locked-section-title">Управление подпиской</div>
+                        <div class="locked-section-text">
+                            У вас пока нет активной подписки. Оформите Pro, чтобы получить неограниченный доступ к анализу и управление биллингом.
+                        </div>
+                        <div class="locked-section-btn">🚀 Оформить подписку</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                # Статус подписки
+                sub_status = st.session_state.get("subscription_status", "active")
+                try:
+                    p_at = datetime.fromisoformat(st.session_state.subscription_purchased_at.replace("Z", "+00:00"))
+                    e_at = datetime.fromisoformat(st.session_state.subscription_expires_at.replace("Z", "+00:00"))
+                    purchased_str = p_at.strftime("%d.%m.%Y")
+                    expires_str = e_at.strftime("%d.%m.%Y")
+                    days_left = (e_at - datetime.now(timezone.utc)).days
+                except Exception:
+                    purchased_str = "—"
+                    expires_str = "—"
+                    days_left = 0
+                
+                if sub_status == "cancelled":
+                    status_html = '<div class="billing-status-cancelled">⚠️ Подписка отменена</div>'
+                else:
+                    status_html = '<div class="billing-status-active">✅ Подписка активна</div>'
+                
+                st.markdown(f"""
+                    <div class="billing-status-card">
+                        {status_html}
+                        <div style="font-size: 28px; font-weight: 800; margin: 12px 0 4px;">Безлимит Pro</div>
+                        <div style="font-size: 14px; color: var(--secondary-text);">29 $ / месяц</div>
+                        <div class="billing-info-grid">
+                            <div class="billing-info-item">
+                                <div class="billing-info-label">📅 Дата покупки</div>
+                                <div class="billing-info-value">{purchased_str}</div>
+                            </div>
+                            <div class="billing-info-item">
+                                <div class="billing-info-label">⏳ Действует до</div>
+                                <div class="billing-info-value">{expires_str}</div>
+                            </div>
+                            <div class="billing-info-item">
+                                <div class="billing-info-label">📊 Осталось дней</div>
+                                <div class="billing-info-value">{days_left if days_left > 0 else '—'}</div>
+                            </div>
+                            <div class="billing-info-item">
+                                <div class="billing-info-label">💎 Статус</div>
+                                <div class="billing-info-value">{'Активна' if sub_status != 'cancelled' else 'Отменена'}</div>
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Кнопки управления
+                st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
+                st.markdown('<div class="cabinet-card-title">🎛️ Управление подпиской</div>', unsafe_allow_html=True)
+                
+                btn_col1, btn_col2 = st.columns(2)
+                
+                with btn_col1:
+                    sub_checkout_url = f"https://jurisclearai.lemonsqueezy.com/checkout/buy/8bc12198-0e4d-4774-b486-78ddcb5a200c?checkout[custom][user_id]={st.session_state.user_id}"
+                    st.markdown(f"""
+                        <a href="{sub_checkout_url}" target="_blank" style="text-decoration: none;">
+                            <div class="renew-sub-btn">🔄 Продлить подписку</div>
+                        </a>
+                    """, unsafe_allow_html=True)
+                
+                with btn_col2:
+                    if sub_status != "cancelled":
+                        if st.button("❌ Отменить подписку", use_container_width=True, key="btn_cancel_sub_cabinet"):
+                            try:
+                                import requests
+                                cancel_url = "https://zqcucvoeybuudpzxziqq.supabase.co/functions/v1/cancel-subscription"
+                                resp = requests.post(cancel_url, json={"user_id": st.session_state.user_id}, timeout=15)
+                                if resp.status_code == 200:
+                                    st.session_state.subscription_status = "cancelled"
+                                    st.rerun()
+                            except Exception as e:
+                                pass
+                    else:
+                        st.markdown("""
+                            <div style="padding: 14px; text-align: center; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--secondary-text); font-weight: 600; font-size: 14px;">
+                                Подписка уже отменена
+                            </div>
+                        """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # История платежей
+                st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
+                st.markdown('<div class="cabinet-card-title">🧾 История платежей</div>', unsafe_allow_html=True)
+                
+                demo_payments = [
+                    {"date": purchased_str, "amount": "29 $", "type": "Подписка Pro — 30 дней", "status": "Оплачено"},
+                ]
+                
+                for payment in demo_payments:
+                    st.markdown(f"""
+                        <div class="payment-history-row">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <div style="font-size: 20px;">💳</div>
+                                <div>
+                                    <div style="font-size: 14px; font-weight: 600; color: var(--text-color);">{payment["type"]}</div>
+                                    <div style="font-size: 12px; color: var(--secondary-text);">{payment["date"]}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="font-size: 16px; font-weight: 800; color: var(--text-color);">{payment["amount"]}</div>
+                                <div class="payment-badge-success">✅ {payment["status"]}</div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ===== СЕКЦИЯ: УВЕДОМЛЕНИЯ =====
+        elif selected_section == "🔔 Уведомления":
+            st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
+            st.markdown('<div class="cabinet-card-title">🔔 Уведомления</div>', unsafe_allow_html=True)
+            
+            # Кнопка "Отметить все"
+            st.markdown("""
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                    <div class="profile-field-action" style="font-size: 11px;">✓ Отметить все как прочитанные</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Демо-уведомления
+            demo_notifications = [
+                {"icon": "🎉", "icon_class": "success", "title": "Добро пожаловать в JurisClear AI!", "text": "Ваш аккаунт успешно создан. Начните анализ вашего первого документа.", "time": "Сегодня", "unread": True},
+                {"icon": "💳", "icon_class": "info", "title": "Подписка Pro оформлена", "text": "Подписка Безлимит Pro активирована. Вам доступны все функции без ограничений.", "time": "Сегодня", "unread": True},
+                {"icon": "📊", "icon_class": "system", "title": "Анализ завершён", "text": "Договор оказания услуг — ООО «Альфа» проанализирован. Оценка риска: 8/10.", "time": "22.03.2026", "unread": False},
+                {"icon": "⚠️", "icon_class": "warning", "title": "Напоминание о подписке", "text": "Ваша подписка Pro истекает через 5 дней. Продлите, чтобы не потерять доступ.", "time": "20.03.2026", "unread": False},
+                {"icon": "🔄", "icon_class": "system", "title": "Обновление системы", "text": "Мы улучшили точность анализа NDA-документов на 15%. Попробуйте новые возможности!", "time": "18.03.2026", "unread": False},
+            ]
+            
+            for notif in demo_notifications:
+                unread_class = "unread" if notif["unread"] else ""
+                st.markdown(f"""
+                    <div class="notification-card {unread_class}">
+                        <div class="notification-icon {notif['icon_class']}">{notif['icon']}</div>
+                        <div class="notification-content">
+                            <div class="notification-title">{notif['title']}</div>
+                            <div class="notification-text">{notif['text']}</div>
+                        </div>
+                        <div class="notification-time">{notif['time']}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # cabinet-container
+    
+    render_cabinet()
+    
+    # Футер для страницы кабинета
+    st.divider()
+    st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>© 2026 JurisClear AI | support@jurisclear.com</p>", unsafe_allow_html=True)
+    
+    st.stop()  # Останавливаем выполнение — основной контент не рендерится
+
+# ========== ОСНОВНОЙ КОНТЕНТ (показывается, когда кабинет закрыт) ==========
 
 # --- ОБНОВЛЕННЫЕ ТАРИФЫ С КОНКРЕТНЫМИ ФУНКЦИЯМИ ---
 # --- Динамическая карточка Безлимит Pro ---
@@ -965,9 +1353,14 @@ with tab_compare:
 
     render_compare_content()
 
-st.divider()
-col_f1, col_f2, col_f3 = st.columns(3)
-with col_f1:
-    st.caption("© 2026 JurisClear AI | Ереван")
+    st.divider()
+    col_f1, col_f2, col_f3 = st.columns(3)
+    with col_f1:
+        st.caption("© 2026 JurisClear AI | Ереван")
 
-st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>support@jurisclear.com</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>support@jurisclear.com</p>", unsafe_allow_html=True)
+
+# Футер для страницы кабинета тоже
+if st.session_state.is_authenticated and st.session_state.show_cabinet:
+    st.divider()
+    st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-size: 11px; margin-top: 20px;'>© 2026 JurisClear AI | support@jurisclear.com</p>", unsafe_allow_html=True)
