@@ -312,7 +312,7 @@ if st.session_state.is_authenticated:
 header_col1, header_col2 = st.columns([2.5, 1.5])
 
 with header_col1:
-    st.markdown(f"""<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><div style="display: flex; align-items: center; gap: 15px;"><span class="app-header-icon" style="font-size: 40px; line-height: 1;">⚖️</span><div style="display: flex; flex-direction: column;"><h1 class="app-header-title" style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1></div></div>{mobile_avatar_html}</div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 10px;"><div style="display: flex; align-items: center; gap: 15px;"><span class="app-header-icon" style="font-size: 40px; line-height: 1;">⚖️</span><div style="display: flex; flex-direction: column;"><h1 class="app-header-title" style='color: var(--header-color); margin: 0; padding: 0; font-size: 32px; font-weight: 800; line-height: 1;'>JurisClear <span style='color:var(--accent-blue)'>AI</span></h1></div></div>{mobile_avatar_html}</div>""", unsafe_allow_html=True)
 
 with header_col2:
     if not st.session_state.is_authenticated:
