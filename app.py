@@ -443,24 +443,69 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
             st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
             st.markdown('<div class="cabinet-card-title">📝 Личные данные</div>', unsafe_allow_html=True)
             
-            # Имя
+            # Имя — CSS для стилизации Streamlit-кнопки под profile-field-action
+            st.markdown("""<style>
+            [data-testid="stHorizontalBlock"]:has(#name-field-marker) {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: 16px;
+                padding: 12px 20px;
+                margin-bottom: 12px;
+                align-items: center;
+                transition: all 0.3s ease;
+            }
+            [data-testid="stHorizontalBlock"]:has(#name-field-marker):hover {
+                background: rgba(255, 255, 255, 0.05);
+                border-color: rgba(157, 0, 255, 0.2);
+            }
+            [data-testid="stHorizontalBlock"]:has(#name-field-marker) [data-testid="stButton"] > button {
+                background: rgba(157, 0, 255, 0.1) !important;
+                border: 1px solid rgba(157, 0, 255, 0.3) !important;
+                border-radius: 10px !important;
+                color: #a78bfa !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                padding: 8px 16px !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                white-space: nowrap !important;
+                min-height: 0 !important;
+            }
+            [data-testid="stHorizontalBlock"]:has(#name-field-marker) [data-testid="stButton"] > button:hover {
+                background: rgba(157, 0, 255, 0.2) !important;
+                border-color: rgba(157, 0, 255, 0.6) !important;
+                transform: translateY(-1px) !important;
+                box-shadow: none !important;
+            }
+            /* Editing mode styling */
+            [data-testid="stHorizontalBlock"]:has(#name-edit-marker) [data-testid="stButton"] > button {
+                border-radius: 10px !important;
+                padding: 8px 16px !important;
+                font-size: 12px !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
+                min-height: 0 !important;
+            }
+            </style>""", unsafe_allow_html=True)
+            
             if not st.session_state.editing_name:
-                st.markdown(f"""
-                    <div class="profile-field">
-                        <div>
+                nc1, nc2 = st.columns([5, 1])
+                with nc1:
+                    st.markdown(f"""<span id="name-field-marker"></span>
+                        <div style="padding: 4px 0;">
                             <div class="profile-field-label">Имя</div>
                             <div class="profile-field-value">{st.session_state.user_display_name or '—'}</div>
                         </div>
-                    </div>
-                """, unsafe_allow_html=True)
-                st.markdown('<div style="display: flex; justify-content: flex-end; margin-top: -12px; margin-bottom: 12px;">', unsafe_allow_html=True)
-                if st.button("✏️ Изменить", key="btn_edit_name"):
-                    st.session_state.editing_name = True
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+                with nc2:
+                    if st.button("✏️ Изменить", key="btn_edit_name"):
+                        st.session_state.editing_name = True
+                        st.rerun()
             else:
-                st.markdown("""
-                    <div class="profile-field" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                st.markdown(f"""
+                    <div class="profile-field" style="flex-direction: column; align-items: stretch; gap: 8px;">
                         <div>
                             <div class="profile-field-label">Имя</div>
                         </div>
@@ -475,6 +520,7 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
                 )
                 btn_col1, btn_col2 = st.columns(2)
                 with btn_col1:
+                    st.markdown('<span id="name-edit-marker"></span>', unsafe_allow_html=True)
                     if st.button("💾 Сохранить", use_container_width=True, key="btn_save_name"):
                         if new_name.strip():
                             success, error = update_display_name(supabase, st.session_state.user_id, new_name.strip())
