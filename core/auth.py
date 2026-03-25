@@ -98,3 +98,17 @@ def get_user_profile(supabase, user_id: str):
         return None
     except Exception:
         return None
+
+
+def update_display_name(supabase, user_id: str, new_name: str):
+    """
+    Обновление display_name пользователя в таблице profiles.
+    Возвращает (success: bool, error_message: str | None).
+    """
+    try:
+        supabase.table("profiles").update({
+            "display_name": new_name
+        }).eq("id", user_id).execute()
+        return True, None
+    except Exception as e:
+        return False, f"Ошибка при обновлении имени: {str(e)}"
