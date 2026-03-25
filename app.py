@@ -439,15 +439,80 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
             st.markdown('<div class="cabinet-card-title">📝 Личные данные</div>', unsafe_allow_html=True)
             
             # Имя
-            st.markdown(f"""
-                <div class="profile-field">
-                    <div>
-                        <div class="profile-field-label">Имя</div>
-                        <div class="profile-field-value">{st.session_state.user_display_name or '—'}</div>
-                    </div>
-                    <div class="profile-field-action">✏️ Изменить</div>
-                </div>
-            """, unsafe_allow_html=True)
+            if st.session_state.get("edit_name_mode", False):
+                st.markdown('<div class="profile-field" style="display:block; padding-bottom:20px;">', unsafe_allow_html=True)
+                st.markdown('<div class="profile-field-label" style="margin-bottom:8px;">Новое имя</div>', unsafe_allow_html=True)
+                new_name_val = st.text_input("Новое имя", value=st.session_state.user_display_name, label_visibility="collapsed", key="input_new_name_cab")
+                
+                col_s, col_c = st.columns(2)
+                with col_s:
+                    if st.button("Сохранить", use_container_width=True, type="primary", key="btn_save_name_cab"):
+                        if new_name_val.strip() and supabase and st.session_state.user_id:
+                            try:
+                                supabase.table("profiles").update({"display_name": new_name_val.strip()}).eq("id", st.session_state.user_id).execute()
+                                supabase.auth.update_user({"data": {"display_name": new_name_val.strip()}})
+                                st.session_state.user_display_name = new_name_val.strip()
+                            except Exception as e:
+                                pass
+                        st.session_state.edit_name_mode = False
+                        st.rerun()
+                with col_c:
+                    if st.button("Отмена", use_container_width=True, key="btn_cancel_name_cab"):
+                        st.session_state.edit_name_mode = False
+                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <style>
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    border-radius: 16px;
+                    padding: 16px 20px;
+                    margin-bottom: 12px;
+                    transition: all 0.3s ease;
+                }
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker):hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-color: rgba(157, 0, 255, 0.2);
+                }
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) button {
+                    background: rgba(157, 0, 255, 0.1) !important;
+                    border: 1px solid rgba(157, 0, 255, 0.3) !important;
+                    border-radius: 10px !important;
+                    color: #a78bfa !important;
+                    font-size: 12px !important;
+                    font-weight: 700 !important;
+                    padding: 8px 16px !important;
+                    height: auto !important;
+                    min-height: 0 !important;
+                    line-height: normal !important;
+                    box-shadow: none !important;
+                    text-transform: none !important;
+                    letter-spacing: normal !important;
+                    width: 100% !important;
+                }
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) button:hover {
+                    background: rgba(157, 0, 255, 0.2) !important;
+                    border-color: rgba(157, 0, 255, 0.6) !important;
+                    transform: translateY(-1px) !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                name_container = st.container()
+                with name_container:
+                    st.markdown('<div class="profile-name-marker"></div>', unsafe_allow_html=True)
+                    try:
+                        nc1, nc2 = st.columns([4, 1], vertical_alignment="center")
+                    except TypeError:
+                        nc1, nc2 = st.columns([4, 1])
+                    with nc1:
+                        st.markdown(f'<div class="profile-field-label" style="margin-bottom: 4px;">Имя</div><div class="profile-field-value">{st.session_state.user_display_name or "—"}</div>', unsafe_allow_html=True)
+                    with nc2:
+                        if st.button("✏️ Изменить", key="btn_edit_name_cab", use_container_width=True):
+                            st.session_state.edit_name_mode = True
+                            st.rerun()
             
             # Email
             st.markdown(f"""
