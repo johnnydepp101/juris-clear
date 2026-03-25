@@ -12,7 +12,7 @@ from ui.design import load_css, get_risk_params, sample_text
 from utils.file_processing import extract_text_from_pdf
 from core.intelligence import analyze_long_text, generate_analysis, compare_documents
 from utils.export import create_pdf, create_docx
-from core.auth import sign_up, sign_in, sign_out, get_user_profile, update_display_name, update_user_email, update_user_password, update_profile_fields, delete_user_account
+from core.auth import sign_up, sign_in, sign_out, get_user_profile
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -418,14 +418,6 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
         
         # ===== СЕКЦИЯ: ПРОФИЛЬ =====
         if selected_section == "👤 Профиль":
-            # Загружаем данные профиля из БД
-            profile_data = get_user_profile(supabase, st.session_state.user_id) if supabase else None
-            
-            # Инициализируем состояния для режимов редактирования
-            for edit_key in ["edit_name", "edit_email", "edit_password", "edit_extra", "confirm_delete"]:
-                if edit_key not in st.session_state:
-                    st.session_state[edit_key] = False
-            
             # Аватар
             if is_pro:
                 avatar_bg_lg = "background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 3px solid #10b981;"
@@ -442,248 +434,81 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
 </div>
             """, unsafe_allow_html=True)
             
-            # ========== Карточка: Личные данные ==========
+            # Карточка: Личные данные
             st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
             st.markdown('<div class="cabinet-card-title">📝 Личные данные</div>', unsafe_allow_html=True)
             
-            # --- Имя ---
-            if not st.session_state.edit_name:
-                name_col1, name_col2 = st.columns([5, 1])
-                with name_col1:
-                    st.markdown(f"""
-                        <div class="profile-field">
-                            <div>
-                                <div class="profile-field-label">Имя</div>
-                                <div class="profile-field-value">{st.session_state.user_display_name or '—'}</div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                with name_col2:
-                    if st.button("✏️", key="btn_edit_name", help="Изменить имя"):
-                        st.session_state.edit_name = True
-                        st.rerun()
-            else:
-                new_name = st.text_input("Новое имя", value=st.session_state.user_display_name or "", key="input_new_name")
-                save_col, cancel_col = st.columns(2)
-                with save_col:
-                    if st.button("💾 Сохранить", key="btn_save_name", use_container_width=True):
-                        if new_name.strip():
-                            success, err = update_display_name(supabase, st.session_state.user_id, new_name.strip())
-                            if success:
-                                st.session_state.user_display_name = new_name.strip()
-                                st.session_state.edit_name = False
-                                st.rerun()
-                            else:
-                                st.error(err)
-                        else:
-                            st.error("Имя не может быть пустым.")
-                with cancel_col:
-                    if st.button("Отмена", key="btn_cancel_name", use_container_width=True):
-                        st.session_state.edit_name = False
-                        st.rerun()
+            # Имя
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Имя</div>
+                        <div class="profile-field-value">{st.session_state.user_display_name or '—'}</div>
+                    </div>
+                    <div class="profile-field-action">✏️ Изменить</div>
+                </div>
+            """, unsafe_allow_html=True)
             
-            # --- Email ---
-            if not st.session_state.edit_email:
-                email_col1, email_col2 = st.columns([5, 1])
-                with email_col1:
-                    st.markdown(f"""
-                        <div class="profile-field">
-                            <div>
-                                <div class="profile-field-label">Электронная почта</div>
-                                <div class="profile-field-value">{st.session_state.user_email}</div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                with email_col2:
-                    if st.button("✉️", key="btn_edit_email", help="Сменить email"):
-                        st.session_state.edit_email = True
-                        st.rerun()
-            else:
-                new_email = st.text_input("Новый email", value=st.session_state.user_email, key="input_new_email")
-                st.caption("⚡ Email будет изменён немедленно (без подтверждения).")
-                save_e_col, cancel_e_col = st.columns(2)
-                with save_e_col:
-                    if st.button("💾 Сохранить", key="btn_save_email", use_container_width=True):
-                        if new_email.strip() and "@" in new_email:
-                            if new_email.strip() != st.session_state.user_email:
-                                success, err = update_user_email(supabase, new_email.strip())
-                                if success:
-                                    st.session_state.user_email = new_email.strip()
-                                    st.session_state.edit_email = False
-                                    st.rerun()
-                                else:
-                                    st.error(err)
-                            else:
-                                st.warning("Новый email совпадает с текущим.")
-                        else:
-                            st.error("Введите корректный email.")
-                with cancel_e_col:
-                    if st.button("Отмена", key="btn_cancel_email", use_container_width=True):
-                        st.session_state.edit_email = False
-                        st.rerun()
+            # Email
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Электронная почта</div>
+                        <div class="profile-field-value">{st.session_state.user_email}</div>
+                    </div>
+                    <div class="profile-field-action">✉️ Сменить</div>
+                </div>
+            """, unsafe_allow_html=True)
             
-            # --- Пароль ---
-            if not st.session_state.edit_password:
-                pass_col1, pass_col2 = st.columns([5, 1])
-                with pass_col1:
-                    st.markdown(f"""
-                        <div class="profile-field">
-                            <div>
-                                <div class="profile-field-label">Пароль</div>
-                                <div class="profile-field-value">••••••••</div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                with pass_col2:
-                    if st.button("🔑", key="btn_edit_pass", help="Сменить пароль"):
-                        st.session_state.edit_password = True
-                        st.rerun()
-            else:
-                new_pass = st.text_input("Новый пароль", type="password", placeholder="Минимум 6 символов", key="input_new_pass")
-                confirm_pass = st.text_input("Подтвердите пароль", type="password", placeholder="Повторите пароль", key="input_confirm_pass")
-                save_p_col, cancel_p_col = st.columns(2)
-                with save_p_col:
-                    if st.button("💾 Сохранить", key="btn_save_pass", use_container_width=True):
-                        if not new_pass:
-                            st.error("Введите новый пароль.")
-                        elif new_pass != confirm_pass:
-                            st.error("Пароли не совпадают.")
-                        else:
-                            success, err = update_user_password(supabase, new_pass)
-                            if success:
-                                st.session_state.edit_password = False
-                                st.success("✅ Пароль успешно изменён!")
-                                st.rerun()
-                            else:
-                                st.error(err)
-                with cancel_p_col:
-                    if st.button("Отмена", key="btn_cancel_pass", use_container_width=True):
-                        st.session_state.edit_password = False
-                        st.rerun()
+            # Пароль
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Пароль</div>
+                        <div class="profile-field-value">••••••••</div>
+                    </div>
+                    <div class="profile-field-action">🔑 Сменить</div>
+                </div>
+            """, unsafe_allow_html=True)
             
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # ========== Карточка: Дополнительные данные ==========
-            st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
-            st.markdown('<div class="cabinet-card-title">📋 Дополнительные данные</div>', unsafe_allow_html=True)
-            
-            current_phone = (profile_data or {}).get("phone", "") or ""
-            current_company = (profile_data or {}).get("company", "") or ""
-            current_position = (profile_data or {}).get("position", "") or ""
-            
-            if not st.session_state.edit_extra:
-                extra_col1, extra_col2 = st.columns([5, 1])
-                with extra_col1:
-                    st.markdown(f"""
-                        <div class="profile-field">
-                            <div>
-                                <div class="profile-field-label">📱 Телефон</div>
-                                <div class="profile-field-value">{current_phone or '—'}</div>
-                            </div>
-                        </div>
-                        <div class="profile-field">
-                            <div>
-                                <div class="profile-field-label">🏢 Компания</div>
-                                <div class="profile-field-value">{current_company or '—'}</div>
-                            </div>
-                        </div>
-                        <div class="profile-field">
-                            <div>
-                                <div class="profile-field-label">💼 Должность</div>
-                                <div class="profile-field-value">{current_position or '—'}</div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                with extra_col2:
-                    if st.button("✏️", key="btn_edit_extra", help="Редактировать"):
-                        st.session_state.edit_extra = True
-                        st.rerun()
-            else:
-                edit_phone = st.text_input("📱 Телефон", value=current_phone, placeholder="+7 (999) 123-45-67", key="input_phone")
-                edit_company = st.text_input("🏢 Компания", value=current_company, placeholder="ООО «Компания»", key="input_company")
-                edit_position = st.text_input("💼 Должность", value=current_position, placeholder="Юрист", key="input_position")
-                save_x_col, cancel_x_col = st.columns(2)
-                with save_x_col:
-                    if st.button("💾 Сохранить", key="btn_save_extra", use_container_width=True):
-                        success, err = update_profile_fields(supabase, st.session_state.user_id, {
-                            "phone": edit_phone.strip() or None,
-                            "company": edit_company.strip() or None,
-                            "position": edit_position.strip() or None
-                        })
-                        if success:
-                            st.session_state.edit_extra = False
-                            st.rerun()
-                        else:
-                            st.error(err)
-                with cancel_x_col:
-                    if st.button("Отмена", key="btn_cancel_extra", use_container_width=True):
-                        st.session_state.edit_extra = False
-                        st.rerun()
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # ========== Карточка: Настройки ==========
+            # Карточка: Настройки
             st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
             st.markdown('<div class="cabinet-card-title">⚙️ Настройки</div>', unsafe_allow_html=True)
-            
-            current_lang = (profile_data or {}).get("language", "ru") or "ru"
-            current_tz = (profile_data or {}).get("timezone", "UTC+4") or "UTC+4"
-            
-            lang_options = ["ru", "en", "de", "fr", "es"]
-            lang_labels = {"ru": "🇷🇺 Русский", "en": "🇬🇧 English", "de": "🇩🇪 Deutsch", "fr": "🇫🇷 Français", "es": "🇪🇸 Español"}
-            tz_options = ["UTC+0", "UTC+1", "UTC+2", "UTC+3", "UTC+4", "UTC+5", "UTC+6", "UTC+7", "UTC+8", "UTC+9", "UTC+10", "UTC+11", "UTC+12", "UTC-1", "UTC-2", "UTC-3", "UTC-4", "UTC-5", "UTC-6", "UTC-7", "UTC-8", "UTC-9", "UTC-10", "UTC-11"]
-            
-            settings_col1, settings_col2 = st.columns(2)
-            with settings_col1:
-                selected_lang = st.selectbox(
-                    "🌐 Язык интерфейса",
-                    options=lang_options,
-                    format_func=lambda x: lang_labels.get(x, x),
-                    index=lang_options.index(current_lang) if current_lang in lang_options else 0,
-                    key="select_language"
-                )
-            with settings_col2:
-                selected_tz = st.selectbox(
-                    "🕐 Часовой пояс",
-                    options=tz_options,
-                    index=tz_options.index(current_tz) if current_tz in tz_options else 4,
-                    key="select_timezone"
-                )
-            
-            # Сохраняем настройки автоматически при изменении
-            if selected_lang != current_lang or selected_tz != current_tz:
-                if st.button("💾 Сохранить настройки", key="btn_save_settings", use_container_width=True):
-                    success, err = update_profile_fields(supabase, st.session_state.user_id, {
-                        "language": selected_lang,
-                        "timezone": selected_tz
-                    })
-                    if success:
-                        st.success("✅ Настройки сохранены!")
-                        st.rerun()
-                    else:
-                        st.error(err)
-            
-            # Дата регистрации
-            reg_date_str = "—"
-            if profile_data and profile_data.get("created_at"):
-                try:
-                    reg_dt = datetime.fromisoformat(str(profile_data["created_at"]).replace("Z", "+00:00"))
-                    reg_date_str = reg_dt.strftime("%d.%m.%Y, %H:%M")
-                except Exception:
-                    reg_date_str = str(profile_data["created_at"])[:10]
             
             st.markdown(f"""
                 <div class="profile-field">
                     <div>
-                        <div class="profile-field-label">📅 Дата регистрации</div>
-                        <div class="profile-field-value">{reg_date_str}</div>
+                        <div class="profile-field-label">Язык интерфейса</div>
+                        <div class="profile-field-value">🇷🇺 Русский</div>
+                    </div>
+                    <div class="profile-field-action">🌐 Изменить</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Часовой пояс</div>
+                        <div class="profile-field-value">UTC+4 (Ереван)</div>
+                    </div>
+                    <div class="profile-field-action">🕐 Изменить</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+                <div class="profile-field">
+                    <div>
+                        <div class="profile-field-label">Дата регистрации</div>
+                        <div class="profile-field-value">—</div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # ========== Зона опасности ==========
+            # Зона опасности
             st.markdown('<div class="cabinet-card">', unsafe_allow_html=True)
             st.markdown('<div class="cabinet-card-title">⚠️ Зона опасности</div>', unsafe_allow_html=True)
             st.markdown("""
@@ -691,50 +516,7 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
                     Удаление аккаунта — необратимое действие. Все данные, включая историю анализов и подписку, будут безвозвратно удалены.
                 </p>
             """, unsafe_allow_html=True)
-            
-            if not st.session_state.confirm_delete:
-                if st.button("🗑️ Удалить аккаунт", key="btn_start_delete", use_container_width=True):
-                    st.session_state.confirm_delete = True
-                    st.rerun()
-            else:
-                st.warning("⚠️ Вы уверены? Это действие невозможно отменить!")
-                confirm_check = st.checkbox("Я понимаю, что все данные будут удалены безвозвратно", key="chk_confirm_delete")
-                confirm_email = st.text_input("Введите ваш email для подтверждения", placeholder=st.session_state.user_email, key="input_confirm_delete_email")
-                
-                del_col1, del_col2 = st.columns(2)
-                with del_col1:
-                    if st.button("🗑️ Подтвердить удаление", key="btn_confirm_delete", use_container_width=True, type="primary"):
-                        if not confirm_check:
-                            st.error("Поставьте галочку для подтверждения.")
-                        elif confirm_email.strip().lower() != st.session_state.user_email.lower():
-                            st.error("Email не совпадает с вашим аккаунтом.")
-                        else:
-                            with st.spinner("Удаление аккаунта..."):
-                                project_url = st.secrets["SUPABASE_URL"]
-                                service_key = st.secrets.get("SUPABASE_SERVICE_KEY") or st.secrets.get("SUPABASE_KEY")
-                                success, err = delete_user_account(project_url, service_key, st.session_state.user_id)
-                            if success:
-                                # Очищаем session и куки
-                                st.session_state.clear_tokens = True
-                                st.session_state.is_authenticated = False
-                                st.session_state.user_email = ""
-                                st.session_state.user_id = None
-                                st.session_state.user_display_name = ""
-                                st.session_state.show_cabinet = False
-                                st.session_state.confirm_delete = False
-                                if supabase:
-                                    try:
-                                        sign_out(supabase)
-                                    except Exception:
-                                        pass
-                                st.rerun()
-                            else:
-                                st.error(f"Ошибка: {err}")
-                with del_col2:
-                    if st.button("Отмена", key="btn_cancel_delete", use_container_width=True):
-                        st.session_state.confirm_delete = False
-                        st.rerun()
-            
+            st.markdown('<div class="danger-btn">🗑️ Удалить аккаунт</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
         # ===== СЕКЦИЯ: ИСТОРИЯ =====
