@@ -12,7 +12,7 @@ from ui.design import load_css, get_risk_params, sample_text
 from utils.file_processing import extract_text_from_pdf
 from core.intelligence import analyze_long_text, generate_analysis, compare_documents
 from utils.export import create_pdf, create_docx
-from core.auth import sign_up, sign_in, sign_out, get_user_profile
+from core.auth import sign_up, sign_in, sign_out, get_user_profile, update_display_name
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -73,6 +73,8 @@ if 'show_cabinet' not in st.session_state:
     st.session_state.show_cabinet = False
 if 'cabinet_section' not in st.session_state:
     st.session_state.cabinet_section = "👤 Профиль"
+if 'editing_name' not in st.session_state:
+    st.session_state.editing_name = False
 
 # --- АВТОМАТИЧЕСКИЙ ВХОД ЧЕРЕЗ COOKIES ---
 # Обрабатываем запись и удаление куки ДО использования (чтобы избежать прерывания от st.rerun)
@@ -333,6 +335,7 @@ with header_col2:
         with cols[1]:
             if st.button("👤 Кабинет", use_container_width=True, key="btn_open_cabinet"):
                 st.session_state.show_cabinet = not st.session_state.show_cabinet
+                st.session_state.editing_name = False
                 st.rerun()
         
         with cols[2]:
@@ -368,6 +371,7 @@ with header_col2:
                 st.session_state.user_id = None
                 st.session_state.user_display_name = ""
                 st.session_state.show_cabinet = False
+                st.session_state.editing_name = False
                 st.rerun()
 
 st.markdown(f"<p style='text-align: center; color: var(--secondary-text); font-weight: 500;'>Профессиональный юридический аудит договоров</p>", unsafe_allow_html=True)
@@ -393,6 +397,7 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
         with cab_h2:
             if st.button("← Назад", use_container_width=True, key="btn_cabinet_back"):
                 st.session_state.show_cabinet = False
+                st.session_state.editing_name = False
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -439,15 +444,52 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
             st.markdown('<div class="cabinet-card-title">📝 Личные данные</div>', unsafe_allow_html=True)
             
             # Имя
-            st.markdown(f"""
-                <div class="profile-field">
-                    <div>
-                        <div class="profile-field-label">Имя</div>
-                        <div class="profile-field-value">{st.session_state.user_display_name or '—'}</div>
+            if not st.session_state.editing_name:
+                st.markdown(f"""
+                    <div class="profile-field">
+                        <div>
+                            <div class="profile-field-label">Имя</div>
+                            <div class="profile-field-value">{st.session_state.user_display_name or '—'}</div>
+                        </div>
                     </div>
-                    <div class="profile-field-action">✏️ Изменить</div>
-                </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+                st.markdown('<div style="display: flex; justify-content: flex-end; margin-top: -12px; margin-bottom: 12px;">', unsafe_allow_html=True)
+                if st.button("✏️ Изменить", key="btn_edit_name"):
+                    st.session_state.editing_name = True
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                    <div class="profile-field" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                        <div>
+                            <div class="profile-field-label">Имя</div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+                new_name = st.text_input(
+                    "Новое имя",
+                    value=st.session_state.user_display_name or "",
+                    key="input_new_name",
+                    label_visibility="collapsed",
+                    placeholder="Введите новое имя..."
+                )
+                btn_col1, btn_col2 = st.columns(2)
+                with btn_col1:
+                    if st.button("💾 Сохранить", use_container_width=True, key="btn_save_name"):
+                        if new_name.strip():
+                            success, error = update_display_name(supabase, st.session_state.user_id, new_name.strip())
+                            if success:
+                                st.session_state.user_display_name = new_name.strip()
+                                st.session_state.editing_name = False
+                                st.rerun()
+                            else:
+                                st.error(error)
+                        else:
+                            st.warning("Имя не может быть пустым.")
+                with btn_col2:
+                    if st.button("❌ Отмена", use_container_width=True, key="btn_cancel_name"):
+                        st.session_state.editing_name = False
+                        st.rerun()
             
             # Email
             st.markdown(f"""
