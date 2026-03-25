@@ -476,6 +476,30 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
                     background: rgba(255, 255, 255, 0.05);
                     border-color: rgba(157, 0, 255, 0.2);
                 }
+                
+                /* Убираем лишние отступы внутренних контейнеров Streamlit */
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) > div[data-testid="stVerticalBlock"] {
+                    gap: 0 !important;
+                }
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) .stMarkdown p {
+                    margin-bottom: 0 !important;
+                }
+
+                /* Делаем блок горизонтальным с выравниванием по краям (как в HTML-версии) */
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) div[data-testid="stHorizontalBlock"] {
+                    align-items: center !important;
+                    justify-content: space-between !important;
+                    gap: 0 !important;
+                }
+                
+                /* Колонки занимают только нужное место */
+                div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) div[data-testid="column"] {
+                    width: auto !important;
+                    flex: 0 1 auto !important;
+                    min-width: 0 !important;
+                }
+
+                /* Стили кнопки */
                 div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) button {
                     background: rgba(157, 0, 255, 0.1) !important;
                     border: 1px solid rgba(157, 0, 255, 0.3) !important;
@@ -490,12 +514,27 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
                     box-shadow: none !important;
                     text-transform: none !important;
                     letter-spacing: normal !important;
-                    width: 100% !important;
+                    width: auto !important;
+                    display: inline-flex !important;
+                    margin: 0 !important;
                 }
                 div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) button:hover {
                     background: rgba(157, 0, 255, 0.2) !important;
                     border-color: rgba(157, 0, 255, 0.6) !important;
                     transform: translateY(-1px) !important;
+                }
+
+                /* Адаптивность для мобильных устройств (workflow adaptive-flexible) */
+                @media (max-width: 768px) {
+                    div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) div[data-testid="stHorizontalBlock"] {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 12px !important;
+                    }
+                    div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) div[data-testid="column"],
+                    div[data-testid="stVerticalBlock"]:has(> div.element-container > div.stMarkdown div.profile-name-marker) button {
+                        width: 100% !important;
+                    }
                 }
                 </style>
                 """, unsafe_allow_html=True)
@@ -508,9 +547,10 @@ if st.session_state.is_authenticated and st.session_state.show_cabinet:
                     except TypeError:
                         nc1, nc2 = st.columns([4, 1])
                     with nc1:
-                        st.markdown(f'<div class="profile-field-label" style="margin-bottom: 4px;">Имя</div><div class="profile-field-value">{st.session_state.user_display_name or "—"}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="profile-field-label">Имя</div><div class="profile-field-value">{st.session_state.user_display_name or "—"}</div>', unsafe_allow_html=True)
                     with nc2:
-                        if st.button("✏️ Изменить", key="btn_edit_name_cab", use_container_width=True):
+                        # use_container_width=False, ширина контроллируется через CSS 'width: auto' на десктопе и 100% на мобилке
+                        if st.button("✏️ Изменить", key="btn_edit_name_cab", use_container_width=False):
                             st.session_state.edit_name_mode = True
                             st.rerun()
             
